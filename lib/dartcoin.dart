@@ -3,6 +3,7 @@ library dartcoin;
 
 import "dart:math";
 import "package:crypto/crypto.dart";
+import "package:cipher/digests/ripemd160.dart";
 
 
 part "src/core/utils.dart";
@@ -20,4 +21,5 @@ part "src/core/transaction_output.dart";
 
 part "src/core/block.dart";
 
-part "src/core/script.dart";
+part "src/script/script.dart";
+part "src/script/script_op_codes.dart";

@@ -3,4 +3,5 @@ author: Steven Roose
 description: A Bitcoin library for Dart.
 homepage: http://www.dartcoin.org/
 dependencies:
+  cipher: any
   crypto: any

@@ -25,6 +25,26 @@ class Utils {
   }
   
   /**
+   * Calculates the RIPEMD-160 hash of the given input.
+   */
+  static List<int> ripemd160Digest(List<int> input) {
+    RIPEMD160Digest digest = new RIPEMD160Digest();
+    digest.update(input, 0, input.length);
+    digest.finish();
+    List<int> result = new List(20);
+    digest.doFinal(result, 0);
+    return result;
+  }
+  
+  /**
+   * Calculates the RIPEMD-160 hash of the SHA-256 hash of the input.
+   * This is used to convert an ECDSA public key to a Bitcoin address.
+   */
+  static List<int> sha256hash160(List<int> input) {
+    return ripemd160Digest(singleDigest(input));
+  }
+  
+  /**
    * Converts a list of bytes to a hex string.
    * 
    * (Just a warpper for the crypto:CryptoUtils.bytesToHex() method.)
