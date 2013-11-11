@@ -154,7 +154,7 @@ class Block {
         int right = min(left + 1, levelSize - 1);
         Sha256Hash leftHash  = tree[levelOffset + left];
         Sha256Hash rightHash = tree[levelOffset + right];
-        List<int> concat = leftHash.bytes;
+        Uint8List concat = leftHash.bytes;
         concat.addAll(rightHash.bytes);
         tree.add(Sha256Hash.createDouble(concat));
       }
@@ -164,8 +164,8 @@ class Block {
     return tree;
   }
   
-  List<int> _encodeHeader() {
-    List<int> result = new List();
+  Uint8List _encodeHeader() {
+    Uint8List result = new List();
     result.addAll(Utils.intToBytesBE(version, 4));
     result.addAll(previousBlock.bytes);
     result.addAll(merkleRoot.bytes);
@@ -175,8 +175,8 @@ class Block {
     return result;
   }
   
-  List<int> encode() {
-    List<int> result = new List();
+  Uint8List encode() {
+    Uint8List result = new List();
     result.addAll(_encodeHeader());
     result.addAll(new VarInt(transactions.length).encode());
     for(Transaction tx in transactions) {

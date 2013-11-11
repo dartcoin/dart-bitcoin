@@ -12,8 +12,8 @@ class VarInt {
     return sizeOf(this.value);
   }
   
-  List<int> encode() {
-    List<int> result;
+  Uint8List encode() {
+    Uint8List result;
     if(value < 0xfd)        result =  [value];
     if(value <= 0xffff)     result = [253, 0, 0];
     if(value <= 0xffffffff) result = [254, 0, 0, 0, 0];

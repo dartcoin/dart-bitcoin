@@ -16,8 +16,8 @@ class TransactionInput {
     }
   }
   
-  List<int> encode() {
-    List<int> result = new List();
+  Uint8List encode() {
+    Uint8List result = new List();
     result.addAll(outpoint.encode());
     result.addAll(new VarInt(scriptLength).encode());
     result.addAll(scriptSig.encode());

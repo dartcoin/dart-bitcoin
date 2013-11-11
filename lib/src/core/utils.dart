@@ -6,7 +6,7 @@ class Utils {
   /**
    * Calculates the SHA-256 hash of the input data.
    */
-  static List<int> singleDigest(List<int> input) {
+  static Uint8List singleDigest(Uint8List input) {
     SHA256 digest = new SHA256();
     digest.add(input);
     return digest.close();
@@ -15,10 +15,10 @@ class Utils {
   /**
    * Calculates the double-round SHA-256 hash of the input data.
    */
-  static List<int> doubleDigest(List<int> input) {
+  static Uint8List doubleDigest(Uint8List input) {
     SHA256 digest = new SHA256();
     digest.add(input);
-    List<int> tmp = digest.close();
+    Uint8List tmp = digest.close();
     digest = digest.newInstance();
     digest.add(tmp);
     return digest.close();
@@ -27,11 +27,11 @@ class Utils {
   /**
    * Calculates the RIPEMD-160 hash of the given input.
    */
-  static List<int> ripemd160Digest(List<int> input) {
+  static Uint8List ripemd160Digest(Uint8List input) {
     RIPEMD160Digest digest = new RIPEMD160Digest();
     digest.update(input, 0, input.length);
     digest.finish();
-    List<int> result = new List(20);
+    Uint8List result = new List(20);
     digest.doFinal(result, 0);
     return result;
   }
@@ -40,7 +40,7 @@ class Utils {
    * Calculates the RIPEMD-160 hash of the SHA-256 hash of the input.
    * This is used to convert an ECDSA public key to a Bitcoin address.
    */
-  static List<int> sha256hash160(List<int> input) {
+  static Uint8List sha256hash160(Uint8List input) {
     return ripemd160Digest(singleDigest(input));
   }
   
@@ -49,7 +49,7 @@ class Utils {
    * 
    * (Just a warpper for the crypto:CryptoUtils.bytesToHex() method.)
    */
-  static String bytesToHex(List<int> bytes) {
+  static String bytesToHex(Uint8List bytes) {
     return CryptoUtils.bytesToHex(bytes);
   }
   
@@ -57,12 +57,12 @@ class Utils {
    * Converts a hex string to a list of bytes.
    */
   static String _BYTE_ALPHABET = "0123456789ABCDEF";
-  static List<int> hexToBytes(String hex) {
+  static Uint8List hexToBytes(String hex) {
     hex = hex.toUpperCase();
     if(hex.length % 2 != 0) {
       hex = "0" + hex;
     }
-    List<int> result = new List();
+    Uint8List result = new List();
     while(hex.length > 0) {
       String byte = hex.substring(0, 2);
       hex = hex.substring(2, hex.length);
@@ -94,9 +94,9 @@ class Utils {
   /**
    * Converts the integer to a byte array in little endian. Ony positive integers allowed.
    */
-  static List<int> intToBytesLE(int val, [int size = -1]) {
+  static Uint8List intToBytesLE(int val, [int size = -1]) {
     if(val < 0) throw new Exception("Only positive values allowed.");
-    List<int> result = new List();
+    Uint8List result = new List();
     while(val > 0) {
       int mod = val % 256;
       val = val >> 8;
@@ -110,9 +110,9 @@ class Utils {
   /**
    * Converts the integer to a byte array in big endian. Ony positive integers allowed.
    */
-  static List<int> intToBytesBE(int val, [int size = -1]) {
+  static Uint8List intToBytesBE(int val, [int size = -1]) {
     if(val < 0) throw new Exception("Only positive values allowed.");
-    List<int> result = new List();
+    Uint8List result = new List();
     while(val > 0) {
       int mod = val % 256;
       val = val >> 8;

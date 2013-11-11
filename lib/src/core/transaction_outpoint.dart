@@ -26,8 +26,8 @@ class TransactionOutPoint {
     txid = transaction.hash;
   }
   
-  List<int> encode() {
-    List<int> result = new List();
+  Uint8List encode() {
+    Uint8List result = new List();
     result.addAll(txid.bytes);
     result.addAll(Utils.intToBytesBE(index, 4));
     return result;

@@ -6,7 +6,7 @@ class Base58 {
   // unused
   //static final String _validRegex = r"/^[1-9A-HJ-NP-Za-km-z]+$/";
   
-  static String encode(List<int> bytes) {
+  static String encode(Uint8List bytes) {
     if(bytes.length == 0) {
       return "";
     }
@@ -40,13 +40,13 @@ class Base58 {
     return output;
   }
   
-  static List<int> decode(String input) {
+  static Uint8List decode(String input) {
     if(input.length == 0) {
       return [0];
     }
     
     // generate base 58 index list from input string
-    List<int> input58 = new List(input.length);
+    Uint8List input58 = new List(input.length);
     for(int i = 0 ; i < input.length ; i++) {
       int charint = ALPHABET.indexOf(input[i]);
       if(charint < 0) {
@@ -62,7 +62,7 @@ class Base58 {
     }
     
     // decode
-    List<int> output = new List();
+    Uint8List output = new List();
     // TODO
     int startAt = leadingZeroes;
     while(startAt < input58.length) {
@@ -85,8 +85,8 @@ class Base58 {
    * number -> number / 58
    * returns number % 58 
    */
-  static int _divmod58(List<int> number, int startAt) {
-    List<int> result = new List(number.length);
+  static int _divmod58(Uint8List number, int startAt) {
+    Uint8List result = new List(number.length);
     int remaining = 0;
     for(int i = startAt ; i < number.length ; i++) {
       int num = number[i] + (remaining << 8); //= number[i] + remaining * 16
@@ -100,8 +100,8 @@ class Base58 {
    * number -> number / 256
    * returns number % 256 
    */
-  static int _divmod256(List<int> number58, int startAt) {
-    List<int> result = new List(number58.length);
+  static int _divmod256(Uint8List number58, int startAt) {
+    Uint8List result = new List(number58.length);
     int remaining = 0;
     for(int i = startAt ; i < number58.length ; i++) {
       int num = number58[i] + 58 * remaining;

@@ -14,8 +14,8 @@ class TransactionOutput {
     }
   }
   
-  List<int> encode() {
-    List<int> result = new List();
+  Uint8List encode() {
+    Uint8List result = new List();
     result.addAll(Utils.intToBytesBE(value, 8));
     result.addAll(new VarInt(scriptLength).encode());
     result.addAll(scriptPubKey.encode());

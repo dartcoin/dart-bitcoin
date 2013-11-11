@@ -1,6 +1,7 @@
 library dartcoin;
 
 
+import "dart:typed_data";
 import "dart:math";
 import "package:crypto/crypto.dart";
 import "package:cipher/digests/ripemd160.dart";

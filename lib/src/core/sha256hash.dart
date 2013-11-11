@@ -1,19 +1,19 @@
 part of dartcoin;
 
 class Sha256Hash {
-  final List<int> bytes;
+  final Uint8List bytes;
   
-  Sha256Hash(List<int> this.bytes) {
+  Sha256Hash(Uint8List this.bytes) {
     if(bytes.length != 32) {
       throw new Exception("SHA-256 hashes are 32 bytes long.");
     }
   }
   
-  static Sha256Hash create(List<int> bytes) {
+  static Sha256Hash create(Uint8List bytes) {
     return new Sha256Hash(Utils.singleDigest(bytes));
   }
   
-  static Sha256Hash createDouble(List<int> bytes) {
+  static Sha256Hash createDouble(Uint8List bytes) {
     return new Sha256Hash(Utils.doubleDigest(bytes));
   }
   

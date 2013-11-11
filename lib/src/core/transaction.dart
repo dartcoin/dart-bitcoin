@@ -84,8 +84,8 @@ class Transaction {
     _hash = Sha256Hash.createDouble(encode());
   }
   
-  List<int> encode() {
-    List<int> result = new List();
+  Uint8List encode() {
+    Uint8List result = new List();
     result.addAll(Utils.intToBytesBE(version, 4));
     result.addAll(new VarInt(inputs.length).encode());
     for(TransactionInput input in inputs) {
