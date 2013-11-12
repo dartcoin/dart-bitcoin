@@ -80,12 +80,26 @@ class Transaction {
     }
   }
   
+  int get fee {
+    int totalIn = amount;
+    int totalOut = 0;
+    try {
+      for(TransactionOutput output in outputs) {
+        totalOut += output.value;
+      }
+    }
+    on NoSuchMethodError catch(e) {
+      throw new Exception("Not all outputs fully known. Unable to calculate fee.");
+    }
+    return totalIn - totalOut;
+  }
+  
   void _calculateHash() {
     _hash = Sha256Hash.createDouble(encode());
   }
   
   Uint8List encode() {
-    Uint8List result = new List();
+    List<int> result = new List();
     result.addAll(Utils.intToBytesBE(version, 4));
     result.addAll(new VarInt(inputs.length).encode());
     for(TransactionInput input in inputs) {
@@ -96,7 +110,7 @@ class Transaction {
       result.addAll(output.encode());
     }
     result.addAll(Utils.intToBytesBE(lockTime, 4));
-    return result;
+    return new Uint8List.fromList(result);
   }
 }
 

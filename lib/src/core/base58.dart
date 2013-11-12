@@ -46,7 +46,7 @@ class Base58 {
     }
     
     // generate base 58 index list from input string
-    Uint8List input58 = new List(input.length);
+    List<int> input58 = new List(input.length);
     for(int i = 0 ; i < input.length ; i++) {
       int charint = ALPHABET.indexOf(input[i]);
       if(charint < 0) {
@@ -62,7 +62,7 @@ class Base58 {
     }
     
     // decode
-    Uint8List output = new List();
+    List<int> output = new List();
     // TODO
     int startAt = leadingZeroes;
     while(startAt < input58.length) {
@@ -78,7 +78,7 @@ class Base58 {
     while(output[zeroes++] == 0) {}
     output = output.sublist(zeroes - leadingZeroes - 1);
     
-    return output;
+    return new Uint8List.fromList(output);
   }
   
   /**
@@ -86,7 +86,7 @@ class Base58 {
    * returns number % 58 
    */
   static int _divmod58(Uint8List number, int startAt) {
-    Uint8List result = new List(number.length);
+    Uint8List result = new Uint8List(number.length);
     int remaining = 0;
     for(int i = startAt ; i < number.length ; i++) {
       int num = number[i] + (remaining << 8); //= number[i] + remaining * 16
@@ -101,12 +101,12 @@ class Base58 {
    * returns number % 256 
    */
   static int _divmod256(Uint8List number58, int startAt) {
-    Uint8List result = new List(number58.length);
+    Uint8List result = new Uint8List(number58.length);
     int remaining = 0;
     for(int i = startAt ; i < number58.length ; i++) {
       int num = number58[i] + 58 * remaining;
       number58[i] = num >> 8; //=num ~/ 256
-      remaining = num % 256;
+      remaining = num & 0xff;
     }
     return remaining;
   }

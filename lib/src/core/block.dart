@@ -12,13 +12,16 @@ class Block {
   int _nonce;
   List<Transaction> _txs;
   
+  int _height;
+  
   Block({ Sha256Hash hash,
           Sha256Hash previousBlock,
           Sha256Hash merkleRoot,
           int timestamp,
           int bits,
           int nonce,
-          List<Transaction> transactions}) {
+          List<Transaction> transactions,
+          int height}) {
     _hash = hash;
     _previous = previousBlock;
     _merkle = merkleRoot;
@@ -26,9 +29,7 @@ class Block {
     _bits = bits;
     _nonce = nonce;
     _txs = transactions;
-    if(hash == null) {
-      //TODO calculate hash
-    }
+    _height = height;
   }
   
   Sha256Hash get hash {
@@ -88,6 +89,15 @@ class Block {
   void set nonce(int nonce) {
     _nonce = nonce;
     _hash = null;
+  }
+  
+  int get height {
+    return _height;
+    //TODO implement
+  }
+  
+  void set height(int height) {
+    _height = height;
   }
   
   List<Transaction> get transactions {
@@ -154,8 +164,9 @@ class Block {
         int right = min(left + 1, levelSize - 1);
         Sha256Hash leftHash  = tree[levelOffset + left];
         Sha256Hash rightHash = tree[levelOffset + right];
-        Uint8List concat = leftHash.bytes;
-        concat.addAll(rightHash.bytes);
+        Uint8List concat = new Uint8List(leftHash.bytes.length + rightHash.bytes.length);
+        concat.replaceRange(0, leftHash.bytes.length, leftHash.bytes);
+        concat.replaceRange(leftHash.bytes.length, concat.length, rightHash.bytes);
         tree.add(Sha256Hash.createDouble(concat));
       }
       // Move to the next level.
@@ -165,24 +176,24 @@ class Block {
   }
   
   Uint8List _encodeHeader() {
-    Uint8List result = new List();
+    List<int> result = new List();
     result.addAll(Utils.intToBytesBE(version, 4));
     result.addAll(previousBlock.bytes);
     result.addAll(merkleRoot.bytes);
     result.addAll(Utils.intToBytesBE(timestamp, 4));
     result.addAll(Utils.intToBytesBE(bits, 4));
     result.addAll(Utils.intToBytesBE(nonce, 4));
-    return result;
+    return new Uint8List.fromList(result);
   }
   
   Uint8List encode() {
-    Uint8List result = new List();
+    List<int> result = new List();
     result.addAll(_encodeHeader());
     result.addAll(new VarInt(transactions.length).encode());
     for(Transaction tx in transactions) {
       result.addAll(tx.encode());
     }
-    return result;
+    return new Uint8List.fromList(result);
   }
 }
 

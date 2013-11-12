@@ -7,7 +7,7 @@ class Address {
   /**
    * Create a new address object.
    * 
-   * If version is set, the bytes will be treated as the payload (usually 20 bytes).
+   * If version is set, the bytes will be treated as the payload (usually 20  of RIPEMD-160).
    * If version is not set, the version will be extracted from the bytes (first) and 
    * the checksum (last four bytes) will be verified.
    */
@@ -33,19 +33,27 @@ class Address {
     if(!_validateChecksum(bytes)) {
       throw new Exception("Checksum failed.");
     }
-    _bytes = bytes.sublist(1, 21);
+    _bytes = new Uint8List.fromList(bytes.sublist(1, 21));
     _version = bytes[0];
+  }
+  
+  int get version {
+    return _version;
+  }
+  
+  Uint8List get hash160 {
+    return _bytes;
   }
   
   /**
    * Returns the base58 string.
    */
   String toString() {
-    Uint8List bytes = new List();
+    List<int> bytes = new List();
     bytes.add(_version);
     bytes.addAll(_bytes);
-    bytes.addAll(Utils.doubleDigest(bytes).sublist(0, 4));
-    return Base58.encode(bytes);
+    bytes.addAll(Utils.doubleDigest(new Uint8List.fromList(bytes)).sublist(0, 4));
+    return Base58.encode(new Uint8List.fromList(bytes));
   }
   
   /**
@@ -53,8 +61,8 @@ class Address {
    * bytes from the double-round SHA-256 checksum from the main bytes.
    */
   static bool _validateChecksum(Uint8List bytes) {
-    Uint8List payload = bytes.sublist(0, bytes.length - 4);
-    Uint8List checksum = bytes.sublist(bytes.length - 4);
+    List<int> payload = bytes.sublist(0, bytes.length - 4);
+    List<int> checksum = bytes.sublist(bytes.length - 4);
     if(Utils.equalLists(checksum, Utils.doubleDigest(payload).sublist(0, 4))) {
       return true;
     }

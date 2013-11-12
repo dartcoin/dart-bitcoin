@@ -27,9 +27,9 @@ class TransactionOutPoint {
   }
   
   Uint8List encode() {
-    Uint8List result = new List();
+    List<int> result = new List();
     result.addAll(txid.bytes);
     result.addAll(Utils.intToBytesBE(index, 4));
-    return result;
+    return new Uint8List.fromList(result);
   }
 }

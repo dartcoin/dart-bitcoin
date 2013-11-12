@@ -17,11 +17,11 @@ class TransactionInput {
   }
   
   Uint8List encode() {
-    Uint8List result = new List();
+    List<int> result = new List();
     result.addAll(outpoint.encode());
     result.addAll(new VarInt(scriptLength).encode());
     result.addAll(scriptSig.encode());
     result.addAll(Utils.intToBytesBE(sequence, 4));
-    return result;
+    return new Uint8List.fromList(result);
   }
 }

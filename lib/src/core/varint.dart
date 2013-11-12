@@ -13,7 +13,7 @@ class VarInt {
   }
   
   Uint8List encode() {
-    Uint8List result;
+    List<int> result;
     if(value < 0xfd)        result =  [value];
     if(value <= 0xffff)     result = [253, 0, 0];
     if(value <= 0xffffffff) result = [254, 0, 0, 0, 0];
@@ -21,7 +21,7 @@ class VarInt {
     
     result.replaceRange(1, result.length, Utils.intToBytesLE(value));
     // sublist is necessary due to doubtful implementation of replaceRange
-    return result.sublist(0, size);
+    return new Uint8List.fromList(result.sublist(0, size));
   }
   
   static int sizeOf(int value) {
