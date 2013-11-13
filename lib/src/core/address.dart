@@ -1,20 +1,22 @@
 part of dartcoin;
 
 class Address {
+  
+  static final LENGTH = 20; // bytes (= 160 bits)
+  
   int _version;
   Uint8List _bytes;
   
   /**
    * Create a new address object.
    * 
-   * If version is set, the bytes will be treated as the payload (usually 20  of RIPEMD-160).
-   * If version is not set, the version will be extracted from the bytes (first) and 
-   * the checksum (last four bytes) will be verified.
+   * If bytes is of size 20, bytes is used as the hash160 and the mainnet version will be used.
+   * If bytes is of size 25, version and hash will be extracted and checksum verified.
    */
-  Address(Uint8List bytes, [int version]) {
-    if(bytes.length == 20 && version != null) {
+  Address(Uint8List bytes) {
+    if(bytes.length == 20) {
       _bytes = bytes;
-      _version = version;
+      _version = NetworkParameters.MAIN_NET.addressHeader;
       return;
     }
     if(_validateChecksum(bytes)) {
@@ -35,6 +37,12 @@ class Address {
     }
     _bytes = new Uint8List.fromList(bytes.sublist(1, 21));
     _version = bytes[0];
+  }
+  
+  Address.withNetworkParameters(Uint8List hash160, NetworkParameters params) {
+    if(hash160.length != 20 || params == null) throw new Exception();
+    _bytes = hash160;
+    _version = params.addressHeader;
   }
   
   int get version {
