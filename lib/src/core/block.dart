@@ -109,8 +109,12 @@ class Block {
     _merkle = null;
   }
   
+  bool get isHeader {
+    return transactions == null;
+  }
+  
   void _calculateHash() {
-    _hash = Sha256Hash.createDouble(_encodeHeader());
+    _hash = Sha256Hash.doubleDigest(_encodeHeader());
   }
   
   void _calculateMerkleRoot() {
@@ -167,12 +171,23 @@ class Block {
         Uint8List concat = new Uint8List(leftHash.bytes.length + rightHash.bytes.length);
         concat.replaceRange(0, leftHash.bytes.length, leftHash.bytes);
         concat.replaceRange(leftHash.bytes.length, concat.length, rightHash.bytes);
-        tree.add(Sha256Hash.createDouble(concat));
+        tree.add(Sha256Hash.doubleDigest(concat));
       }
       // Move to the next level.
       levelOffset += levelSize;
     }
     return tree;
+  }
+  
+  Block cloneAsHeader() {
+    Block block = new Block(
+        hash: hash, 
+        previousBlock: previousBlock,
+        merkleRoot: merkleRoot,
+        timestamp: timestamp,
+        bits: bits,
+        nonce: nonce);
+    return block;
   }
   
   Uint8List _encodeHeader() {
@@ -189,9 +204,11 @@ class Block {
   Uint8List encode() {
     List<int> result = new List();
     result.addAll(_encodeHeader());
-    result.addAll(new VarInt(transactions.length).encode());
-    for(Transaction tx in transactions) {
-      result.addAll(tx.encode());
+    if(!isHeader) {
+      result.addAll(new VarInt(transactions.length).encode());
+      for(Transaction tx in transactions) {
+        result.addAll(tx.encode());
+      }
     }
     return new Uint8List.fromList(result);
   }

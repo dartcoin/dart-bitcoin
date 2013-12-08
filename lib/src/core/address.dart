@@ -56,6 +56,7 @@ class Address {
   /**
    * Returns the base58 string.
    */
+  @override
   String toString() {
     List<int> bytes = new List();
     bytes.add(_version);

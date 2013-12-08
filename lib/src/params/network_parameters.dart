@@ -19,5 +19,6 @@ abstract class NetworkParameters {
   // NETWORK-SPECIFIC PARAMETERS
   
   int addressHeader;
+  int magicValue;
   
 }

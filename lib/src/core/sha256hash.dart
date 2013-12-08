@@ -9,24 +9,28 @@ class Sha256Hash {
     }
   }
   
-  static Sha256Hash create(Uint8List bytes) {
+  static Sha256Hash digest(Uint8List bytes) {
     return new Sha256Hash(Utils.singleDigest(bytes));
   }
   
-  static Sha256Hash createDouble(Uint8List bytes) {
+  static Sha256Hash doubleDigest(Uint8List bytes) {
     return new Sha256Hash(Utils.doubleDigest(bytes));
   }
-  
+
+  @override
   String toString() {
     return Utils.bytesToHex(bytes);
   }
-  
+
+  @override
   int get hashCode {
     return bytes[bytes.length-1] | (bytes[bytes.length-2] << 8) | (bytes[bytes.length-3] << 16) | (bytes[bytes.length-4] << 24); 
   }
   
+  @override
   bool operator ==(Sha256Hash other) {
-    if(identical(this,other)) return true;
+    if(identical(this,other)) 
+      return true;
     return Utils.equalLists(bytes, other.bytes);
   }
 }

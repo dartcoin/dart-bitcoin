@@ -95,7 +95,7 @@ class Transaction {
   }
   
   void _calculateHash() {
-    _hash = Sha256Hash.createDouble(encode());
+    _hash = Sha256Hash.doubleDigest(encode());
   }
   
   Uint8List encode() {

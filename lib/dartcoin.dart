@@ -1,6 +1,8 @@
 library dartcoin;
 
 
+import "dart:collection";
+import "dart:convert";
 import "dart:typed_data";
 import "dart:math";
 import "package:crypto/crypto.dart";
@@ -11,6 +13,7 @@ part "src/core/utils.dart";
 part "src/core/units.dart";
 part "src/core/sha256hash.dart";
 part "src/core/varint.dart";
+part "src/core/varstr.dart";
 
 // addresses and private keys
 part "src/core/address.dart";
