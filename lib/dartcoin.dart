@@ -14,6 +14,7 @@ part "src/core/units.dart";
 part "src/core/sha256hash.dart";
 part "src/core/varint.dart";
 part "src/core/varstr.dart";
+part "src/core/bitcoin_serialization.dart";
 
 // addresses and private keys
 part "src/core/address.dart";

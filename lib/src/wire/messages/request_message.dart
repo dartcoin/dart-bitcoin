@@ -18,7 +18,7 @@ abstract class RequestMessage extends Message {
   Uint8List encode_payload() {
     List<int> result = new List<int>();
     result.addAll(Utils.intToBytesLE(version, 4));
-    result.addAll(new VarInt(locators.length).encode());
+    result.addAll(new VarInt(locators.length).serialize());
     for(Sha256Hash hash in locators) {
       result.addAll(hash.bytes);
     }

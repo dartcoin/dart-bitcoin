@@ -126,10 +126,11 @@ class Utils {
   /**
    * Converts the big endian byte array to an unsigned integer.
    */
-  static int bytesToIntBE(Uint8List bytes) {
+  static int bytesToIntBE(Uint8List bytes, [int size]) {
+    if(size == null) size = bytes.length;
     int result = 0;
-    for(int i = 0 ; i < bytes.length ; i++) {
-      result += bytes[i] << (8 * (bytes.length - i - 1));
+    for(int i = 0 ; i < size ; i++) {
+      result += bytes[i] << (8 * (size - i - 1));
     }
     return result;
   }
@@ -137,9 +138,10 @@ class Utils {
   /**
    * Converts the little endian byte array to an unsigned integer.
    */
-  static int bytesToIntLE(Uint8List bytes) {
+  static int bytesToIntLE(Uint8List bytes, [int size]) {
+    if(size == null) size = bytes.length;
     int result = 0;
-    for(int i = 0; i < bytes.length ; i++) {
+    for(int i = 0; i < size ; i++) {
       result += bytes[i] << (8 * i);
     }
     return result;

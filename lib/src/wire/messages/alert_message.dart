@@ -48,9 +48,9 @@ class AlertMessage extends Message {
     result.addAll(Utils.intToBytesLE(maxVer, 4));
     //another set
     result.addAll(Utils.intToBytesLE(priority, 4));
-    result.addAll(new VarStr(comment).encode());
-    result.addAll(new VarStr(statusBar).encode());
-    result.addAll(new VarStr(reversed).encode());
+    result.addAll(new VarStr(comment).serialize());
+    result.addAll(new VarStr(statusBar).serialize());
+    result.addAll(new VarStr(reversed).serialize());
     return new Uint8List.fromList(result);
   }
   

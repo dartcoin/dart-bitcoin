@@ -8,12 +8,12 @@ class HeadersMessage extends Message {
   
   Uint8List encode_payload() {
     List<int> result = new List<int>();
-    result.addAll(new VarInt(headers.length).encode());
+    result.addAll(new VarInt(headers.length).serialize());
     for(Block header in headers) {
       if(header.isHeader)
-        result.addAll(header.encode());
+        result.addAll(header.serialize());
       else
-        result.addAll(header.cloneAsHeader().encode());
+        result.addAll(header.cloneAsHeader().serialize());
       result.add(0);
     }
     return new Uint8List.fromList(result);

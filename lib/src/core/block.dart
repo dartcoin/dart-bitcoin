@@ -1,10 +1,12 @@
 part of dartcoin;
 
-class Block {
+class Block extends Object with BitcoinSerialization {
+  
+  static const int HEADER_SIZE = 80;
   
   Sha256Hash _hash;
   
-  final int version = 0x01000000;
+  int _version = 0x01000000;
   Sha256Hash _previous;
   Sha256Hash _merkle;
   int _timestamp;
@@ -32,7 +34,17 @@ class Block {
     _height = height;
   }
   
+  factory Block.deserialize(Uint8List bytes, 
+      {int length: BitcoinSerialization.UNKNOWN_LENGTH, bool lazy: true}) => 
+          new BitcoinSerialization.deserialize(new Block(), bytes, length: length, lazy: lazy);
+  
+  int get version {
+    _needInstance();
+    return _version;
+  }
+  
   Sha256Hash get hash {
+    _needInstance();
     if(_hash == null) {
       _calculateHash();
     }
@@ -40,19 +52,23 @@ class Block {
   }
   
   void set hash(Sha256Hash hash) {
+    _needInstance();
     _hash = hash;
   }
   
   Sha256Hash get previousBlock {
+    _needInstance();
     return _previous;
   }
   
   void set previousBlock(Sha256Hash previousBlock) {
+    _needInstance();
     _previous = previousBlock;
     _hash = null;
   }
   
   Sha256Hash get merkleRoot {
+    _needInstance();
     if(_merkle == null) {
       _calculateMerkleRoot();
     }
@@ -60,33 +76,40 @@ class Block {
   }
   
   void set merkleRoot(Sha256Hash merkleRoot) {
+    _needInstance();
     _merkle = merkleRoot;
     _hash = null;
   }
   
   int get timestamp {
+    _needInstance();
     return _timestamp;
   }
   
   void set timestamp(int timestamp) {
+    _needInstance();
     _timestamp = timestamp;
     _hash = null;
   }
   
   int get bits {
+    _needInstance();
     return _bits;
   }
   
   void set bits(int bits) {
+    _needInstance();
     _bits = bits;
     _hash = null;
   }
   
   int get nonce {
+    _needInstance();
     return _nonce;
   }
   
   void set nonce(int nonce) {
+    _needInstance();
     _nonce = nonce;
     _hash = null;
   }
@@ -101,28 +124,39 @@ class Block {
   }
   
   List<Transaction> get transactions {
+    _needInstance();
     return _txs;
   }
   
   void set transactions(List<Transaction> transactions) {
+    _needInstance();
     _txs = transactions;
     _merkle = null;
   }
   
   bool get isHeader {
+    _needInstance();
     return transactions == null;
   }
   
   void _calculateHash() {
-    _hash = Sha256Hash.doubleDigest(_encodeHeader());
+    _needInstance();
+    _hash = Sha256Hash.doubleDigest(_serializeHeader());
   }
   
   void _calculateMerkleRoot() {
-    List<Sha256Hash> tree = _buildMerkleTree();
+    _needInstance();
+    // first add all tx hashes to the tree
+    List<Sha256Hash> tree = new List();
+    for(Transaction tx in transactions) {
+      tree.add(tx.hash);
+    }
+    // then complete the tree
+    _buildMerkleTree(tree);
     merkleRoot = tree.last;
   }
   
-  List<Sha256Hash> _buildMerkleTree() {
+  static List<Sha256Hash> _buildMerkleTree(List<Sha256Hash> tree) {
     // The Merkle root is based on a tree of hashes calculated from the transactions:
     //
     //     root
@@ -153,11 +187,6 @@ class Block {
     //    2     3    4  4
     //  / \   / \   / \
     // t1 t2 t3 t4 t5 t5
-    List<Sha256Hash> tree = new List();
-    // Start by adding all the hashes of the transactions as leaves of the tree.
-    for(Transaction tx in transactions) {
-      tree.add(tx.hash);
-    }
     int levelOffset = 0; // Offset in the list where the currently processed level starts.
     // Step through each level, stopping when we reach the root (levelSize == 1).
     for (int levelSize = tree.length; levelSize > 1; levelSize = (levelSize + 1) ~/ 2) {
@@ -180,17 +209,23 @@ class Block {
   }
   
   Block cloneAsHeader() {
-    Block block = new Block(
+    if(_isSerialized) {
+      List<int> bytes = serialize().sublist(0, 80);
+      bytes.add(0);
+      return new Block.deserialize(bytes, length: HEADER_SIZE + 1);
+    }
+    Block b = new Block(
         hash: hash, 
         previousBlock: previousBlock,
         merkleRoot: merkleRoot,
         timestamp: timestamp,
         bits: bits,
         nonce: nonce);
-    return block;
+    b._serializationLength = HEADER_SIZE + 1;
+    return b;
   }
   
-  Uint8List _encodeHeader() {
+  Uint8List _serializeHeader() {
     List<int> result = new List();
     result.addAll(Utils.intToBytesBE(version, 4));
     result.addAll(previousBlock.bytes);
@@ -201,16 +236,40 @@ class Block {
     return new Uint8List.fromList(result);
   }
   
-  Uint8List encode() {
+  void _deserializeHeader(Uint8List bytes) {
+    _version = Utils.bytesToIntBE(bytes.sublist(0, 4));
+    _previous = new Sha256Hash(bytes.sublist(4, 36));
+    _merkle = new Sha256Hash(bytes.sublist(36, 68));
+    _timestamp = Utils.bytesToIntBE(bytes.sublist(68), 4);
+    _bits = Utils.bytesToIntBE(bytes.sublist(72), 4);
+    _nonce = Utils.bytesToIntBE(bytes.sublist(76), 4);
+  }
+  
+  Uint8List _serialize() {
     List<int> result = new List();
-    result.addAll(_encodeHeader());
+    result.addAll(_serializeHeader());
     if(!isHeader) {
-      result.addAll(new VarInt(transactions.length).encode());
+      result.addAll(new VarInt(transactions.length).serialize());
       for(Transaction tx in transactions) {
-        result.addAll(tx.encode());
+        result.addAll(tx.serialize());
       }
     }
     return new Uint8List.fromList(result);
+  }
+  
+  void _deserialize(Uint8List bytes) {
+    _deserializeHeader(bytes);
+    // parse transactions
+    int offset = HEADER_SIZE;
+    _txs = new List<Transaction>();
+    VarInt nbTx = new VarInt.deserialize(bytes.sublist(offset), lazy: false);
+    offset += nbTx.serializationLength;
+    for(int i = 0 ; i < nbTx.value ; i++) {
+      Transaction tx = new Transaction.deserialize(bytes.sublist(offset));
+      offset += tx.serializationLength;
+      _txs.add(tx);
+    }
+    _serializationLength = offset;
   }
 }
 

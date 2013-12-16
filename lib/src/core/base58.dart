@@ -86,7 +86,6 @@ class Base58 {
    * returns number % 58 
    */
   static int _divmod58(Uint8List number, int startAt) {
-    Uint8List result = new Uint8List(number.length);
     int remaining = 0;
     for(int i = startAt ; i < number.length ; i++) {
       int num = number[i] + (remaining << 8); //= number[i] + remaining * 16
@@ -101,7 +100,6 @@ class Base58 {
    * returns number % 256 
    */
   static int _divmod256(Uint8List number58, int startAt) {
-    Uint8List result = new Uint8List(number58.length);
     int remaining = 0;
     for(int i = startAt ; i < number58.length ; i++) {
       int num = number58[i] + 58 * remaining;

@@ -1,14 +1,16 @@
 part of dartcoin;
 
-class VarInt extends Object with ByteRepresentation {
+class VarInt extends Object with BitcoinSerialization {
   
   int _value;
   
   VarInt(int this._value) {
-    if(_value < 0) throw new Exception("VarInt values should be at elast 0!");
+    if(_value < 0) throw new Exception("VarInt values should be at least 0!");
   }
   
-  factory VarInt.decode(Uint8List bytes) => _fromBytes(bytes);
+  factory VarInt.deserialize(Uint8List bytes, 
+      {int length: BitcoinSerialization.UNKNOWN_LENGTH, bool lazy: true}) => 
+      new BitcoinSerialization.deserialize(new VarInt(0), bytes, length: length, lazy: lazy);
   
   int get value {
     _needInstance();
@@ -20,9 +22,19 @@ class VarInt extends Object with ByteRepresentation {
     return sizeOf(this._value);
   }
   
-  void _decode(Uint8List bytes) {
-    if(bytes.length < 1 || bytes.length > 9)
-      throw new Exception("VarInt are at least 1 and at most 9 bytes.");
+  Uint8List _serialize() {
+    List<int> result;
+    if(_value < 0xfd)        result =  [_value];
+    if(_value <= 0xffff)     result = [253, 0, 0];
+    if(_value <= 0xffffffff) result = [254, 0, 0, 0, 0];
+    if(result == null)       result = [255, 0, 0, 0, 0, 0, 0, 0, 0];
+    
+    result.replaceRange(1, result.length, Utils.intToBytesLE(_value, result.length + 1));
+    // sublist is necessary due to doubtful implementation of replaceRange
+    return new Uint8List.fromList(result.sublist(0, size));
+  }
+  
+  void _deserialize(Uint8List bytes) {
     if(bytes[0] == 253) {
       _value = Utils.bytesToIntLE(bytes.sublist(1, 3));
       return;
@@ -38,16 +50,11 @@ class VarInt extends Object with ByteRepresentation {
     _value = bytes[0];
   }
   
-  Uint8List _encode() {
-    List<int> result;
-    if(_value < 0xfd)        result =  [_value];
-    if(_value <= 0xffff)     result = [253, 0, 0];
-    if(_value <= 0xffffffff) result = [254, 0, 0, 0, 0];
-    if(result == null)      result = [255, 0, 0, 0, 0, 0, 0, 0, 0];
-    
-    result.replaceRange(1, result.length, Utils.intToBytesLE(_value));
-    // sublist is necessary due to doubtful implementation of replaceRange
-    return new Uint8List.fromList(result.sublist(0, size));
+  int _lazySerializationLength(Uint8List bytes) {
+    if(bytes[0] == 253) return 3;
+    if(bytes[0] == 254) return 5;
+    if(bytes[0] == 255) return 9;
+    return 1;
   }
   
   static int sizeOf(int value) {
