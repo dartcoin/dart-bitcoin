@@ -98,7 +98,7 @@ class ScriptExecutor {
             break;
           
           case ScriptOpCodes.OP_1NEGATE:
-            stack.add(new Uint8List.fromList(Utils.encodeMPI(-1, false).reversed));
+            stack.add(new Uint8List.fromList(Utils.encodeMPI(new BigInteger(-1), false).reversed));
             break;
 
           case ScriptOpCodes.OP_1:
@@ -117,7 +117,7 @@ class ScriptExecutor {
           case ScriptOpCodes.OP_14:
           case ScriptOpCodes.OP_15:
           case ScriptOpCodes.OP_16:
-            stack.add(new Uint8List.fromList(Utils.encodeMPI(Script.decodeFromOpN(opcode), false).reversed));
+            stack.add(new Uint8List.fromList(Utils.encodeMPI(new BigInteger(Script.decodeFromOpN(opcode)), false).reversed));
             break;
           
           case ScriptOpCodes.OP_NOP:
@@ -216,7 +216,7 @@ class ScriptExecutor {
             break;
 
           case ScriptOpCodes.OP_DEPTH:
-            stack.add(new Uint8List.fromList(Utils.encodeMPI(stack.length, false).reversed));
+            stack.add(new Uint8List.fromList(Utils.encodeMPI(new BigInteger(stack.length), false).reversed));
             break;
           
           case ScriptOpCodes.OP_DROP:
@@ -294,7 +294,7 @@ class ScriptExecutor {
           case ScriptOpCodes.OP_SIZE:
             if (stack.length < 1)
               throw new Exception("Attempted OP_SIZE on an empty stack");
-            stack.add(new Uint8List.fromList(Utils.encodeMPI(stack.last.length, false).reversed));
+            stack.add(new Uint8List.fromList(Utils.encodeMPI(new BigInteger(stack.last.length), false).reversed));
             break;
             
           case ScriptOpCodes.OP_INVERT:
@@ -356,7 +356,7 @@ class ScriptExecutor {
                 throw new Exception("Unreacheable.");
             }
             
-            stack.add(new Uint8List.fromList(Utils.encodeMPI(numericOPnum, false).reversed));
+            stack.add(new Uint8List.fromList(Utils.encodeMPI(new BigInteger(numericOPnum), false).reversed));
             break;
             
           case ScriptOpCodes.OP_2MUL:
@@ -452,7 +452,7 @@ class ScriptExecutor {
                 throw new Exception("Opcode switched at runtime?");
             }
             
-            stack.add(new Uint8List.fromList(Utils.encodeMPI(numericOPresult, false).reversed));
+            stack.add(new Uint8List.fromList(Utils.encodeMPI(new BigInteger(numericOPresult), false).reversed));
             break;
             
           case ScriptOpCodes.OP_MUL:
@@ -479,9 +479,9 @@ class ScriptExecutor {
             int OPWITHINnum2 = _castToInt(stack.removeLast());
             int OPWITHINnum1 = _castToInt(stack.removeLast());
             if (OPWITHINnum2 <= OPWITHINnum1 && OPWITHINnum1 < OPWITHINnum3)
-              stack.add(new Uint8List.fromList(Utils.encodeMPI(1, false).reversed));
+              stack.add(new Uint8List.fromList(Utils.encodeMPI(BigInteger.ONE, false).reversed));
             else
-              stack.add(new Uint8List.fromList(Utils.encodeMPI(0, false).reversed));
+              stack.add(new Uint8List.fromList(Utils.encodeMPI(BigInteger.ZERO, false).reversed));
             break;
               
           case ScriptOpCodes.OP_RIPEMD160:
@@ -547,7 +547,7 @@ class ScriptExecutor {
           throw new Exception("Stack size exceeded range");
       }
     
-      if (!ifStack.isEmpty())
+      if (!ifStack.isEmpty)
         throw new Exception("OP_IF/OP_NOTIF without OP_ENDIF");
   }
   
