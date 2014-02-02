@@ -1,4 +1,4 @@
-part of dartcoin;
+part of dartcoin.core;
 
 class Transaction extends Object with BitcoinSerialization {
   

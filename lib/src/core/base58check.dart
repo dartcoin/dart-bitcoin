@@ -1,4 +1,4 @@
-part of dartcoin;
+part of dartcoin.core;
 
 /**
  * Used for encoding en decoding bytestrings to the Base58Check encoding that Bitcoin uses.

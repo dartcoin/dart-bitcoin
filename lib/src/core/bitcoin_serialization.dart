@@ -1,4 +1,4 @@
-part of dartcoin;
+part of dartcoin.core;
 
 /**
  * Intended for mixin usage to enable lazy decoding in a class.
