@@ -1,5 +1,5 @@
 library dartcoin;
 
-export "core.dart";
+export "core/core.dart";
 
-export "wire.dart";
+export "wire/wire.dart";
