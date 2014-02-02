@@ -3,11 +3,9 @@ part of dartcoin;
 class TransactionOutput extends Object with BitcoinSerialization {
   
   int _value;
-  int _scriptLength; //TODO
   Script _scriptPubKey;
   
   TransactionOutput({ int value, 
-                      int scriptLength,
                       Script scriptPubKey}) {
     _value = value;
     _scriptPubKey = scriptPubKey;
@@ -17,14 +15,9 @@ class TransactionOutput extends Object with BitcoinSerialization {
       {int length: BitcoinSerialization.UNKNOWN_LENGTH, bool lazy: true}) =>
       new BitcoinSerialization.deserialize(new TransactionOutput(), bytes, length: length, lazy: lazy);
   
-  int get value{
+  int get value {
     _needInstance();
     return _value;
-  }
-  
-  int get scriptLength { //TODO needed?
-    _needInstance();
-    return _scriptLength;
   }
   
   Script get scriptPubKey {
@@ -33,16 +26,17 @@ class TransactionOutput extends Object with BitcoinSerialization {
   } 
   
   Uint8List _serialize() {
-    List<int> result = new List();
-    result.addAll(Utils.intToBytesBE(value, 8));
-    result.addAll(new VarInt(scriptLength).serialize());
-    result.addAll(scriptPubKey.encode());
+    Uint8List encodedScript = scriptPubKey.encode();
+    List<int> result = new List()
+      ..addAll(Utils.uintToBytesBE(value, 8))
+      ..addAll(new VarInt(encodedScript.length).serialize())
+      ..addAll(scriptPubKey.encode());
     return new Uint8List.fromList(result);
   }
   
   void _deserialize(Uint8List bytes) {
     int offset = 0;
-    _value = Utils.bytesToIntBE(bytes, 4);
+    _value = Utils.bytesToUintBE(bytes, 4);
     offset += 4;
     VarInt scrLn = new VarInt.deserialize(bytes.sublist(offset), lazy: false);
     offset += scrLn.serializationLength;
@@ -53,7 +47,7 @@ class TransactionOutput extends Object with BitcoinSerialization {
   
   int _lazySerializationLength(Uint8List bytes) {
     int offset = 0;
-    _value = Utils.bytesToIntBE(bytes, 4);
+    _value = Utils.bytesToUintBE(bytes, 4);
     offset += 4;
     VarInt scrLn = new VarInt.deserialize(bytes.sublist(offset), lazy: false);
     return offset + scrLn.value;

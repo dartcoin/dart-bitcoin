@@ -1,6 +1,5 @@
 part of dartcoin;
 
-
 class Utils {
   
   /**
@@ -34,6 +33,15 @@ class Utils {
     Uint8List result = new Uint8List(20);
     digest.doFinal(result, 0);
     return result;
+  }
+  
+  /**
+   * Calculates the SHA-1 hash of the given input.
+   */
+  static Uint8List sha1Digest(Uint8List input) {
+    SHA1 digest = new SHA1();
+    digest.add(input);
+    return new Uint8List.fromList(digest.close());
   }
   
   /**
@@ -73,12 +81,34 @@ class Utils {
     }
     return new Uint8List.fromList(result);
   }
+
+
+  /** The string that prefixes all text messages signed using Bitcoin keys. */
+  static final String BITCOIN_SIGNED_MESSAGE_HEADER = "Bitcoin Signed Message:\n";
+  static final Uint8List BITCOIN_SIGNED_MESSAGE_HEADER_BYTES = new Uint8List.fromList(new Utf8Encoder().convert(BITCOIN_SIGNED_MESSAGE_HEADER));
+
+  /**
+   * <p>Given a textual message, returns a byte buffer formatted as follows:</p>
+   *
+   * <tt><p>[24] "Bitcoin Signed Message:\n" [message.length as a varint] message</p></tt>
+   */
+  static Uint8List formatMessageForSigning(String message) {
+    List<int> result = new List<int>();
+    result.add(BITCOIN_SIGNED_MESSAGE_HEADER_BYTES.length);
+    result.addAll(BITCOIN_SIGNED_MESSAGE_HEADER_BYTES);
+    Uint8List messageBytes = new Uint8List.fromList(new Utf8Encoder().convert(message));
+    VarInt size = new VarInt(messageBytes.length);
+    result.addAll(size.serialize());
+    result.addAll(messageBytes);
+    return new Uint8List.fromList(result);
+  }
   
   /**
    * Compare two lists, returns true if lists contain the same elements.
    * 
-   * "==" operator is used to compare the lists.
+   * "==" operator is used to compare the elements in the lists.
    */
+  //TODO replace with dart:collections/equality
   static bool equalLists(List list1, List list2) {
     if(list1.length != list2.length) {
       return false;
@@ -90,11 +120,27 @@ class Utils {
     }
     return true;
   }
+
+  /**
+   * The regular BigInteger.toByteArray() method isn't quite what we often need: it appends a
+   * leading zero to indicate that the number is positive and may need padding.
+   */
+  static Uint8List bigIntegerToBytes(BigInteger b, int numBytes) {
+    if (b == null) {
+      return null;
+    }
+    Uint8List bytes = new Uint8List(numBytes);
+    Uint8List biBytes = new Uint8List.fromList(b.toByteArray());
+    int start = (biBytes.length == numBytes + 1) ? 1 : 0;
+    int length = min(biBytes.length, numBytes);
+    bytes.setRange(numBytes - length, numBytes, biBytes.sublist(start, start + length));
+    return bytes;
+  }
   
   /**
    * Converts the integer to a byte array in little endian. Ony positive integers allowed.
    */
-  static Uint8List intToBytesLE(int val, [int size = -1]) {
+  static Uint8List uintToBytesLE(int val, [int size = -1]) {
     if(val < 0) throw new Exception("Only positive values allowed.");
     List<int> result = new List();
     while(val > 0) {
@@ -110,7 +156,7 @@ class Utils {
   /**
    * Converts the integer to a byte array in big endian. Ony positive integers allowed.
    */
-  static Uint8List intToBytesBE(int val, [int size = -1]) {
+  static Uint8List uintToBytesBE(int val, [int size = -1]) {
     if(val < 0) throw new Exception("Only positive values allowed.");
     List<int> result = new List();
     while(val > 0) {
@@ -126,7 +172,7 @@ class Utils {
   /**
    * Converts the big endian byte array to an unsigned integer.
    */
-  static int bytesToIntBE(Uint8List bytes, [int size]) {
+  static int bytesToUintBE(Uint8List bytes, [int size]) {
     if(size == null) size = bytes.length;
     int result = 0;
     for(int i = 0 ; i < size ; i++) {
@@ -138,12 +184,101 @@ class Utils {
   /**
    * Converts the little endian byte array to an unsigned integer.
    */
-  static int bytesToIntLE(Uint8List bytes, [int size]) {
+  static int bytesToUintLE(Uint8List bytes, [int size]) {
     if(size == null) size = bytes.length;
     int result = 0;
     for(int i = 0; i < size ; i++) {
       result += bytes[i] << (8 * i);
     }
     return result;
+  }
+  
+  //TODO
+  static Uint8List intTo2CBytes(int val, [int size]) {
+    if(val < 0) {
+      
+    }
+  }
+  
+  /**
+   * Converts the BE endian two's complement encoded bytes to an integer.
+   * 
+   * Size in number of bytes, not bits;
+   */
+  //TODO not a quite satisfactory implementation
+  static int bytesTo2CInt(Uint8List bytes, [int size]) {
+    if(size == null) size = bytes.length;
+    int result = bytesToUintBE(bytes, size);
+    if(bytes[0] >= 0x40) { // number is negative
+      result = result - pow(2, 8 * size);
+    }
+  }
+
+
+  /**
+   * MPI encoded numbers are produced by the OpenSSL BN_bn2mpi function. They consist of
+   * a 4 byte big endian length field, followed by the stated number of bytes representing
+   * the number in big endian format (with a sign bit).
+   * @param hasLength can be set to false if the given array is missing the 4 byte length field
+   */
+  static BigInteger decodeMPI(Uint8List mpi, bool hasLength) {
+    Uint8List buf;
+    if (hasLength) {
+      int length = bytesToUintBE(mpi, 4);
+      buf = mpi.sublist(4);
+    }
+    else {
+      buf = mpi;
+    }
+    if (buf.length == 0)
+      return BigInteger.ZERO;
+    bool isNegative = (buf[0] & 0x80) == 0x80;
+    if (isNegative)
+      buf[0] &= 0x7f;
+    BigInteger result = new BigInteger(buf);
+    return isNegative ? -1 * result.negate_op() : result;
+  }
+  
+  /**
+   * MPI encoded numbers are produced by the OpenSSL BN_bn2mpi function. They consist of
+   * a 4 byte big endian length field, followed by the stated number of bytes representing
+   * the number in big endian format (with a sign bit).
+   * @param includeLength indicates whether the 4 byte length field should be included
+   */
+  static Uint8List encodeMPI(BigInteger value, bool includeLength) {
+    if (value == 0) {
+      if (!includeLength)
+        return new Uint8List(0);
+      else
+        return new Uint8List(4);
+    }
+    bool isNegative = value.compareTo(BigInteger.ZERO) < 0;
+    if (isNegative)
+      value = value.negate_op();
+    Uint8List array = value.toByteArray();
+    int length = array.length;
+    if ((array[0] & 0x80) == 0x80)
+      length++;
+    if (includeLength) {
+      Uint8List result = new Uint8List(length + 4);
+      result.setRange(length - array.length + 3, length + 3, array);
+      result.setRange(0, 4, uintToBytesBE(length, 4));
+      if (isNegative)
+        result[4] |= 0x80;
+      return result;
+    }
+    else {
+      Uint8List result;
+      if (length != array.length) {
+        result = new Uint8List(length);
+        result.setRange(1, array.length + 1, array);
+      }
+      else {
+        result = array;
+      }
+      if (isNegative)
+        result[0] |= 0x80;
+      return result;
+    }
   }
 }

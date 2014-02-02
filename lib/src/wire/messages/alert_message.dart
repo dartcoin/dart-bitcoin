@@ -38,23 +38,23 @@ class AlertMessage extends Message {
   
   Uint8List _constructMessage() {
     List<int> result = new List<int>();
-    result.addAll(Utils.intToBytesLE(version, 4));
-    result.addAll(Utils.intToBytesLE(relayUntil, 8));
-    result.addAll(Utils.intToBytesLE(expiration, 8));
-    result.addAll(Utils.intToBytesLE(id, 4));
-    result.addAll(Utils.intToBytesLE(cancel, 4));
+    result.addAll(Utils.uintToBytesLE(version, 4));
+    result.addAll(Utils.uintToBytesLE(relayUntil, 8));
+    result.addAll(Utils.uintToBytesLE(expiration, 8));
+    result.addAll(Utils.uintToBytesLE(id, 4));
+    result.addAll(Utils.uintToBytesLE(cancel, 4));
     //TODO how to encode the sets?
-    result.addAll(Utils.intToBytesLE(minVer, 4));
-    result.addAll(Utils.intToBytesLE(maxVer, 4));
+    result.addAll(Utils.uintToBytesLE(minVer, 4));
+    result.addAll(Utils.uintToBytesLE(maxVer, 4));
     //another set
-    result.addAll(Utils.intToBytesLE(priority, 4));
+    result.addAll(Utils.uintToBytesLE(priority, 4));
     result.addAll(new VarStr(comment).serialize());
     result.addAll(new VarStr(statusBar).serialize());
     result.addAll(new VarStr(reversed).serialize());
     return new Uint8List.fromList(result);
   }
   
-  Uint8List encode_payload() {
+  Uint8List _serialize_payload() {
     List<int> result = new List<int>();
     result.addAll(message);
     result.addAll(signature);

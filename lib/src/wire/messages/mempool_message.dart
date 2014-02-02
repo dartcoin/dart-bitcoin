@@ -4,7 +4,7 @@ class MemPoolMessage extends Message {
   
   MemPoolMessage() : super("mempool");
   
-  Uint8List encode_payload() {
+  Uint8List _serialize_payload() {
     return new Uint8List(0);
   }
 }

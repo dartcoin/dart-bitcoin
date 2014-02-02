@@ -1,7 +1,11 @@
 name: dartcoin
-author: Steven Roose
-description: A Bitcoin library for Dart.
+version: 0.0.0
+author: Steven Roose <stevenroose@gmail.com>
+description: A Bitcoin library for Dart. Pub-test release.
 homepage: http://www.dartcoin.org/
 dependencies:
-  cipher: any
+  bignum: '>=0.0.4'
+  cipher: '>=0.5.1'
   crypto: any
+  json: any
+  json_rpc: any

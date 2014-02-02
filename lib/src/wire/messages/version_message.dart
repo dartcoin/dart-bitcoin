@@ -9,7 +9,7 @@ class VersionMessage extends Message {
     
   }
   
-  Uint8List encode_payload() {
+  Uint8List _serialize_payload() {
     
   }
 }

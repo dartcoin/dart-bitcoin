@@ -116,7 +116,6 @@ class Block extends Object with BitcoinSerialization {
   
   int get height {
     return _height;
-    //TODO implement
   }
   
   void set height(int height) {
@@ -227,22 +226,22 @@ class Block extends Object with BitcoinSerialization {
   
   Uint8List _serializeHeader() {
     List<int> result = new List();
-    result.addAll(Utils.intToBytesBE(version, 4));
+    result.addAll(Utils.uintToBytesBE(version, 4));
     result.addAll(previousBlock.bytes);
     result.addAll(merkleRoot.bytes);
-    result.addAll(Utils.intToBytesBE(timestamp, 4));
-    result.addAll(Utils.intToBytesBE(bits, 4));
-    result.addAll(Utils.intToBytesBE(nonce, 4));
+    result.addAll(Utils.uintToBytesBE(timestamp, 4));
+    result.addAll(Utils.uintToBytesBE(bits, 4));
+    result.addAll(Utils.uintToBytesBE(nonce, 4));
     return new Uint8List.fromList(result);
   }
   
   void _deserializeHeader(Uint8List bytes) {
-    _version = Utils.bytesToIntBE(bytes.sublist(0, 4));
+    _version = Utils.bytesToUintBE(bytes.sublist(0, 4));
     _previous = new Sha256Hash(bytes.sublist(4, 36));
     _merkle = new Sha256Hash(bytes.sublist(36, 68));
-    _timestamp = Utils.bytesToIntBE(bytes.sublist(68), 4);
-    _bits = Utils.bytesToIntBE(bytes.sublist(72), 4);
-    _nonce = Utils.bytesToIntBE(bytes.sublist(76), 4);
+    _timestamp = Utils.bytesToUintBE(bytes.sublist(68), 4);
+    _bits = Utils.bytesToUintBE(bytes.sublist(72), 4);
+    _nonce = Utils.bytesToUintBE(bytes.sublist(76), 4);
   }
   
   Uint8List _serialize() {

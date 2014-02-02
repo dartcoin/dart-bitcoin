@@ -12,7 +12,7 @@ class InventoryItem {
   
   Uint8List encode() {
     List<int> result = new List<int>();
-    result.addAll(Utils.intToBytesLE(type.value, 4));
+    result.addAll(Utils.uintToBytesLE(type.value, 4));
     result.addAll(hash.bytes);
     return new Uint8List.fromList(result);
   }

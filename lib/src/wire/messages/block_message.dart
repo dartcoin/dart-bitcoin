@@ -6,7 +6,15 @@ class BlockMessage extends Message {
   
   BlockMessage(Block this.block) : super("block");
   
-  Uint8List encode_payload() {
+  factory BlockMessage.deserialize(Uint8List bytes) {
+    
+  }
+  
+  static BlockMessage deserializex() {
+    return null;
+  }
+  
+  Uint8List _serialize_payload() {
     return block.serialize();
   }
 }

@@ -10,7 +10,7 @@ abstract class InventoryItemContainerMessage extends Message {
     }
   }
   
-  Uint8List encode_payload() {
+  Uint8List _serialize_payload() {
     List<int> result = new List<int>();
     result.addAll(new VarInt(items.length).serialize());
     for(InventoryItem item in items) {

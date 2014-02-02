@@ -17,9 +17,9 @@ class PongMessage extends Message {
     nonce != null;
   }
   
-  Uint8List encode_payload() {
+  Uint8List _serialize_payload() {
     if(hasNonce)
-      return Utils.intToBytesLE(nonce, 8);
+      return Utils.uintToBytesLE(nonce, 8);
     return new Uint8List(0);
   }
   

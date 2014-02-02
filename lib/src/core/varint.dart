@@ -29,22 +29,22 @@ class VarInt extends Object with BitcoinSerialization {
     if(_value <= 0xffffffff) result = [254, 0, 0, 0, 0];
     if(result == null)       result = [255, 0, 0, 0, 0, 0, 0, 0, 0];
     
-    result.replaceRange(1, result.length, Utils.intToBytesLE(_value, result.length + 1));
+    result.replaceRange(1, result.length, Utils.uintToBytesLE(_value, result.length + 1));
     // sublist is necessary due to doubtful implementation of replaceRange
     return new Uint8List.fromList(result.sublist(0, size));
   }
   
   void _deserialize(Uint8List bytes) {
     if(bytes[0] == 253) {
-      _value = Utils.bytesToIntLE(bytes.sublist(1, 3));
+      _value = Utils.bytesToUintLE(bytes.sublist(1, 3));
       return;
     }
     if(bytes[0] == 254) {
-      _value = Utils.bytesToIntLE(bytes.sublist(1, 5));
+      _value = Utils.bytesToUintLE(bytes.sublist(1, 5));
       return;
     }
     if(bytes[0] == 255) {
-      _value = Utils.bytesToIntLE(bytes.sublist(1, 9));
+      _value = Utils.bytesToUintLE(bytes.sublist(1, 9));
       return;
     }
     _value = bytes[0];

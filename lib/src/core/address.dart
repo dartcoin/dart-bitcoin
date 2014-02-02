@@ -10,37 +10,31 @@ class Address {
   /**
    * Create a new address object.
    * 
-   * If bytes is of size 20, bytes is used as the hash160 and the mainnet version will be used.
-   * If bytes is of size 25, version and hash will be extracted and checksum verified.
+   * The `address` parameter can either be of type String or Uint8List.
+   * 
+   * If String, the checksum will be verified.
+   * 
+   * If Uint8List of size 20, bytes is used as the hash160 and the mainnet version will be used.
+   * If Uint8List of size 25, version and hash will be extracted and checksum verified.
    */
-  Address(Uint8List bytes) {
-    if(bytes.length == 20) {
-      _bytes = bytes;
+  Address(dynamic address) {
+    if(address is String)
+      address = Base58Check.decode(address);
+    if(address is Uint8List && address.length == 20) {
+      _bytes = address;
       _version = NetworkParameters.MAIN_NET.addressHeader;
       return;
     }
-    if(_validateChecksum(bytes)) {
-      _bytes = bytes.sublist(1, bytes.length - 4);
-      _version = bytes[0];
+    if(address is Uint8List && _validateChecksum(address)) {
+      _bytes = address.sublist(1, address.length - 4);
+      _version = address[0];
       return;
     }
     throw new Exception("Format exception or failed checksum, read documentation!");
   }
   
-  /**
-   * Create a new address from a base58 string. Checksum will be verified.
-   */
-  Address.fromBase58(String address) {
-    Uint8List bytes = Base58.decode(address);
-    if(!_validateChecksum(bytes)) {
-      throw new Exception("Checksum failed.");
-    }
-    _bytes = new Uint8List.fromList(bytes.sublist(1, 21));
-    _version = bytes[0];
-  }
-  
   Address.withNetworkParameters(Uint8List hash160, NetworkParameters params) {
-    if(hash160.length != 20 || params == null) throw new Exception();
+    if(hash160.length != 20 || params == null) throw new Exception("Bad hash format. Must be 20 bytes long.");
     _bytes = hash160;
     _version = params.addressHeader;
   }
@@ -62,7 +56,7 @@ class Address {
     bytes.add(_version);
     bytes.addAll(_bytes);
     bytes.addAll(Utils.doubleDigest(new Uint8List.fromList(bytes)).sublist(0, 4));
-    return Base58.encode(new Uint8List.fromList(bytes));
+    return Base58Check.encode(new Uint8List.fromList(bytes));
   }
   
   /**

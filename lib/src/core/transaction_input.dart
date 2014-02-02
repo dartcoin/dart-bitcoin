@@ -3,20 +3,15 @@ part of dartcoin;
 class TransactionInput extends Object with BitcoinSerialization {
   
   TransactionOutPoint _outpoint;
-  int scriptLength; //TODO maybe store in Script class?
   Script _scriptSig;
   int _sequence;
   
   TransactionInput({TransactionOutPoint outpoint, 
-                    int this.scriptLength: null,
                     Script scriptSig,
                     int sequence: 0}) {
     _outpoint = outpoint;
     _scriptSig = scriptSig;
     _sequence = sequence;
-    if(scriptLength == null) {
-      //TODO calculate scriptLength
-    }
   }
   
   factory TransactionInput.deserialize(Uint8List bytes, 
@@ -39,11 +34,12 @@ class TransactionInput extends Object with BitcoinSerialization {
   }
   
   Uint8List _serialize() {
-    List<int> result = new List();
-    result.addAll(outpoint.serialize());
-    result.addAll(new VarInt(scriptLength).serialize());
-    result.addAll(scriptSig.encode());
-    result.addAll(Utils.intToBytesBE(sequence, 4));
+    Uint8List encodedScript = scriptSig.encode();
+    List<int> result = new List()
+      ..addAll(outpoint.serialize())
+      ..addAll(new VarInt(encodedScript.length).serialize())
+      ..addAll(scriptSig.encode())
+      ..addAll(Utils.uintToBytesBE(sequence, 4));
     return new Uint8List.fromList(result);
   }
   
@@ -55,7 +51,7 @@ class TransactionInput extends Object with BitcoinSerialization {
     offset += scrLn.serializationLength;
     _scriptSig = null;//TODO new Script.deserialize(bytes.sublist(offset), scrLn.value);
     offset += scrLn.value;
-    _sequence = Utils.bytesToIntBE(bytes.sublist(offset), 4);
+    _sequence = Utils.bytesToUintBE(bytes.sublist(offset), 4);
     offset += 4;
     _serializationLength = offset;
   }

@@ -8,13 +8,13 @@ class MultiSigOutputScript extends Script {
    * 
    * Standard multisig outputs have max 3 keys, but it is possible to add up to 16 keys.
    */
-  factory MultiSigOutputScript(int threshold, List<ECKey> pubkeys) {
+  factory MultiSigOutputScript(int threshold, List<KeyPair> pubkeys) {
     if(threshold <= 0 || threshold > pubkeys.length) throw new Exception("Invalid threshold value.");
     if(pubkeys.length > 16) throw new Exception("Maximum 16 public keys.");
     
     List<ScriptChunk> chunks = new List();
     chunks.add(new ScriptChunk.fromOpCode(Script.encodeToOpN(threshold)));
-    for(ECKey key in pubkeys) {
+    for(KeyPair key in pubkeys) {
       chunks.add(new ScriptChunk(false, key.publicKey));
     }
     chunks.add(new ScriptChunk.fromOpCode(Script.encodeToOpN(pubkeys.length)));
@@ -30,10 +30,10 @@ class MultiSigOutputScript extends Script {
     return Script.decodeFromOpN(chunks[0].data[0]);
   }
   
-  List<ECKey> get pubKeys {
-    List<ECKey> keys = new List();
+  List<KeyPair> get pubKeys {
+    List<KeyPair> keys = new List();
     for(int i = 0 ; i < (chunks.length - 3) ; i++) {
-      keys.add(new ECKey(publicKey: chunks[i+1].data));
+      keys.add(new KeyPair(chunks[i+1].data));
     }
     return keys;
   }

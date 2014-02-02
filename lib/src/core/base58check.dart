@@ -1,6 +1,11 @@
 part of dartcoin;
 
-class Base58 {
+/**
+ * Used for encoding en decoding bytestrings to the Base58Check encoding that Bitcoin uses.
+ * 
+ * More info can be found in the Bitcoin wiki: https://en.bitcoin.it/wiki/Base58Check_encoding
+ */
+class Base58Check {
   static final String ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
   
   // unused

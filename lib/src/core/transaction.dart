@@ -91,7 +91,7 @@ class Transaction extends Object with BitcoinSerialization {
   
   Uint8List _serialize() {
     List<int> result = new List();
-    result.addAll(Utils.intToBytesBE(version, 4));
+    result.addAll(Utils.uintToBytesBE(version, 4));
     result.addAll(new VarInt(inputs.length).serialize());
     for(TransactionInput input in inputs) {
       result.addAll(input.serialize());
@@ -100,13 +100,13 @@ class Transaction extends Object with BitcoinSerialization {
     for(TransactionInput output in outputs) {
       result.addAll(output.serialize());
     }
-    result.addAll(Utils.intToBytesBE(lockTime, 4));
+    result.addAll(Utils.uintToBytesBE(lockTime, 4));
     return new Uint8List.fromList(result);
   }
   
   void _deserialize(Uint8List bytes) {
     int offset = 0;
-    _version = Utils.bytesToIntBE(bytes.sublist(0), 4);
+    _version = Utils.bytesToUintBE(bytes.sublist(0), 4);
     offset += 4;
     _inputs = new List<TransactionInput>();
     VarInt nbInputs = new VarInt.deserialize(bytes.sublist(offset), lazy: false);
@@ -124,7 +124,7 @@ class Transaction extends Object with BitcoinSerialization {
       offset += output.serializationLength;
       _outputs.add(output);
     }
-    _lockTime = Utils.bytesToIntBE(bytes.sublist(offset), 4);
+    _lockTime = Utils.bytesToUintBE(bytes.sublist(offset), 4);
     offset += 4;
     _serializationLength = offset;
   }

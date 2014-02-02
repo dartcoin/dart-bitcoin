@@ -6,7 +6,7 @@ class TxMessage extends Message {
   
   TxMessage(Transaction this.tx) : super("tx");
   
-  Uint8List encode_payload() {
+  Uint8List _serialize_payload() {
     return tx.serialize();
   }
 }

@@ -6,7 +6,7 @@ class HeadersMessage extends Message {
   
   HeadersMessage(List<Block> this.headers) : super("headers");
   
-  Uint8List encode_payload() {
+  Uint8List _serialize_payload() {
     List<int> result = new List<int>();
     result.addAll(new VarInt(headers.length).serialize());
     for(Block header in headers) {
