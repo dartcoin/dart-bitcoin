@@ -6,6 +6,9 @@ homepage: http://www.dartcoin.org/
 dependencies:
   bignum: '>=0.0.4'
   cipher: '>=0.5.1'
+  collection: any
   crypto: any
   json: any
   json_rpc: any
+dev_dependencies:
+  unittest: any

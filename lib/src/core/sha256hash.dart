@@ -1,6 +1,9 @@
 part of dartcoin.core;
 
 class Sha256Hash {
+  
+  static final Sha256Hash ZERO_HASH = new Sha256Hash(new Uint8List(32));
+  
   final Uint8List bytes;
   
   Sha256Hash(Uint8List this.bytes) {
@@ -29,8 +32,8 @@ class Sha256Hash {
   
   @override
   bool operator ==(Sha256Hash other) {
-    if(identical(this,other)) 
-      return true;
+    if(!(other is Sha256Hash)) return false;
+    if(identical(this,other)) return true;
     return Utils.equalLists(bytes, other.bytes);
   }
 }

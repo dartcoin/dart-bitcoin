@@ -39,9 +39,9 @@ class TransactionOutPoint extends Object with BitcoinSerialization {
   }
   
   Uint8List _serialize() {
-    List<int> result = new List();
-    result.addAll(txid.bytes);
-    result.addAll(Utils.uintToBytesBE(index, 4));
+    List<int> result = new List()
+      ..addAll(txid.bytes)
+      ..addAll(Utils.uintToBytesBE(index, 4));
     return new Uint8List.fromList(result);
   }
   

@@ -7,6 +7,7 @@ import "dart:typed_data";
 import "dart:math";
 import "package:crypto/crypto.dart";
 import "package:bignum/bignum.dart";
+import "package:collection/equality.dart";
 
 import "package:cipher/api.dart";
 import "package:cipher/digests/ripemd160.dart";

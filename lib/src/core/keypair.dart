@@ -3,16 +3,16 @@ part of dartcoin.core;
 class KeyPair {
   
   static final ECCurve _CURVE = new fp.ECCurve(
-    new BigInteger("fffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2f"), //q
-    new BigInteger("0000000000000000000000000000000000000000000000000000000000000000"), //a
-    new BigInteger("0000000000000000000000000000000000000000000000000000000000000007") //b
+    new BigInteger("fffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2f", 16), //q
+    new BigInteger("0", 16), //a
+    new BigInteger("7", 16) //b
   );
   
   static final ECDomainParameters _ECPARAMS = new ECDomainParametersImpl("secp256k1", 
       _CURVE, 
-      _CURVE.decodePoint( new BigInteger("0479be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8").toByteArray() ), //G
-      new BigInteger("fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141"), //n
-      new BigInteger("01") //h
+      _CURVE.decodePoint( new BigInteger("0479be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8", 16).toByteArray() ), //G
+      new BigInteger("fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141", 16), //n
+      new BigInteger("1", 16) //h
   );
   
   static final BigInteger _HALF_CURVE_ORDER = new BigInteger("fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141").shiftRight(1);
@@ -129,8 +129,8 @@ class KeyPair {
    */
   Address toAddress([NetworkParameters params]) {
     if(params == null)
-      return new Address(Utils.sha256hash160(_pub));
-    return new Address.withNetworkParameters(Utils.sha256hash160(_pub), params);
+      return new Address(Utils.sha256hash160(publicKey));
+    return new Address.withNetworkParameters(Utils.sha256hash160(publicKey), params);
   }
   
   String toString() {
@@ -156,8 +156,10 @@ class KeyPair {
    */
   void clearPrivateKey() {
     _priv = null;
-    _encryptedPrivateKey.clear();
-    _encryptedPrivateKey = null;
+    if(_encryptedPrivateKey != null) {
+      _encryptedPrivateKey.clear();
+      _encryptedPrivateKey = null;
+    }
     _keyCrypter = null;
   }
   

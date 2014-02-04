@@ -3,12 +3,12 @@ part of dartcoin.core;
 class PayToAddressOutputScript extends Script {
   
   factory PayToAddressOutputScript(Address address) {
-    List<ScriptChunk> chunks = new List();
-    chunks.add(new ScriptChunk.fromOpCode(ScriptOpCodes.OP_DUP));
-    chunks.add(new ScriptChunk.fromOpCode(ScriptOpCodes.OP_HASH160));
-    chunks.add(new ScriptChunk(false, address.hash160));
-    chunks.add(new ScriptChunk.fromOpCode(ScriptOpCodes.OP_EQUALVERIFY));
-    chunks.add(new ScriptChunk.fromOpCode(ScriptOpCodes.OP_CHECKSIG));
+    List<ScriptChunk> chunks = new List()
+      ..add(new ScriptChunk.fromOpCode(ScriptOpCodes.OP_DUP))
+      ..add(new ScriptChunk.fromOpCode(ScriptOpCodes.OP_HASH160))
+      ..add(new ScriptChunk(false, address.hash160))
+      ..add(new ScriptChunk.fromOpCode(ScriptOpCodes.OP_EQUALVERIFY))
+      ..add(new ScriptChunk.fromOpCode(ScriptOpCodes.OP_CHECKSIG));
     return new Script.fromChunks(chunks);
   }
   

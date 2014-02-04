@@ -14,6 +14,10 @@ class TransactionInput extends Object with BitcoinSerialization {
     _sequence = sequence;
   }
   
+  TransactionInput.coinbase() {
+    _outpoint = new TransactionOutPoint(txid: Sha256Hash.ZERO_HASH, index: -1); //TODO verify
+  }
+  
   factory TransactionInput.deserialize(Uint8List bytes, 
       {int length: BitcoinSerialization.UNKNOWN_LENGTH, bool lazy: true}) =>
       new BitcoinSerialization.deserialize(new TransactionInput(), bytes, length: length, lazy: lazy);
@@ -31,6 +35,12 @@ class TransactionInput extends Object with BitcoinSerialization {
   int get sequence {
     _needInstance();
     return _sequence;
+  }
+  
+  bool get isCoinbase {
+    _needInstance();
+    return outpoint.txid == Sha256Hash.ZERO_HASH &&
+        (outpoint.index & 0xFFFFFFFF) == 0xFFFFFFFF;
   }
   
   Uint8List _serialize() {

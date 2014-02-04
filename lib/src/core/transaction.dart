@@ -90,9 +90,9 @@ class Transaction extends Object with BitcoinSerialization {
   }
   
   Uint8List _serialize() {
-    List<int> result = new List();
-    result.addAll(Utils.uintToBytesBE(version, 4));
-    result.addAll(new VarInt(inputs.length).serialize());
+    List<int> result = new List()
+      ..addAll(Utils.uintToBytesBE(version, 4))
+      ..addAll(new VarInt(inputs.length).serialize());
     for(TransactionInput input in inputs) {
       result.addAll(input.serialize());
     }

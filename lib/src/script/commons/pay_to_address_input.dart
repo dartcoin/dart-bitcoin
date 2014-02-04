@@ -3,9 +3,9 @@ part of dartcoin.core;
 class PayToAddressInputScript extends Script {
   
   factory PayToAddressInputScript(Uint8List signature, Uint8List pubKey) {
-    List<ScriptChunk> chunks = new List();
-    chunks.add(new ScriptChunk(false, signature));
-    chunks.add(new ScriptChunk(false, pubKey));
+    List<ScriptChunk> chunks = new List()
+      ..add(new ScriptChunk(false, signature))
+      ..add(new ScriptChunk(false, pubKey));
     return new Script.fromChunks(chunks);
   }
   
@@ -22,7 +22,7 @@ class PayToAddressInputScript extends Script {
   }
   
   Address get address {
-    return new Address(pubKey);
+    return new Address(pubKey);//TODO wrong
   }
   
   /**

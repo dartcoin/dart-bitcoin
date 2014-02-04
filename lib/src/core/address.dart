@@ -59,6 +59,22 @@ class Address {
     return Base58Check.encode(new Uint8List.fromList(bytes));
   }
   
+  @override
+  bool operator ==(Address other) {
+    if(!(other is Address)) return false;
+    if(version != other.version) return false;
+    return Utils.equalLists(hash160, other.hash160);
+  }
+  
+  @override
+  int get hashCode {
+    ListEquality<int> le = new ListEquality<int>();
+    List<int> allBytes = new List<int>()
+        ..add(version)
+        ..addAll(hash160);
+    return le.hash(allBytes);
+  }
+  
   /**
    * Validates the byte string. The last four bytes have to match the first four
    * bytes from the double-round SHA-256 checksum from the main bytes.

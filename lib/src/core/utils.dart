@@ -29,7 +29,6 @@ class Utils {
   static Uint8List ripemd160Digest(Uint8List input) {
     RIPEMD160Digest digest = new RIPEMD160Digest();
     digest.update(input, 0, input.length);
-    digest.finish();
     Uint8List result = new Uint8List(20);
     digest.doFinal(result, 0);
     return result;
