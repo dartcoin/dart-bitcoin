@@ -1,20 +1,35 @@
-part of dartcoin.wire;
+part of dartcoin.core;
 
 class PongMessage extends Message {
   
-  int nonce;
+  int _nonce;
   
-  PongMessage([int this.nonce = null]) : super("pong") {
+  PongMessage([int nonce = null]) : super("pong") {
     if(nonce != null && nonce < 0)
       throw new Exception("Nonce value should be at least zero");
+    _nonce = nonce;
   }
   
   PongMessage.fromPing(PingMessage ping) : super("pong") {
-    nonce = ping.nonce;
+    _nonce = ping.nonce;
+  }
+
+  factory PongMessage.deserialize(Uint8List bytes, {bool lazy: true}) => 
+      new BitcoinSerialization.deserialize(new PongMessage(), bytes, length: Message.HEADER_LENGTH + 8, lazy: lazy);
+  
+  int get nonce {
+    _needInstance();
+    return _nonce;
   }
   
   bool get hasNonce {
     nonce != null;
+  }
+  
+  void _deserialize(Uint8List bytes) {
+    int offset = Message._preparePayloadSerialization(bytes, this);
+    _nonce = Utils.bytesToUintLE(bytes.sublist(offset), 8);
+    _serializationLength = offset + 8;
   }
   
   Uint8List _serialize_payload() {

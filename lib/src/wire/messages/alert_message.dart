@@ -1,4 +1,4 @@
-part of dartcoin.wire;
+part of dartcoin.core;
 
 class AlertMessage extends Message {
   //TODO implement
@@ -24,16 +24,25 @@ class AlertMessage extends Message {
     this._message = message;
     this._signature = signature;
   }
+
+  factory AlertMessage.deserialize(Uint8List bytes, {int length: BitcoinSerialization.UNKNOWN_LENGTH, bool lazy: true}) => 
+          new BitcoinSerialization.deserialize(new AlertMessage(null, null), bytes, length: length, lazy: lazy);
   
   Uint8List get message {
+    _needInstance();
     if(_message == null)
       _message = _constructMessage();
     return _message;
   }
   
   Uint8List get signature {
+    _needInstance();
     //TODO implement signing. (only necessary if we suppose holders of the alert key are going to use dartcoin)
     return _signature;
+  }
+  
+  void _deserialize(Uint8List bytes) {
+    //TODO
   }
   
   Uint8List _constructMessage() {

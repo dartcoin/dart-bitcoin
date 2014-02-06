@@ -59,7 +59,6 @@ class VarInt extends Object with BitcoinSerialization {
   
   static int sizeOf(int value) {
     if(value < 0) throw new Exception("VarInt values should be at least 0!");
-    
     if(value < 0xfd) return 1;
     if(value <= 0xffff) return 3;
     if(value <= 0xffffffff) return 5;

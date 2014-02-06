@@ -2,12 +2,14 @@ part of dartcoin.core;
 
 class Sha256Hash {
   
+  static const int LENGTH = 32;
+  
   static final Sha256Hash ZERO_HASH = new Sha256Hash(new Uint8List(32));
   
   final Uint8List bytes;
   
   Sha256Hash(Uint8List this.bytes) {
-    if(bytes.length != 32) {
+    if(bytes.length != LENGTH) {
       throw new Exception("SHA-256 hashes are 32 bytes long.");
     }
   }

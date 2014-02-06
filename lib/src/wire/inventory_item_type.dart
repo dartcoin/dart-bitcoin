@@ -1,4 +1,4 @@
-part of dartcoin.wire;
+part of dartcoin.core;
 
 class InventoryItemType {
 

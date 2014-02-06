@@ -1,19 +1,45 @@
-part of dartcoin.wire;
+part of dartcoin.core;
 
-class InventoryItem {
+class InventoryItem extends Object with BitcoinSerialization {
   
-  final InventoryItemType type;
-  final Sha256Hash hash;
+  static const int SERIALIZATION_LENGTH = 4 + Sha256Hash.LENGTH;
   
-  InventoryItem(InventoryItemType this.type, Sha256Hash this.hash);
+  InventoryItemType _type;
+  Sha256Hash _hash;
+  
+  InventoryItem(InventoryItemType type, Sha256Hash hash) {
+    _type = type;
+    _hash = hash;
+  }
 
   InventoryItem.fromTransaction(Transaction tx) : this(InventoryItemType.MSG_TX, tx.hash);
   InventoryItem.fromBlock(Block block) : this(InventoryItemType.MSG_BLOCK, block.hash);
   
-  Uint8List encode() {
-    List<int> result = new List<int>();
-    result.addAll(Utils.uintToBytesLE(type.value, 4));
-    result.addAll(hash.bytes);
+  factory InventoryItem.deserialize(Uint8List bytes, {bool lazy: true}) => 
+          new BitcoinSerialization.deserialize(new InventoryItem(null, null), bytes, length: SERIALIZATION_LENGTH, lazy: lazy);
+  
+  InventoryItemType get type {
+    _needInstance();
+    return _type;
+  }
+  
+  Sha256Hash get hash {
+    _needInstance();
+    return _hash;
+  }
+  
+  void _deserialize(Uint8List bytes) {
+    _type = new InventoryItemType._(Utils.bytesToUintLE(bytes, 4));
+    _hash = new Sha256Hash(bytes.sublist(4, Sha256Hash.LENGTH + 4));
+  }
+  
+  @override
+  int _lazySerializationLength(Uint8List bytes) => SERIALIZATION_LENGTH;
+  
+  Uint8List _serialize() {
+    List<int> result = new List<int>()
+      ..addAll(Utils.uintToBytesLE(type.value, 4))
+      ..addAll(hash.bytes);
     return new Uint8List.fromList(result);
   }
 
