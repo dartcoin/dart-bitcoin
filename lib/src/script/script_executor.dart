@@ -13,9 +13,9 @@ class _ScriptExecutor {
     int opCount = 0;
     int lastCodeSepLoc = 0;
 
-    DoubleLinkedQueue<Uint8List> stack    = new DoubleLinkedQueue<Uint8List>();
-    ListQueue<Uint8List> altstack = new ListQueue<Uint8List>();//TODO rename
-    ListQueue<bool> ifStack  = new ListQueue<bool>();
+    DoubleLinkedQueue<Uint8List> stack = new DoubleLinkedQueue<Uint8List>();
+    ListQueue<Uint8List> altStack      = new ListQueue<Uint8List>();
+    ListQueue<bool> ifStack            = new ListQueue<bool>();
     
     // copy stack
     for(Uint8List item in inputStack) {
@@ -24,7 +24,6 @@ class _ScriptExecutor {
     
     // main loop for script execution
     for(ScriptChunk chunk in script.chunks) {
-      // TODO ??
       bool shouldExecute = !ifStack.contains(false);
       
       if(!chunk.isOpCode) {
@@ -140,13 +139,13 @@ class _ScriptExecutor {
           case ScriptOpCodes.OP_TOALTSTACK:
             if (stack.length < 1)
               throw new Exception("Attempted OP_TOALTSTACK on an empty stack");
-            altstack.add(stack.removeLast());
+            altStack.add(stack.removeLast());
             break;
 
           case ScriptOpCodes.OP_FROMALTSTACK:
-            if (altstack.length < 1)
+            if (altStack.length < 1)
               throw new Exception("Attempted OP_TOALTSTACK on an empty altstack");
-            stack.add(altstack.removeLast());
+            stack.add(altStack.removeLast());
             break;
 
           case ScriptOpCodes.OP_2DROP:
@@ -253,7 +252,7 @@ class _ScriptExecutor {
           case ScriptOpCodes.OP_ROLL:
             if (stack.length < 1)
               throw new Exception("Attempted OP_PICK/OP_ROLL on an empty stack");
-            int val = castToBigInteger(stack.removeLast());
+            int val = castToBigInteger(stack.removeLast()).intValue();
             if (val < 0 || val >= stack.length)
               throw new Exception("OP_PICK/OP_ROLL attempted to get data deeper than stack size");
             DoubleLinkedQueueEntry<Uint8List> cursor = stack.lastEntry();
@@ -546,7 +545,7 @@ class _ScriptExecutor {
           }
         }
         
-        if (stack.length + altstack.length > 1000 || stack.length + altstack.length < 0)
+        if (stack.length + altStack.length > 1000 || stack.length + altStack.length < 0)
           throw new Exception("Stack size exceeded range");
       }
     
@@ -567,8 +566,7 @@ class _ScriptExecutor {
     Uint8List prog = new Uint8List.fromList(script.bytes);
     Uint8List connectedScript = new Uint8List.fromList(prog.sublist(lastCodeSepLocation));
 
-    ScriptChunk sigChunk = new ScriptChunk(false, sigBytes);
-    connectedScript = removeAllInstancesOf(connectedScript, sigChunk.serialize());
+    connectedScript = removeAllInstancesOf(connectedScript, Script.encodeData(sigBytes));
 
     // TODO (from bitcoinj): Use int for indexes everywhere, we can't have that many inputs/outputs
     bool sigValid = false;
@@ -622,13 +620,11 @@ class _ScriptExecutor {
     // copying
     Uint8List prog = new Uint8List.fromList(script.bytes);
     Uint8List connectedScript = new Uint8List.fromList(prog.getRange(lastCodeSepLocation, prog.length));
-
+    
     for (Uint8List sig in sigs) {
-      UnsafeByteArrayOutputStream outStream = new UnsafeByteArrayOutputStream(sig.length + 1);
-      writeBytes(outStream, sig);
-      connectedScript = removeAllInstancesOf(connectedScript, outStream.toByteArray());
+      connectedScript = removeAllInstancesOf(connectedScript, Script.encodeData(sig));
     }
-
+    
     bool valid = true;
     while (sigs.length > 0) {
       Uint8List pubKey = pubkeys.removeFirst();

@@ -50,6 +50,29 @@ class Script {
     buf.writeAll(chunks, " ");
     return buf.toString();
   }
+
+  /**
+   * <p>Whether or not this is a scriptPubKey representing a pay-to-script-hash output. In such outputs, the logic that
+   * controls reclamation is not actually in the output at all. Instead there's just a hash, and it's up to the
+   * spending input to provide a program matching that hash. This rule is "soft enforced" by the network as it does
+   * not exist in Satoshis original implementation. It means blocks containing P2SH transactions that don't match
+   * correctly are considered valid, but won't be mined upon, so they'll be rapidly re-orgd out of the chain. This
+   * logic is defined by <a href="https://en.bitcoin.it/wiki/BIP_0016">BIP 16</a>.</p>
+   *
+   * <p>bitcoinj does not support creation of P2SH transactions today. The goal of P2SH is to allow short addresses
+   * even for complex scripts (eg, multi-sig outputs) so they are convenient to work with in things like QRcodes or
+   * with copy/paste, and also to minimize the size of the unspent output set (which improves performance of the
+   * Bitcoin system).</p>
+   */
+  bool get isPayToScriptHash {
+    // We have to check against the serialized form because BIP16 defines a P2SH output using an exact byte
+    // template, not the logical program structure. Thus you can have two programs that look identical when
+    // printed out but one is a P2SH script and the other isn't! :(
+    return bytes.length == 23 &&
+        (bytes[0]  & 0xff) == ScriptOpCodes.OP_HASH160 &&
+        (bytes[1]  & 0xff) == 0x14 &&
+        (bytes[22] & 0xff) == ScriptOpCodes.OP_EQUAL;
+  }
   
   void parse() {
     List<ScriptChunk> chunks = new List();
@@ -104,6 +127,25 @@ class Script {
       bytes.addAll(chunk.data);
     }
     return new Uint8List.fromList(bytes);
+  }
+  
+  static Uint8List encodeData(Uint8List data) {
+    List<int> result = new List<int>();
+    if(data.length < ScriptOpCodes.OP_PUSHDATA1) {
+      result.add(data.length);
+    }
+    else if(data.length <= 0xff) {
+      result.add(ScriptOpCodes.OP_PUSHDATA1);
+      result.add(data.length);
+    } else if (data.length <= 0xffff) {
+      result.add(ScriptOpCodes.OP_PUSHDATA2);
+      result.addAll(Utils.uintToBytesLE(data.length, 2));
+    } else {
+      result.add(ScriptOpCodes.OP_PUSHDATA4);
+      result.addAll(Utils.uintToBytesLE(data.length, 4));
+    }
+    result.addAll(data);
+    return new Uint8List.fromList(result);
   }
   
   static int decodeFromOpN(int opcode) {

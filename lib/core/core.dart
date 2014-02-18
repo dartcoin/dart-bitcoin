@@ -62,11 +62,12 @@ part "../src/script/script.dart";
 part "../src/script/script_chunk.dart";
 part "../src/script/script_op_codes.dart";
 part "../src/script/script_executor.dart";
-part "../src/script/commons/pay_to_address_output.dart";
-part "../src/script/commons/pay_to_address_input.dart";
-part "../src/script/commons/pay_to_pub_key_output.dart";
-part "../src/script/commons/pay_to_pub_key_input.dart";
-part "../src/script/commons/multisig_output.dart";
+part "../src/script/standard/pay_to_address_output.dart";
+part "../src/script/standard/pay_to_address_input.dart";
+part "../src/script/standard/pay_to_pub_key_output.dart";
+part "../src/script/standard/pay_to_pub_key_input.dart";
+part "../src/script/standard/pay_to_script_hash.dart";
+part "../src/script/standard/multisig_output.dart";
 
 // wire
 part "../src/wire/inventory_item.dart";

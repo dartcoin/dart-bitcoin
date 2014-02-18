@@ -44,23 +44,11 @@ class ScriptChunk {
   }
   
   Uint8List serialize() {
-    List<int> result = new List();
-    if(!isOpCode) {
-      if(data.length < ScriptOpCodes.OP_PUSHDATA1) {
-        result.add(data.length);
-      }
-      else if(data.length <= 0xff) {
-        result.add(ScriptOpCodes.OP_PUSHDATA1);
-        result.add(data.length);
-      } else if (data.length <= 0xffff) {
-        result.add(ScriptOpCodes.OP_PUSHDATA2);
-        result.addAll(Utils.uintToBytesLE(data.length, 2));
-      } else {
-        result.add(ScriptOpCodes.OP_PUSHDATA4);
-        result.addAll(Utils.uintToBytesLE(data.length, 4));
-      }
+    if(isOpCode) {
+      return data;
     }
-    result.addAll(data);
-    return new Uint8List.fromList(result);
+    else {
+      return Script.encodeData(data);
+    }
   }
 }

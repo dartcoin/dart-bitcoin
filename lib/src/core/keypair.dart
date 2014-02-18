@@ -128,8 +128,6 @@ class KeyPair {
    * If `params` is ommited, the MAINNET params will be used.
    */
   Address toAddress([NetworkParameters params]) {
-    if(params == null)
-      return new Address(Utils.sha256hash160(publicKey));
     return new Address(Utils.sha256hash160(publicKey), params);
   }
   
