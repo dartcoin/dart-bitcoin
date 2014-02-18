@@ -202,8 +202,8 @@ class KeyPair {
       else
         privateKeyForSigning = _priv;
     }
-
-    ECDSASigner signer = new ECDSASigner();
+    
+    ECDSASigner signer = _createSigner();
     PrivateKeyParameter privKey = new PrivateKeyParameter(new ECPrivateKey(privateKeyForSigning, _ECPARAMS));
     signer.init(true, privKey);
     ECSignature ecSig = signer.generateSignature(input.bytes);
@@ -223,7 +223,7 @@ class KeyPair {
   }
   
   static bool verifySignatureForPubkey(Uint8List data, ECDSASignature signature, Uint8List pubkey) {
-    ECDSASigner signer = new ECDSASigner();
+    ECDSASigner signer = _createSigner();
     PublicKeyParameter params = new PublicKeyParameter(new ECPublicKey(_ECPARAMS.curve.decodePoint(pubkey), _ECPARAMS));
     signer.init(false, params);
     ECSignature ecSig = new ECSignature(signature.r, signature.s);
@@ -312,6 +312,11 @@ class KeyPair {
   bool verifyMessage(String message, String signatureBase64) {
     KeyPair key = KeyPair.signedMessageToKey(message, signatureBase64);
     return Utils.equalLists(key.publicKey, publicKey);
+  }
+  
+  static ECDSASigner _createSigner() {
+    Mac signerMac = new HMac(new SHA256Digest(), 64); // = new Mac("SHA-256/HMAC")
+    return new ECDSASigner(null, signerMac);
   }
   
   
