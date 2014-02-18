@@ -9,12 +9,14 @@ class TransactionOutPoint extends Object with BitcoinSerialization {
   
   TransactionOutPoint({ Sha256Hash txid, 
                         int index,
-                        Transaction transaction}) {
+                        Transaction transaction,
+                        NetworkParameters params: NetworkParameters.MAIN_NET}) {
     _txid = txid;
     _index = index;
     _tx = transaction;
     if(transaction != null)
       txid = transaction.hash;
+    this.params = params;
   }
   
   factory TransactionOutPoint.deserialize(Uint8List bytes, {bool lazy: true}) =>
@@ -33,10 +35,20 @@ class TransactionOutPoint extends Object with BitcoinSerialization {
   Transaction get transaction {
     _needInstance();
     if(_tx == null) {
-      //TODO implement
+      //TODO implement or return null?
     }
     return _tx;
   }
+  
+  @override
+  operator ==(TransactionOutPoint other) {
+    if(!(other is TransactionOutPoint)) return false;
+    return txid == other.txid &&
+        index == other.index &&
+        (transaction == null || other.transaction == null || transaction == other.transaction);
+  }
+  
+  //TODO hashcode?
   
   Uint8List _serialize() {
     List<int> result = new List()

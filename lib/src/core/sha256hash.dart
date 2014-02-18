@@ -6,12 +6,22 @@ class Sha256Hash {
   
   static final Sha256Hash ZERO_HASH = new Sha256Hash(new Uint8List(32));
   
-  final Uint8List bytes;
+  Uint8List bytes;
   
-  Sha256Hash(Uint8List this.bytes) {
-    if(bytes.length != LENGTH) {
-      throw new Exception("SHA-256 hashes are 32 bytes long.");
+  /**
+   * The parameter for [hash] can be either a hexadecimal string or a [Uint8List] object.
+   */
+  Sha256Hash(dynamic hash) {
+    if(hash is String) {
+      if(hash.length != 2 * LENGTH)
+        throw new Exception("SHA-256 hashes are 64 hexadecimal characters long.");
+      hash = Utils.hexToBytes(hash);
     }
+    if(!(hash is Uint8List))
+      throw new Exception("Input parameter must be either a hexadecimal string or a [Uint8List] object.");
+    if(hash.length != LENGTH)
+      throw new Exception("SHA-256 hashes are 32 bytes long.");
+    bytes = hash;
   }
   
   static Sha256Hash digest(Uint8List bytes) {

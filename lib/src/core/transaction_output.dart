@@ -5,10 +5,16 @@ class TransactionOutput extends Object with BitcoinSerialization {
   int _value;
   Script _scriptPubKey;
   
+  Transaction _parent;
+  
   TransactionOutput({ int value, 
-                      Script scriptPubKey}) {
+                      Script scriptPubKey,
+                      Transaction parent,
+                      NetworkParameters params: NetworkParameters.MAIN_NET}) {
     _value = value;
     _scriptPubKey = scriptPubKey;
+    _parent = parent;
+    this.params = params;
   }
   
   factory TransactionOutput.deserialize(Uint8List bytes, 
@@ -23,7 +29,26 @@ class TransactionOutput extends Object with BitcoinSerialization {
   Script get scriptPubKey {
     _needInstance();
     return _scriptPubKey;
-  } 
+  }
+  
+  Transaction get parent {
+    return _parent;
+  }
+  
+  int get index {
+    if(_parent == null) throw new Exception("Parent tx not specified.");
+    parent.outputs.indexOf(parent.outputs.singleWhere((output) => output == this));
+  }
+  
+  @override
+  operator ==(TransactionOutput other) {
+    if(!(other is TransactionOutput)) return false;
+    return value == other.value &&
+        scriptPubKey == other.scriptPubKey &&
+        (parent == null || other.parent == null || parent == other.parent);
+  }
+  
+  //TODO hashcode?
   
   Uint8List _serialize() {
     Uint8List encodedScript = scriptPubKey.encode();

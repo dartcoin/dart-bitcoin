@@ -26,7 +26,6 @@ class ScriptChunk {
     return _data;
   }
   
-  //TODO implement setting these in parsing
   int get startLocationInProgram {
     return _startLocationInProgram;
   }

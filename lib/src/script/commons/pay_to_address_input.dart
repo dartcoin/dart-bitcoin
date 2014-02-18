@@ -9,7 +9,7 @@ class PayToAddressInputScript extends Script {
     return new Script.fromChunks(chunks);
   }
   
-  PayToAddressInputScript.convert(Script script) : super._fromBytes(script.bytes) {
+  PayToAddressInputScript.convert(Script script) : super(script.bytes) {
     if(!matchesType(script)) throw new Exception("Given script is not an instance of this script type.");
   }
   

@@ -18,6 +18,8 @@ abstract class BitcoinSerialization {
   bool retainSerialization = false;
   int _serializationLength = -1;
   
+  NetworkParameters _params;
+  
   /**
    * Serialize this object according to the Bitcoin protocol.
    */
@@ -92,4 +94,15 @@ abstract class BitcoinSerialization {
       _serialization = null;
     _isSerialized = false;
   }
+  
+  NetworkParameters get params {
+    return _params;
+  }
+  
+  void set params(NetworkParameters params) {
+    _params = params != null ? params : NetworkParameters.MAIN_NET;
+  }
 }
+
+
+

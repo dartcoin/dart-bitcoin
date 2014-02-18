@@ -130,7 +130,7 @@ class KeyPair {
   Address toAddress([NetworkParameters params]) {
     if(params == null)
       return new Address(Utils.sha256hash160(publicKey));
-    return new Address.withNetworkParameters(Utils.sha256hash160(publicKey), params);
+    return new Address(Utils.sha256hash160(publicKey), params);
   }
   
   String toString() {
@@ -221,8 +221,12 @@ class KeyPair {
    * larger than 520 bytes.</p>
    */
   bool verify(Uint8List data, ECDSASignature signature) {
+    return verifySignatureForPubkey(data, signature, _pub);
+  }
+  
+  static bool verifySignatureForPubkey(Uint8List data, ECDSASignature signature, Uint8List pubkey) {
     ECDSASigner signer = new ECDSASigner();
-    PublicKeyParameter params = new PublicKeyParameter(new ECPublicKey(_ECPARAMS.curve.decodePoint(_pub), _ECPARAMS));
+    PublicKeyParameter params = new PublicKeyParameter(new ECPublicKey(_ECPARAMS.curve.decodePoint(pubkey), _ECPARAMS));
     signer.init(false, params);
     ECSignature ecSig = new ECSignature(signature.r, signature.s);
     return signer.verifySignature(data, ecSig);

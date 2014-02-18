@@ -7,7 +7,7 @@ abstract class NetworkParameters {
   
   // USE THESE AS PARAMS
   
-  static final NetworkParameters MAIN_NET = new _MainNetParams();
+  static const NetworkParameters MAIN_NET = const _MainNetParams();
   
   
   // GLOBAL PARAMETERS
@@ -18,7 +18,9 @@ abstract class NetworkParameters {
   
   // NETWORK-SPECIFIC PARAMETERS
   
-  int addressHeader;
-  int magicValue;
+  final int addressHeader;
+  final int magicValue;
+  
+  const NetworkParameters._({int this.addressHeader, int this.magicValue});
   
 }

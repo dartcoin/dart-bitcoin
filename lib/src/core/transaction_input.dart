@@ -8,10 +8,12 @@ class TransactionInput extends Object with BitcoinSerialization {
   
   TransactionInput({TransactionOutPoint outpoint, 
                     Script scriptSig,
-                    int sequence: 0}) {
+                    int sequence: 0,
+                    NetworkParameters params: NetworkParameters.MAIN_NET}) {
     _outpoint = outpoint;
     _scriptSig = scriptSig;
     _sequence = sequence;
+    this.params = params;
   }
   
   TransactionInput.coinbase() {
@@ -42,6 +44,16 @@ class TransactionInput extends Object with BitcoinSerialization {
     return outpoint.txid == Sha256Hash.ZERO_HASH &&
         (outpoint.index & 0xFFFFFFFF) == 0xFFFFFFFF;
   }
+  
+  @override
+  operator ==(TransactionInput other) {
+    if(!(other is TransactionInput)) return false;
+    return outpoint == other.outpoint &&
+        scriptSig == other.scriptSig &&
+        sequence == other.sequence;
+  }
+  
+  //TODO hashcode
   
   Uint8List _serialize() {
     Uint8List encodedScript = scriptSig.encode();

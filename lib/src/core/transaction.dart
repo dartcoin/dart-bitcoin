@@ -13,11 +13,13 @@ class Transaction extends Object with BitcoinSerialization {
   Transaction({ Sha256Hash txid,
                 List<TransactionInput> inputs, 
                 List<TransactionOutput> outputs,
-                int lockTime}) {
+                int lockTime,
+                NetworkParameters params: NetworkParameters.MAIN_NET}) {
     _hash = txid;
     _inputs = inputs;
     _outputs = outputs;
     _lockTime = lockTime;
+    this.params = params;
   }
   
   factory Transaction.deserialize(Uint8List bytes, 
@@ -85,22 +87,136 @@ class Transaction extends Object with BitcoinSerialization {
     return totalIn - totalOut;
   }
   
+  @override
+  operator ==(Transaction other) {
+    if(!(other is Transaction)) return false;
+    return version == other.version && 
+        Utils.equalLists(inputs, other.inputs) && 
+        Utils.equalLists(outputs, other.outputs) &&
+        lockTime == other.lockTime;
+  }
+  
+  @override
+  int get hashCode {
+    // first 32 bits of txid hash
+    return txid.bytes[0] << 24 + txid.bytes[1] << 16 + txid.bytes[2] << 8 + txid.bytes[3];
+  }
+  
   void _calculateHash() {
     _hash = Sha256Hash.doubleDigest(serialize());
+  }
+  
+  Sha256Hash hashForSignature(int inputIndex, Uint8List connectedScript, int sigHashType) {
+    _needInstance();
+    // The SIGHASH flags are used in the design of contracts, please see this page for a further understanding of
+    // the purposes of the code in this method:
+    //
+    //   https://en.bitcoin.it/wiki/Contracts
+    
+    // Store all the input scripts and clear them in preparation for signing. If we're signing a fresh
+    // transaction that step isn't very helpful, but it doesn't add much cost relative to the actual
+    // EC math so we'll do it anyway.
+    //
+    // Also store the input sequence numbers in case we are clearing them with SigHash.NONE/SINGLE
+    List<Script> inputScripts = new List<Script>(_inputs.length);
+    List<int> inputSequenceNumbers = new List<int>(_inputs.length); //TODO java uses longs here, are int's fine or do we need Uint64's?
+    for (int i = 0; i < _inputs.length; i++) {
+      inputScripts[i] = _inputs[i].scriptSig;
+      inputSequenceNumbers[i] = _inputs[i].sequence;
+      _inputs[i]._scriptSig = Script.EMPTY_SCRIPT;
+    }
+
+    // This step has no purpose beyond being synchronized with the reference clients bugs. OP_CODESEPARATOR
+    // is a legacy holdover from a previous, broken design of executing scripts that shipped in Bitcoin 0.1.
+    // It was seriously flawed and would have let anyone take anyone elses money. Later versions switched to
+    // the design we use today where scripts are executed independently but share a stack. This left the
+    // OP_CODESEPARATOR instruction having no purpose as it was only meant to be used internally, not actually
+    // ever put into scripts. Deleting OP_CODESEPARATOR is a step that should never be required but if we don't
+    // do it, we could split off the main chain.
+    connectedScript = _ScriptExecutor.removeAllInstancesOfOp(connectedScript, ScriptOpCodes.OP_CODESEPARATOR);
+
+    // Set the input to the script of its output. Satoshi does this but the step has no obvious purpose as
+    // the signature covers the hash of the prevout transaction which obviously includes the output script
+    // already. Perhaps it felt safer to him in some way, or is another leftover from how the code was written.
+    TransactionInput input = _inputs[inputIndex];
+    input._scriptSig = new Script(connectedScript);
+
+    List<TransactionOutput> outputs = _outputs;
+    if ((sigHashType & 0x1f) == (SigHash.NONE.value + 1)) {
+      // SIGHASH_NONE means no outputs are signed at all - the signature is effectively for a "blank cheque".
+      _outputs = new List<TransactionOutput>(0);
+      // The signature isn't broken by new versions of the transaction issued by other parties.
+      for (int i = 0; i < _inputs.length; i++)
+        if (i != inputIndex)
+          _inputs[i]._sequence = 0;
+    } else if ((sigHashType & 0x1f) == (SigHash.SINGLE.value + 1)) {
+      // SIGHASH_SINGLE means only sign the output at the same index as the input (ie, my output).
+      if (inputIndex >= _outputs.length) {
+        // The input index is beyond the number of outputs, it's a buggy signature made by a broken
+        // Bitcoin implementation. The reference client also contains a bug in handling this case:
+        // any transaction output that is signed in this case will result in both the signed output
+        // and any future outputs to this public key being steal-able by anyone who has
+        // the resulting signature and the public key (both of which are part of the signed tx input).
+        // Put the transaction back to how we found it.
+        //
+        // TODO: (from bitcoinj) Only allow this to happen if we are checking a signature, not signing a transactions
+        for (int i = 0 ; i < _inputs.length ; i++) {
+          _inputs[i]._scriptSig = inputScripts[i];
+          _inputs[i]._sequence = inputSequenceNumbers[i];
+        }
+        _outputs = outputs;
+        // Satoshis bug is that SignatureHash was supposed to return a hash and on this codepath it
+        // actually returns the constant "1" to indicate an error, which is never checked for. Oops.
+        return new Sha256Hash("0100000000000000000000000000000000000000000000000000000000000000");
+      }
+      // In SIGHASH_SINGLE the outputs after the matching input index are deleted, and the outputs before
+      // that position are "nulled out". Unintuitively, the value in a "null" transaction is set to -1.
+      _outputs = _outputs.sublist(0, inputIndex + 1);
+      //TODO ^ this line originally was V in Java. Must explicit copying of the list be done? 
+      //this.outputs = new ArrayList<TransactionOutput>(this.outputs.subList(0, inputIndex + 1));
+      for (int i = 0; i < inputIndex; i++)
+        _outputs[i] = new TransactionOutput(value: BigInteger.ONE.negate_op(), scriptPubKey: Script.EMPTY_SCRIPT, parent: this, params: params);
+      // The signature isn't broken by new versions of the transaction issued by other parties.
+      for (int i = 0; i < _inputs.length; i++)
+        if (i != inputIndex)
+          _inputs[i]._sequence = 0;
+    }
+
+    List<TransactionInput> inputs = this.inputs;
+    if ((sigHashType & SigHash.ANYONE_CAN_PAY) == SigHash.ANYONE_CAN_PAY) {
+      // SIGHASH_ANYONECANPAY means the signature in the input is not broken by changes/additions/removals
+      // of other inputs. For example, this is useful for building assurance contracts.
+      _inputs = new List<TransactionInput>();
+      _inputs.add(input);
+    }
+    
+    List<int> toHash = new List<int>()
+      ..addAll(this.serialize())
+    // We also have to write a hash type (sigHashType is actually an unsigned char)
+      ..add(0x000000ff & sigHashType);
+    // Note that this is NOT reversed to ensure it will be signed correctly. If it were to be printed out
+    // however then we would expect that it is IS reversed.
+    Sha256Hash hash = new Sha256Hash(Utils.doubleDigest(toHash));
+
+    // Put the transaction back to how we found it.
+    _inputs = inputs;
+    for (int i = 0; i < inputs.length; i++) {
+      inputs[i]._scriptSig = inputScripts[i];
+      inputs[i]._sequence = inputSequenceNumbers[i];
+    }
+    _outputs = outputs;
+    return hash;
+    
   }
   
   Uint8List _serialize() {
     List<int> result = new List()
       ..addAll(Utils.uintToBytesBE(version, 4))
-      ..addAll(new VarInt(inputs.length).serialize());
-    for(TransactionInput input in inputs) {
-      result.addAll(input.serialize());
-    }
-    result.addAll(new VarInt(outputs.length).serialize());
-    for(TransactionInput output in outputs) {
-      result.addAll(output.serialize());
-    }
-    result.addAll(Utils.uintToBytesBE(lockTime, 4));
+      ..addAll(new VarInt(inputs.length).serialize())
+      ..addAll(inputs.map((input) => input.serialize()))
+      ..addAll(new VarInt(outputs.length).serialize())
+      ..addAll(outputs.map((output) => output.serialize()))
+      ..addAll(Utils.uintToBytesBE(lockTime, 4));
     return new Uint8List.fromList(result);
   }
   

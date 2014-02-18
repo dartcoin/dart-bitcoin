@@ -3,16 +3,12 @@ part of dartcoin.core;
 class Script {
   
   static final int MAX_SCRIPT_ELEMENT_SIZE = 520; //bytes
+  static final Script EMPTY_SCRIPT = new _ImmutableScript(new Uint8List(0));
   
   List<ScriptChunk> _chunks;
   Uint8List _bytes;
   
   Script(Uint8List bytes) {
-    _bytes = bytes;
-    _chunks = null;
-  }
-  
-  Script._fromBytes(Uint8List bytes) {
     _bytes = bytes;
     _chunks = null;
   }
@@ -29,12 +25,25 @@ class Script {
     return _bytes;
   }
   
+  void set bytes(Uint8List bytes) {
+    _bytes = bytes;
+    _chunks = null;
+  }
+  
   List<ScriptChunk> get chunks {
     if(_chunks == null) {
       parse();
     }
     return _chunks;
   }
+  
+  @override
+  operator ==(Script other) {
+    if(!(other is Script)) return false;
+    return Utils.equalLists(bytes, other.bytes);
+  }
+  
+  //TODO hashcode?
   
   String toString() {
     StringBuffer buf = new StringBuffer();
@@ -44,47 +53,46 @@ class Script {
   
   void parse() {
     List<ScriptChunk> chunks = new List();
-    List<int> revbuf = _bytes.reversed;
-    while(revbuf.length > 0) {
-      int opcode = revbuf.removeLast();
+    DoubleLinkedQueue<int> bytes = new DoubleLinkedQueue.from(_bytes); // because there is removeLast but not removeFirst
+    int initialSize = bytes.length;
+    
+    while(bytes.length > 0) {
+      int startLocationInProgram = initialSize - bytes.length;
+      int opcode = bytes.removeFirst();
       
       int dataToRead = -1;
       if(opcode >= 0 && opcode < ScriptOpCodes.OP_PUSHDATA1) {
         dataToRead = opcode;
       }
       else if(opcode == ScriptOpCodes.OP_PUSHDATA1) {
-        if(revbuf.length < 1) throw new Exception("Unexpected end of script");
-        dataToRead = revbuf.removeLast();
+        if(bytes.length < 1) throw new Exception("Unexpected end of script");
+        dataToRead = bytes.removeFirst();
       }
       else if(opcode == ScriptOpCodes.OP_PUSHDATA2) {
-        if(revbuf.length < 2) throw new Exception("Unexpected end of script");
-        dataToRead = revbuf.removeLast() | (revbuf.removeLast() << 8);
+        if(bytes.length < 2) throw new Exception("Unexpected end of script");
+        dataToRead = bytes.removeFirst() | (bytes.removeFirst() << 8);
       }
       else if(opcode == ScriptOpCodes.OP_PUSHDATA4) {
-        if(revbuf.length < 2) throw new Exception("Unexpected end of script");
-        dataToRead = revbuf.removeLast() | (revbuf.removeLast() << 8) | (revbuf.removeLast() << 16) | (revbuf.removeLast() << 24);
+        if(bytes.length < 2) throw new Exception("Unexpected end of script");
+        dataToRead = bytes.removeFirst() | (bytes.removeFirst() << 8) | (bytes.removeFirst() << 16) | (bytes.removeFirst() << 24);
       }
       
       if(dataToRead < 0) {
-        chunks.add(new ScriptChunk(true, new Uint8List.fromList([opcode])));
+        chunks.add(new ScriptChunk(true, new Uint8List.fromList([opcode]), startLocationInProgram));
       }
       else {
-        if (dataToRead > revbuf.length)
+        if (dataToRead > bytes.length)
           throw new Exception("Push of data element that is larger than remaining data");
-        chunks.add(new ScriptChunk(false, new Uint8List.fromList(_reverseLast(dataToRead, revbuf))));
+        chunks.add(new ScriptChunk(false, new Uint8List.fromList(_takeFirstN(dataToRead, bytes)), startLocationInProgram));
       }
     }
     _chunks = chunks;
   }
   
-  /**
-   * Takes the last n elements from reverseBuffer and returns them in opposite order. 
-   * So that the last element from reverseBuffer is the first from the result.
-   */
-  List<int> _reverseLast(int n, List<int> reverseBuffer) {
-    List<int> result = new List();
+  List<int> _takeFirstN(int n, DoubleLinkedQueue<int> reverseBuffer) {
+    List<int> result = new List<int>();
     for(int i ; i < n ; i++) {
-      result.add(reverseBuffer.removeLast());
+      result.add(reverseBuffer.removeFirst());
     }
     return result;
   }
@@ -121,6 +129,17 @@ class Script {
       return ScriptOpCodes.OP_1NEGATE;
     else
       return value - 1 + ScriptOpCodes.OP_1;
+  }
+  
+}
+
+class _ImmutableScript extends Script {
+  
+  _ImmutableScript(Uint8List bytes) : super(bytes);
+  
+  @override
+  void set bytes(Uint8List bytes) {
+    throw new Exception("Operation not allowed");
   }
   
 }

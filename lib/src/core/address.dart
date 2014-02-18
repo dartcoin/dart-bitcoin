@@ -17,12 +17,13 @@ class Address {
    * If Uint8List of size 20, bytes is used as the hash160 and the mainnet version will be used.
    * If Uint8List of size 25, version and hash will be extracted and checksum verified.
    */
-  Address(dynamic address) {
+  Address(dynamic address, [NetworkParameters params]) {
+    if(params == null) params = NetworkParameters.MAIN_NET;
     if(address is String)
       address = Base58Check.decode(address);
     if(address is Uint8List && address.length == 20) {
       _bytes = address;
-      _version = NetworkParameters.MAIN_NET.addressHeader;
+      _version = params.addressHeader;
       return;
     }
     if(address is Uint8List && _validateChecksum(address)) {
@@ -31,12 +32,6 @@ class Address {
       return;
     }
     throw new Exception("Format exception or failed checksum, read documentation!");
-  }
-  
-  Address.withNetworkParameters(Uint8List hash160, NetworkParameters params) {
-    if(hash160.length != 20 || params == null) throw new Exception("Bad hash format. Must be 20 bytes long.");
-    _bytes = hash160;
-    _version = params.addressHeader;
   }
   
   int get version {

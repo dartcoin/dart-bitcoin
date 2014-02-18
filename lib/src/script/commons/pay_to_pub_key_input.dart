@@ -8,7 +8,7 @@ class PayToPubKeyInput extends Script {
     return new Script.fromChunks(chunks);
   }
   
-  PayToPubKeyInput.convert(Script script) : super._fromBytes(script.bytes) {
+  PayToPubKeyInput.convert(Script script) : super(script.bytes) {
     if(!matchesType(script)) throw new Exception("Given script is not an instance of this script type.");
   }
   

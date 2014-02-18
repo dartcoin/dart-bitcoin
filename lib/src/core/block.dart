@@ -23,7 +23,8 @@ class Block extends Object with BitcoinSerialization {
           int bits,
           int nonce,
           List<Transaction> transactions,
-          int height}) {
+          int height,
+          NetworkParameters params: NetworkParameters.MAIN_NET}) {
     _hash = hash;
     _previous = previousBlock;
     _merkle = merkleRoot;
@@ -32,6 +33,7 @@ class Block extends Object with BitcoinSerialization {
     _nonce = nonce;
     _txs = transactions;
     _height = height;
+    this.params = params;
   }
   
   factory Block.deserialize(Uint8List bytes, 

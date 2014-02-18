@@ -12,7 +12,7 @@ class PayToAddressOutputScript extends Script {
     return new Script.fromChunks(chunks);
   }
   
-  PayToAddressOutputScript.convert(Script script) : super._fromBytes(script.bytes) {
+  PayToAddressOutputScript.convert(Script script) : super(script.bytes) {
     if(!matchesType(script)) throw new Exception("Given script is not an instance of this script type.");
   }
   
