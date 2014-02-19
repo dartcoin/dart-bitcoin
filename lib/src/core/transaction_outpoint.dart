@@ -2,6 +2,8 @@ part of dartcoin.core;
 
 class TransactionOutPoint extends Object with BitcoinSerialization {
   
+  static const int SERIALIZATION_LENGTH = 36;
+  
   Sha256Hash _txid;
   int _index;
   
@@ -61,10 +63,11 @@ class TransactionOutPoint extends Object with BitcoinSerialization {
     return new Uint8List.fromList(result);
   }
   
-  void _deserialize(Uint8List bytes) {
+  int _deserialize(Uint8List bytes) {
     _txid = new Sha256Hash(bytes.sublist(0, 32));
     _index = Utils.bytesToUintBE(bytes.sublist(32), 4);
+    return SERIALIZATION_LENGTH;
   }
   
-  int _lazySerializationLength(Uint8List bytes) => 36;
+  int _lazySerializationLength(Uint8List bytes) => SERIALIZATION_LENGTH;
 }

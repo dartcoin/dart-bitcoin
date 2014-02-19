@@ -90,7 +90,7 @@ class TransactionInput extends Object with BitcoinSerialization {
     return new Uint8List.fromList(result);
   }
   
-  void _deserialize(Uint8List bytes) {
+  int _deserialize(Uint8List bytes) {
     int offset = 0;
     _outpoint = new TransactionOutPoint.deserialize(bytes);
     offset += outpoint.serializationLength;
@@ -100,7 +100,7 @@ class TransactionInput extends Object with BitcoinSerialization {
     offset += scrLn.value;
     _sequence = Utils.bytesToUintBE(bytes.sublist(offset), 4);
     offset += 4;
-    _serializationLength = offset;
+    return offset;
   }
   
   int _lazySerializationLength(Uint8List bytes) {

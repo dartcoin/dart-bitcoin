@@ -7,9 +7,9 @@ class GetAddrMessage extends Message {
   factory GetAddrMessage.deserialize(Uint8List bytes, {bool lazy: true}) => 
           new BitcoinSerialization.deserialize(new GetAddrMessage(), bytes, length: Message.HEADER_LENGTH, lazy: lazy);
   
-  void _deserialize(Uint8List bytes) {
+  int _deserialize(Uint8List bytes) {
     int offset = Message._preparePayloadSerialization(bytes, this);
-    _serializationLength = offset;
+    return offset;
   }
   
   Uint8List _serialize_payload() {

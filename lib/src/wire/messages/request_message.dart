@@ -29,7 +29,7 @@ abstract class RequestMessage extends Message {
     return _stop;
   }
   
-  void _deserialize(Uint8List bytes) {
+  int _deserialize(Uint8List bytes) {
     int offset = Message._preparePayloadSerialization(bytes, this);
     int version = Utils.bytesToUintLE(bytes.sublist(offset), 4);
     if(version != _VERSION)
@@ -44,7 +44,7 @@ abstract class RequestMessage extends Message {
     }
     _stop = new Sha256Hash(bytes.sublist(offset, offset + Sha256Hash.LENGTH));
     offset += Sha256Hash.LENGTH;
-    _serializationLength = offset;
+    return offset;
   }
   
   Uint8List _serialize_payload() {

@@ -16,7 +16,7 @@ abstract class InventoryItemContainerMessage extends Message {
     return _items;
   }
   
-  void _deserialize(Uint8List bytes) {
+  int _deserialize(Uint8List bytes) {
     int offset = Message._preparePayloadSerialization(bytes, this);
     VarInt nbItems = new VarInt.deserialize(bytes.sublist(offset));
     offset += nbItems.size;
@@ -26,7 +26,7 @@ abstract class InventoryItemContainerMessage extends Message {
           bytes.sublist(offset, offset + InventoryItem.SERIALIZATION_LENGTH), lazy: false));
       offset += InventoryItem.SERIALIZATION_LENGTH;
     }
-    _serializationLength = offset;
+    return offset;
   }
   
   Uint8List _serialize_payload() {

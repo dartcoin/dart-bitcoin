@@ -12,7 +12,7 @@ class VersionMessage extends Message {
   factory VersionMessage.deserialize(Uint8List bytes, {int length: BitcoinSerialization.UNKNOWN_LENGTH, bool lazy: true}) => 
           new BitcoinSerialization.deserialize(new VersionMessage(), bytes, length: length, lazy: lazy);
   
-  void _deserialize(Uint8List bytes) {
+  int _deserialize(Uint8List bytes) {
     //TODO
   }
   

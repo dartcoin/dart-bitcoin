@@ -30,13 +30,13 @@ class VarStr extends Object with BitcoinSerialization {
     return new Uint8List.fromList(result);
   }
   
-  void _deserialize(Uint8List bytes) {
+  int _deserialize(Uint8List bytes) {
     int offset = 0;
     VarInt size = new VarInt.deserialize(bytes, lazy: false);
     offset += size.serializationLength;
     _content = new Utf8Codec().decode(bytes.sublist(offset, offset + size.value));
     offset += size.value;
-    _serializationLength = offset;
+    return offset;
   }
   
   int _lazySerializationLength(Uint8List bytes) {

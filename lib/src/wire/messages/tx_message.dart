@@ -16,10 +16,11 @@ class TxMessage extends Message {
     return _tx;
   }
   
-  void _deserialize(Uint8List bytes) {
+  int _deserialize(Uint8List bytes) {
     int offset = Message._preparePayloadSerialization(bytes, this);
     _tx = new Transaction.deserialize(bytes.sublist(offset), lazy: false);
-    _serializationLength = offset + _tx.serializationLength;
+    offset += _tx.serializationLength;
+    return offset; 
   }
   
   Uint8List _serialize_payload() {

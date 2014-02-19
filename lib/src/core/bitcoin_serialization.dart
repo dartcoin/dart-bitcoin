@@ -16,7 +16,7 @@ abstract class BitcoinSerialization {
   Uint8List _serialization = null;
   bool _isSerialized = false;
   bool retainSerialization = false;
-  int _serializationLength = -1;
+  int _serializationLength = UNKNOWN_LENGTH;
   
   NetworkParameters _params;
   
@@ -27,7 +27,10 @@ abstract class BitcoinSerialization {
     if(_isSerialized && _serializationLength != UNKNOWN_LENGTH) {
       return _serialization.sublist(0, serializationLength);
     }
-    return _serialize();
+    Uint8List seri = _serialize();
+    _serializationLength = seri.length;
+    _serialization = seri;
+    return seri;
   }
   
   /**
@@ -44,7 +47,10 @@ abstract class BitcoinSerialization {
    */
   factory BitcoinSerialization.deserialize(BitcoinSerialization instance, Uint8List bytes, 
       {int length: UNKNOWN_LENGTH, bool lazy: true}) {
-    instance._fromSerialization(bytes, length);
+    _serialization = bytes;
+    if(length != UNKNOWN_LENGTH)
+      _serializationLength = length;
+    _isSerialized = true;
     if(!lazy) {
       instance._needInstance();
     }
@@ -64,32 +70,34 @@ abstract class BitcoinSerialization {
     if(_serialization != null)
       _serializationLength = _lazySerializationLength(_serialization);
     else
-      _serializationLength = serialize().length;
+      serialize();
+    return _serializationLength;
   }
   
   Uint8List _serialize();
   
-  void _deserialize(Uint8List bytes);
+  /**
+   * Deserialize the object using [bytes].
+   * Should return the amount of bytes it used to deserialize. 
+   * This is required because sometimes the bytes represent more than one object.
+   */
+  int _deserialize(Uint8List bytes);
   
   /**
    * Using classes can override this method to lazily calculate the serialization length.
    * The serialization can be found with _serialization.
    */
   int _lazySerializationLength(Uint8List bytes) {
-    return serialize().length;
+    if(_isSerialized)
+      return _deserialize(bytes);
+    else
+      return serialize().length;
   }
   
-  _fromSerialization(Uint8List bytes, int length) {
-    _serialization = bytes;
-    if(length != UNKNOWN_LENGTH)
-      _serializationLength = length;
-    _isSerialized = true;
-  }
-  
-  _needInstance() {
+  void _needInstance() {
     if(!_isSerialized)
-      return
-    _deserialize(_serialization);
+      return;
+    _serializationLength = _deserialize(_serialization);
     if(!retainSerialization)
       _serialization = null;
     _isSerialized = false;

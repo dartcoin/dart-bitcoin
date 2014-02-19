@@ -95,7 +95,7 @@ class TransactionSignature extends ECDSASignature with BitcoinSerialization {
       ..add(sigHashFlags));
   }
   
-  void _deserialize(Uint8List bytes) {
+  int _deserialize(Uint8List bytes) {
     // no lazy deserialization implemented
   }
   

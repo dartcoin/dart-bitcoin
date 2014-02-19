@@ -11,10 +11,11 @@ class BlockMessage extends Message {
   factory BlockMessage.deserialize(Uint8List bytes, {int length: BitcoinSerialization.UNKNOWN_LENGTH, bool lazy: true}) => 
           new BitcoinSerialization.deserialize(new BlockMessage(null), bytes, length: length, lazy: lazy);
   
-  void _deserialize(Uint8List bytes) {
+  int _deserialize(Uint8List bytes) {
     int offset = Message._preparePayloadSerialization(bytes, this);
     _block = new Block.deserialize(bytes.sublist(offset), lazy: false);
-    _serializationLength = offset + _block.serializationLength;
+    offset += _block.serializationLength;
+    return offset;
   }
   
   Uint8List _serialize_payload() {

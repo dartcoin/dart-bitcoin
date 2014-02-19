@@ -256,13 +256,17 @@ class Block extends Object with BitcoinSerialization {
     return new Uint8List.fromList(result);
   }
   
-  void _deserializeHeader(Uint8List bytes) {
+  /**
+   * Returns the header size
+   */
+  int _deserializeHeader(Uint8List bytes) {
     _version = Utils.bytesToUintBE(bytes.sublist(0, 4));
     _previous = new Sha256Hash(bytes.sublist(4, 36));
     _merkle = new Sha256Hash(bytes.sublist(36, 68));
     _timestamp = Utils.bytesToUintBE(bytes.sublist(68), 4);
     _bits = Utils.bytesToUintBE(bytes.sublist(72), 4);
     _nonce = Utils.bytesToUintBE(bytes.sublist(76), 4);
+    return HEADER_SIZE;
   }
   
   Uint8List _serialize() {
@@ -275,10 +279,9 @@ class Block extends Object with BitcoinSerialization {
     return new Uint8List.fromList(result);
   }
   
-  void _deserialize(Uint8List bytes) {
-    _deserializeHeader(bytes);
+  int _deserialize(Uint8List bytes) {
+    int offset = _deserializeHeader(bytes);
     // parse transactions
-    int offset = HEADER_SIZE;
     _txs = new List<Transaction>();
     VarInt nbTx = new VarInt.deserialize(bytes.sublist(offset), lazy: false);
     offset += nbTx.size;
@@ -287,7 +290,7 @@ class Block extends Object with BitcoinSerialization {
       offset += tx.serializationLength;
       _txs.add(tx);
     }
-    _serializationLength = offset;
+    return offset;
   }
 }
 

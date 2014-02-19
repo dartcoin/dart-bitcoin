@@ -273,7 +273,7 @@ class Transaction extends Object with BitcoinSerialization {
     return new Uint8List.fromList(result);
   }
   
-  void _deserialize(Uint8List bytes) {
+  int _deserialize(Uint8List bytes) {
     int offset = 0;
     _version = Utils.bytesToUintBE(bytes.sublist(0), 4);
     offset += 4;
@@ -295,7 +295,7 @@ class Transaction extends Object with BitcoinSerialization {
     }
     _lockTime = Utils.bytesToUintBE(bytes.sublist(offset), 4);
     offset += 4;
-    _serializationLength = offset;
+    return offset;
   }
 }
 

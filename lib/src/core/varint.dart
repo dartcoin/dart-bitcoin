@@ -34,20 +34,16 @@ class VarInt extends Object with BitcoinSerialization {
     return new Uint8List.fromList(result.sublist(0, size));
   }
   
-  void _deserialize(Uint8List bytes) {
-    if(bytes[0] == 253) {
+  int _deserialize(Uint8List bytes) {
+    if(bytes[0] == 253)
       _value = Utils.bytesToUintLE(bytes.sublist(1, 3));
-      return;
-    }
-    if(bytes[0] == 254) {
+    else if(bytes[0] == 254)
       _value = Utils.bytesToUintLE(bytes.sublist(1, 5));
-      return;
-    }
-    if(bytes[0] == 255) {
+    else if(bytes[0] == 255)
       _value = Utils.bytesToUintLE(bytes.sublist(1, 9));
-      return;
-    }
-    _value = bytes[0];
+    else 
+      _value = bytes[0];
+    return sizeOf(_value);
   }
   
   int _lazySerializationLength(Uint8List bytes) {

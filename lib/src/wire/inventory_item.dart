@@ -28,9 +28,10 @@ class InventoryItem extends Object with BitcoinSerialization {
     return _hash;
   }
   
-  void _deserialize(Uint8List bytes) {
+  int _deserialize(Uint8List bytes) {
     _type = new InventoryItemType._(Utils.bytesToUintLE(bytes, 4));
     _hash = new Sha256Hash(bytes.sublist(4, Sha256Hash.LENGTH + 4));
+    return SERIALIZATION_LENGTH;
   }
   
   @override
