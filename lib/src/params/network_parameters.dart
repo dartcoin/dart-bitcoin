@@ -12,7 +12,7 @@ abstract class NetworkParameters {
   
   // GLOBAL PARAMETERS
   
-  static final int PROTOCOL_VERSION = 70001;
+  static const int PROTOCOL_VERSION = 70001;
   static final Uint8List SATOSHI_KEY = Utils.hexToBytes("04fc9702847840aaf195de8442ebecedf5b095cdbb9bc716bda9110971b28a49e0ead8564ff0db22209e0374782c093bb899692d524e9d6a6956e7c5ecbcd68284");
   
   
@@ -20,7 +20,15 @@ abstract class NetworkParameters {
   
   final int addressHeader;
   final int magicValue;
+  final String id;
   
-  const NetworkParameters._({int this.addressHeader, int this.magicValue});
+  final int port;
+  
+  const NetworkParameters._({
+    int this.addressHeader, 
+    int this.magicValue, 
+    String this.id,
+    int this.port
+  });
   
 }
