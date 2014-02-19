@@ -140,6 +140,42 @@ class Block extends Object with BitcoinSerialization {
     return transactions == null;
   }
   
+  Block cloneAsHeader() {
+    if(_isSerialized) {
+      List<int> bytes = serialize().sublist(0, 80);
+      bytes.add(0);
+      return new Block.deserialize(bytes, length: HEADER_SIZE + 1);
+    }
+    Block b = new Block(
+        hash: hash, 
+        previousBlock: previousBlock,
+        merkleRoot: merkleRoot,
+        timestamp: timestamp,
+        bits: bits,
+        nonce: nonce);
+    b._serializationLength = HEADER_SIZE + 1;
+    return b;
+  }
+
+  /** 
+   * Adds a transaction to this block, with or without checking the sanity of doing so. 
+   */
+  void addTransaction(Transaction t, [bool runSanityChecks = true]) {
+    _needInstance();
+    if (_txs == null) {
+      _txs = new List<Transaction>();
+    }
+    t.parentBlock = this;
+    if (runSanityChecks && transactions.length == 0 && !t.isCoinbase)
+      throw new Exception("Attempted to add a non-coinbase transaction as the first transaction: $t");
+    else if (runSanityChecks && transactions.length > 0 && t.isCoinbase)
+      throw new Exception("Attempted to add a coinbase transaction when there already is one: $t");
+    _txs.add(t);
+    // Force a recalculation next time the values are needed.
+    _merkle = null;
+    _hash = null;
+  }
+  
   void _calculateHash() {
     _needInstance();
     _hash = Sha256Hash.doubleDigest(_serializeHeader());
@@ -209,31 +245,14 @@ class Block extends Object with BitcoinSerialization {
     return tree;
   }
   
-  Block cloneAsHeader() {
-    if(_isSerialized) {
-      List<int> bytes = serialize().sublist(0, 80);
-      bytes.add(0);
-      return new Block.deserialize(bytes, length: HEADER_SIZE + 1);
-    }
-    Block b = new Block(
-        hash: hash, 
-        previousBlock: previousBlock,
-        merkleRoot: merkleRoot,
-        timestamp: timestamp,
-        bits: bits,
-        nonce: nonce);
-    b._serializationLength = HEADER_SIZE + 1;
-    return b;
-  }
-  
   Uint8List _serializeHeader() {
-    List<int> result = new List();
-    result.addAll(Utils.uintToBytesBE(version, 4));
-    result.addAll(previousBlock.bytes);
-    result.addAll(merkleRoot.bytes);
-    result.addAll(Utils.uintToBytesBE(timestamp, 4));
-    result.addAll(Utils.uintToBytesBE(bits, 4));
-    result.addAll(Utils.uintToBytesBE(nonce, 4));
+    List<int> result = new List()
+      ..addAll(Utils.uintToBytesBE(version, 4))
+      ..addAll(previousBlock.bytes)
+      ..addAll(merkleRoot.bytes)
+      ..addAll(Utils.uintToBytesBE(timestamp, 4))
+      ..addAll(Utils.uintToBytesBE(bits, 4))
+      ..addAll(Utils.uintToBytesBE(nonce, 4));
     return new Uint8List.fromList(result);
   }
   
@@ -251,9 +270,7 @@ class Block extends Object with BitcoinSerialization {
     result.addAll(_serializeHeader());
     if(!isHeader) {
       result.addAll(new VarInt(transactions.length).serialize());
-      for(Transaction tx in transactions) {
-        result.addAll(tx.serialize());
-      }
+      transactions.forEach((tx) => result.addAll(tx.serialize()));
     }
     return new Uint8List.fromList(result);
   }

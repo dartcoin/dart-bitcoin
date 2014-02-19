@@ -9,16 +9,19 @@ class Transaction extends Object with BitcoinSerialization {
   List<TransactionOutput> _outputs;
   int _lockTime;
   
+  Block _parent;
   
   Transaction({ Sha256Hash txid,
                 List<TransactionInput> inputs, 
                 List<TransactionOutput> outputs,
                 int lockTime,
+                Block parentBlock,
                 NetworkParameters params: NetworkParameters.MAIN_NET}) {
     _hash = txid;
     _inputs = inputs;
     _outputs = outputs;
     _lockTime = lockTime;
+    _parent = parentBlock;
     this.params = params;
   }
   
@@ -85,6 +88,58 @@ class Transaction extends Object with BitcoinSerialization {
       throw new Exception("Not all outputs fully known. Unable to calculate fee.");
     }
     return totalIn - totalOut;
+  }
+  
+  bool get isCoinbase {
+    _needInstance();
+    return inputs.length == 1 && inputs[0].isCoinbase;
+  }
+  
+  Block get parentBlock {
+    return _parent;
+  }
+  
+  void set parentBlock(Block parentBlock) {
+    _parent = parentBlock;
+  }
+  
+  /**
+   * Adds a TransactionInput to this transaction and returns it.
+   * 
+   * An input can be a TransactionInput object, but it can also be created
+   * from a TransactionOutput object.
+   */
+  TransactionInput addInput(dynamic input) {
+    if(!(input is TransactionInput || input is TransactionOutput)) 
+      throw new Exception("The input must be either a TransactionInput or TransactionOutput object.");
+    if(input is TransactionOutput)
+      input = new TransactionInput(params: params, parentTransaction: this, output: input);
+    _needInstance();
+    input.parentTransaction = this;
+    _inputs.add(input);
+    return input;
+  }
+  
+  //TODO add signedinput
+  
+  void clearInputs() {
+    _inputs.forEach((i) => i.parentTransaction = null);
+    _inputs.clear();
+  }
+  
+  /**
+   * Adds the transaction output to this transaction and returns it.
+   */
+  TransactionOutput addOutput(TransactionOutput output) {
+    _needInstance();
+    output.parentTransaction = this;
+    _outputs.add(output);
+    return output;
+  }
+  
+  void clearOutputs() {
+    _outputs.forEach((o) => o.parentTransaction = null);
+    _outputs.clear();
   }
   
   @override

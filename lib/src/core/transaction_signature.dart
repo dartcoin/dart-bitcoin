@@ -102,15 +102,15 @@ class TransactionSignature extends ECDSASignature with BitcoinSerialization {
 }
 
 class SigHash {
-  static const SigHash ALL    = const SigHash._withInt(1);
-  static const SigHash NONE   = const SigHash._withInt(2);
-  static const SigHash SINGLE = const SigHash._withInt(3);
+  static const SigHash ALL    = const SigHash._(1);
+  static const SigHash NONE   = const SigHash._(2);
+  static const SigHash SINGLE = const SigHash._(3);
   
   static const int ANYONE_CAN_PAY = 0x80; 
   
   final int value;
   
-  const SigHash._withInt(int this.value);
+  const SigHash._(int this.value);
   
   static int sigHashValue(SigHash sh, bool anyoneCanPay) {
     int val = sh.value;

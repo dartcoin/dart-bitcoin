@@ -2,17 +2,34 @@ part of dartcoin.core;
 
 class TransactionInput extends Object with BitcoinSerialization {
   
+  static const int NO_SEQUENCE = 0xFFFFFFFF;
+  
   TransactionOutPoint _outpoint;
   Script _scriptSig;
-  int _sequence;
+  int _sequence; //TODO is long in java
   
-  TransactionInput({TransactionOutPoint outpoint, 
+  Transaction _parent;
+  
+  /**
+   * Create a new TransactionInput.
+   * 
+   * It's not possible to specify both the output parameter and the outpoint parameter. 
+   */
+  TransactionInput({TransactionOutput output, 
                     Script scriptSig,
-                    int sequence: 0,
+                    TransactionOutPoint outpoint,
+                    int sequence: NO_SEQUENCE,
+                    Transaction parentTransaction, 
                     NetworkParameters params: NetworkParameters.MAIN_NET}) {
+    if(output != null) {
+      if(outpoint != null)
+        throw new Exception("It's not possible to specify both the output parameter and the outpoint + sequence parameter.");
+      outpoint = new TransactionOutPoint(transaction: output.parentTransaction, index: output.index, params: params);
+    }
     _outpoint = outpoint;
     _scriptSig = scriptSig;
     _sequence = sequence;
+    _parent = parentTransaction;
     this.params = params;
   }
   
@@ -37,6 +54,14 @@ class TransactionInput extends Object with BitcoinSerialization {
   int get sequence {
     _needInstance();
     return _sequence;
+  }
+  
+  Transaction get parentTransaction {
+    return _parent;
+  }
+  
+  void set parentTransaction(Transaction parentTransaction) {
+    _parent = parentTransaction;
   }
   
   bool get isCoinbase {

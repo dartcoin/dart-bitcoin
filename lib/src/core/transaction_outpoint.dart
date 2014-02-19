@@ -7,15 +7,15 @@ class TransactionOutPoint extends Object with BitcoinSerialization {
   
   Transaction _tx;
   
-  TransactionOutPoint({ Sha256Hash txid, 
+  TransactionOutPoint({ Transaction transaction, 
                         int index,
-                        Transaction transaction,
+                        Sha256Hash txid,
                         NetworkParameters params: NetworkParameters.MAIN_NET}) {
-    _txid = txid;
-    _index = index;
-    _tx = transaction;
     if(transaction != null)
       txid = transaction.hash;
+    _index = index;
+    _txid = txid;
+    _tx = transaction;
     this.params = params;
   }
   
@@ -37,6 +37,11 @@ class TransactionOutPoint extends Object with BitcoinSerialization {
    */
   Transaction get transaction {
     return _tx;
+  }
+  
+  TransactionOutput get connectedOutput {
+    if(_tx == null) return null;
+    return _tx.outputs[index];
   }
   
   @override

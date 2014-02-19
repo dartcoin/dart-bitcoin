@@ -21,6 +21,21 @@ class TransactionOutput extends Object with BitcoinSerialization {
       {int length: BitcoinSerialization.UNKNOWN_LENGTH, bool lazy: true}) =>
       new BitcoinSerialization.deserialize(new TransactionOutput(), bytes, length: length, lazy: lazy);
   
+  factory TransactionOutput.payToAddress(Address to, int amount, 
+      [Transaction parent, NetworkParameters params = NetworkParameters.MAIN_NET]) {
+    return new TransactionOutput(value: amount, scriptPubKey: new PayToAddressOutputScript(to), parent: parent, params: params);
+  }
+  
+  factory TransactionOutput.payToPubKey(KeyPair key, int amount,
+      [Transaction parent, NetworkParameters params = NetworkParameters.MAIN_NET]) {
+    return new TransactionOutput(value: amount, scriptPubKey: new PayToPubKeyOutputScript(key), parent: parent, params: params);
+  }
+  
+  factory TransactionOutput.payToScriptHash(Uint8List scriptHash, int amount,
+      [Transaction parent, NetworkParameters params = NetworkParameters.MAIN_NET]) {
+    return new TransactionOutput(value: amount, scriptPubKey: new PayToScriptHash(scriptHash), parent: parent, params: params);
+  }
+
   int get value {
     _needInstance();
     return _value;
@@ -31,13 +46,17 @@ class TransactionOutput extends Object with BitcoinSerialization {
     return _scriptPubKey;
   }
   
-  Transaction get parent {
+  Transaction get parentTransaction {
     return _parent;
+  }
+  
+  void set parentTransaction(Transaction parentTransaction) {
+    _parent = parentTransaction;
   }
   
   int get index {
     if(_parent == null) throw new Exception("Parent tx not specified.");
-    parent.outputs.indexOf(parent.outputs.singleWhere((output) => output == this));
+    _parent.outputs.indexOf(_parent.outputs.singleWhere((output) => output == this));
   }
   
   @override
@@ -45,7 +64,7 @@ class TransactionOutput extends Object with BitcoinSerialization {
     if(!(other is TransactionOutput)) return false;
     return value == other.value &&
         scriptPubKey == other.scriptPubKey &&
-        (parent == null || other.parent == null || parent == other.parent);
+        (parentTransaction == null || other.parentTransaction == null || parentTransaction == other.parentTransaction);
   }
   
   //TODO hashcode?
