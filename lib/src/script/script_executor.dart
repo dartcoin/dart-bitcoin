@@ -526,7 +526,7 @@ class _ScriptExecutor {
               break;
           case ScriptOpCodes.OP_CHECKMULTISIG:
           case ScriptOpCodes.OP_CHECKMULTISIGVERIFY:
-//TODO              opCount = executeMultiSig(txContainingThis, (int) index, script, stack, opCount, lastCodeSepLocation, opcode);
+              opCount = executeMultiSig(txContainingScript, index, script, stack, opCount, lastCodeSepLoc, opcode);
               break;
           case ScriptOpCodes.OP_NOP1:
           case ScriptOpCodes.OP_NOP2:
