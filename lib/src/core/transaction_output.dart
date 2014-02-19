@@ -64,7 +64,7 @@ class TransactionOutput extends Object with BitcoinSerialization {
     _value = Utils.bytesToUintBE(bytes, 4);
     offset += 4;
     VarInt scrLn = new VarInt.deserialize(bytes.sublist(offset), lazy: false);
-    offset += scrLn.serializationLength;
+    offset += scrLn.size;
     _scriptPubKey = null;//new Script.deserialize(bytes.sublist(offset), scrLn.value);
     offset += scrLn.value;
     _serializationLength = offset;

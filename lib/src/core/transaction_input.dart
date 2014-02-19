@@ -70,8 +70,8 @@ class TransactionInput extends Object with BitcoinSerialization {
     _outpoint = new TransactionOutPoint.deserialize(bytes);
     offset += outpoint.serializationLength;
     VarInt scrLn = new VarInt.deserialize(bytes.sublist(offset), lazy: false);
-    offset += scrLn.serializationLength;
-    _scriptSig = null;//TODO new Script.deserialize(bytes.sublist(offset), scrLn.value);
+    offset += scrLn.size;
+    _scriptSig = new Script(bytes.sublist(offset, offset + scrLn.value));
     offset += scrLn.value;
     _sequence = Utils.bytesToUintBE(bytes.sublist(offset), 4);
     offset += 4;

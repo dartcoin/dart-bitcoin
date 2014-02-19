@@ -119,7 +119,7 @@ class Transaction extends Object with BitcoinSerialization {
     //
     // Also store the input sequence numbers in case we are clearing them with SigHash.NONE/SINGLE
     List<Script> inputScripts = new List<Script>(_inputs.length);
-    List<int> inputSequenceNumbers = new List<int>(_inputs.length); //TODO java uses longs here, are int's fine or do we need Uint64's?
+    List<int> inputSequenceNumbers = new List<int>(_inputs.length);
     for (int i = 0; i < _inputs.length; i++) {
       inputScripts[i] = _inputs[i].scriptSig;
       inputSequenceNumbers[i] = _inputs[i].sequence;
@@ -171,9 +171,7 @@ class Transaction extends Object with BitcoinSerialization {
       }
       // In SIGHASH_SINGLE the outputs after the matching input index are deleted, and the outputs before
       // that position are "nulled out". Unintuitively, the value in a "null" transaction is set to -1.
-      _outputs = _outputs.sublist(0, inputIndex + 1);
-      //TODO ^ this line originally was V in Java. Must explicit copying of the list be done? 
-      //this.outputs = new ArrayList<TransactionOutput>(this.outputs.subList(0, inputIndex + 1));
+      _outputs = new List.from(_outputs.sublist(0, inputIndex + 1));
       for (int i = 0; i < inputIndex; i++)
         _outputs[i] = new TransactionOutput(value: BigInteger.ONE.negate_op(), scriptPubKey: Script.EMPTY_SCRIPT, parent: this, params: params);
       // The signature isn't broken by new versions of the transaction issued by other parties.

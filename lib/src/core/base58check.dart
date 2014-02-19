@@ -67,8 +67,7 @@ class Base58Check {
     }
     
     // decode
-    List<int> output = new List();
-    // TODO
+    List<int> output = new List<int>();
     int startAt = leadingZeroes;
     while(startAt < input58.length) {
       int mod = _divmod256(input58, startAt);

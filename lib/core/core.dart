@@ -9,6 +9,7 @@ import "package:crypto/crypto.dart";
 import "package:bignum/bignum.dart";
 import "package:collection/equality.dart";
 
+// cherry picking cipher dependencies
 import "package:cipher/api.dart";
 import "package:cipher/digests/ripemd160.dart";
 import "package:cipher/params/key_derivators/scrypt_parameters.dart";

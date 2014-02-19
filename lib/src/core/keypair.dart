@@ -568,7 +568,6 @@ class EncryptedPrivateKey {
 }
 
 
-//TODO replace with cipher.ECSignature as soon as it supports DER encoding and ensuring canonical
 class ECDSASignature {
   BigInteger r, s;
   

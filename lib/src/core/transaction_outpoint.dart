@@ -32,11 +32,10 @@ class TransactionOutPoint extends Object with BitcoinSerialization {
     return _index;
   }
   
+  /**
+   * Can be `null` when this object has been created by deserialization.
+   */
   Transaction get transaction {
-    _needInstance();
-    if(_tx == null) {
-      //TODO implement or return null?
-    }
     return _tx;
   }
   

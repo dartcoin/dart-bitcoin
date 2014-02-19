@@ -264,7 +264,7 @@ class Block extends Object with BitcoinSerialization {
     int offset = HEADER_SIZE;
     _txs = new List<Transaction>();
     VarInt nbTx = new VarInt.deserialize(bytes.sublist(offset), lazy: false);
-    offset += nbTx.serializationLength;
+    offset += nbTx.size;
     for(int i = 0 ; i < nbTx.value ; i++) {
       Transaction tx = new Transaction.deserialize(bytes.sublist(offset));
       offset += tx.serializationLength;
