@@ -2,10 +2,16 @@ part of dartcoin.core;
 
 class PayToPubKeyInput extends Script {
   
-  factory PayToPubKeyInput(Uint8List signature) {
-    List<ScriptChunk> chunks = new List();
-    chunks.add(new ScriptChunk(false, signature));
-    return new Script.fromChunks(chunks);
+  /**
+   * 
+   * 
+   * If [encoded] is set to false, the script will be built using chunks. This improves
+   * performance when the script is intended for execution.
+   */
+  factory PayToPubKeyInput(Uint8List signature, [bool encoded = true]) {
+    return new ScriptBuilder(encoded)
+      .data(signature)
+      .build();
   }
   
   PayToPubKeyInput.convert(Script script) : super(script.bytes) {

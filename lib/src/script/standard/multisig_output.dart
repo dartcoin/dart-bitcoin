@@ -7,19 +7,20 @@ class MultiSigOutputScript extends Script {
    * OP_CHECKMULTISIG.
    * 
    * Standard multisig outputs have max 3 keys, but it is possible to add up to 16 keys.
+   * 
+   * If [encoded] is set to false, the script will be built using chunks. This improves
+   * performance when the script is intended for execution.
    */
-  factory MultiSigOutputScript(int threshold, List<KeyPair> pubkeys) {
+  factory MultiSigOutputScript(int threshold, List<KeyPair> pubkeys, [bool encoded = true]) {
     if(threshold <= 0 || threshold > pubkeys.length) throw new Exception("Invalid threshold value.");
     if(pubkeys.length > 16) throw new Exception("Maximum 16 public keys.");
     
-    List<ScriptChunk> chunks = new List();
-    chunks.add(new ScriptChunk.fromOpCode(Script.encodeToOpN(threshold)));
-    for(KeyPair key in pubkeys) {
-      chunks.add(new ScriptChunk(false, key.publicKey));
-    }
-    chunks.add(new ScriptChunk.fromOpCode(Script.encodeToOpN(pubkeys.length)));
-    chunks.add(new ScriptChunk.fromOpCode(ScriptOpCodes.OP_CHECKMULTISIG));
-    return new Script.fromChunks(chunks);
+    ScriptBuilder builder = new ScriptBuilder(encoded)
+      .smallNum(threshold);
+    pubkeys.forEach((pk) => builder.data(pk.publicKey));
+    builder.smallNum(pubkeys.length)
+      .op(ScriptOpCodes.OP_CHECKMULTISIG);
+    return builder.build();
   }
   
   MultiSigOutputScript.convert(Script script) : super(script.bytes) {

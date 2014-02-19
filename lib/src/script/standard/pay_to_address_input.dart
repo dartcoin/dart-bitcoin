@@ -2,24 +2,17 @@ part of dartcoin.core;
 
 class PayToAddressInputScript extends Script {
   
-  factory PayToAddressInputScript(Uint8List signature, Uint8List pubKey) {
-    List<int> script = new List<int>()
-      ..addAll(Script.encodeData(signature))
-      ..addAll(Script.encodeData(pubKey));
-    return new Script(new Uint8List.fromList(script));
-  }
-  
   /**
-   * Creates exactly the same script, but built using chunks.
    * 
-   * This is more efficient when the script is executed directly, 
-   * but less efficient when it will be serialized after creation. 
+   * 
+   * If [encoded] is set to false, the script will be built using chunks. This improves
+   * performance when the script is intended for execution.
    */
-  factory PayToAddressInputScript.withChunks(Uint8List signature, Uint8List pubKey) {
-    List<ScriptChunk> chunks = new List<ScriptChunk>()
-      ..add(new ScriptChunk(false, signature))
-      ..add(new ScriptChunk(false, pubKey));
-    return new Script.fromChunks(chunks);
+  factory PayToAddressInputScript(Uint8List signature, Uint8List pubKey, [bool encoded = true]) {
+    return new ScriptBuilder(encoded)
+      .data(signature)
+      .data(pubKey)
+      .build();
   }
   
   PayToAddressInputScript.convert(Script script) : super(script.bytes) {
