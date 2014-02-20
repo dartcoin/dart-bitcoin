@@ -13,7 +13,7 @@ class HeadersMessage extends Message {
   
   List<Block> get headers { 
     _needInstance();
-    return _headers;
+    return new UnmodifiableListView(_headers);
   }
   
   //TODO there's something phishy with the 80 vs 81 block header size

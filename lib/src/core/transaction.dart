@@ -36,12 +36,12 @@ class Transaction extends Object with BitcoinSerialization {
   
   List<TransactionInput> get inputs {
     _needInstance();
-    return _inputs;
+    return new UnmodifiableListView(_inputs);
   }
   
   List<TransactionOutput> get outputs {
     _needInstance();
-    return _outputs;
+    return new UnmodifiableListView(_outputs);
   }
   
   int get lockTime {

@@ -21,7 +21,7 @@ abstract class RequestMessage extends Message {
   
   List<Sha256Hash> get locators {
     _needInstance();
-    return _locators;
+    return new UnmodifiableListView(_locators);
   }
   
   Sha256Hash get stop {

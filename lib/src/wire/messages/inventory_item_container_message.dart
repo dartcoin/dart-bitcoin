@@ -13,7 +13,7 @@ abstract class InventoryItemContainerMessage extends Message {
   
   List<InventoryItem> get items {
     _needInstance();
-    return _items;
+    return new UnmodifiableListView(_items);
   }
   
   int _deserialize(Uint8List bytes) {

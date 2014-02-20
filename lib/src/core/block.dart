@@ -126,7 +126,7 @@ class Block extends Object with BitcoinSerialization {
   
   List<Transaction> get transactions {
     _needInstance();
-    return _txs;
+    return new UnmodifiableListView(_txs);
   }
   
   void set transactions(List<Transaction> transactions) {
