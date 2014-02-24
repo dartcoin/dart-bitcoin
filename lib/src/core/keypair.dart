@@ -38,18 +38,23 @@ class KeyPair {
    */
   factory KeyPair([dynamic publicKey, dynamic privateKey, bool compressed = true]) {
     if(publicKey == null && privateKey == null) return new KeyPair.generate();
+    // convert private key
     if(privateKey is Uint8List) {
       privateKey = new BigInteger.fromBytes(1, privateKey);
     }
+    // convert public key
+    if(publicKey is BigInteger)
+      publicKey = Utils.bigIntegerToBytes(publicKey, 65);
+    // create private key
     if(privateKey is BigInteger) {
       if(!(publicKey is Uint8List))
         publicKey = publicKeyFromPrivateKey(privateKey, compressed);
       return new KeyPair._internal(privateKey, publicKey);
     }
-    if(publicKey is BigInteger)
-      publicKey = Utils.bigIntegerToBytes(publicKey, 65);
+    // create public key
     if(publicKey is Uint8List && privateKey == null)
       return new KeyPair._internal(null, publicKey);
+    // error
     throw new Exception("The parameters were not of a usable type.");
   }
   

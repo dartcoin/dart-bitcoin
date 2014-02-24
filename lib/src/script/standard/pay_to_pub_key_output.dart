@@ -23,8 +23,8 @@ class PayToPubKeyOutputScript extends Script {
     if(!matchesType(script)) throw new Exception("Given script is not an instance of this script type.");
   }
   
-  Uint8List get pubKey {
-    return chunks[0].data;
+  KeyPair get pubKey {
+    return new KeyPair(chunks[0].data);
   }
   
   Address getAddress([NetworkParameters params]) {

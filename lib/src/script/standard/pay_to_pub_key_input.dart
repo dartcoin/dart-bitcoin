@@ -5,10 +5,16 @@ class PayToPubKeyInput extends Script {
   /**
    * 
    * 
+   * The value for [signature] can be either a [TransactionSignature] or a [Uint8List]. 
+   * 
    * If [encoded] is set to false, the script will be built using chunks. This improves
    * performance when the script is intended for execution.
    */
-  factory PayToPubKeyInput(Uint8List signature, [bool encoded = true]) {
+  factory PayToPubKeyInput(dynamic signature, [bool encoded = true]) {
+    if(signature is TransactionSignature)
+      signature = signature.encodeToDER();
+    if(!(signature is Uint8List))
+      throw new Exception("The value for signature can be either a TransactionSignature or a Uint8List.");
     return new ScriptBuilder(encoded)
       .data(signature)
       .build();
@@ -18,8 +24,8 @@ class PayToPubKeyInput extends Script {
     if(!matchesType(script)) throw new Exception("Given script is not an instance of this script type.");
   }
   
-  Uint8List get signature {
-    return chunks[0].data;
+  TransactionSignature get signature {
+    return new TransactionSignature.deserialize(chunks[0].data);
   }
   
   /**

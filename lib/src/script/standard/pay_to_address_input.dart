@@ -5,10 +5,19 @@ class PayToAddressInputScript extends Script {
   /**
    * 
    * 
+   * The value for [signature] can be either a [TransactionSignature] or a [Uint8List]. 
+   * [pubKey] can be either of type [KeyPair] or [Uint8List].
+   * 
    * If [encoded] is set to false, the script will be built using chunks. This improves
    * performance when the script is intended for execution.
    */
-  factory PayToAddressInputScript(Uint8List signature, Uint8List pubKey, [bool encoded = true]) {
+  factory PayToAddressInputScript(dynamic signature, dynamic pubKey, [bool encoded = true]) {
+    if(signature is TransactionSignature) 
+      signature = signature.encodeToDER();
+    if(pubKey is KeyPair)
+      pubKey = pubKey.publicKey;
+    if(!(signature is Uint8List && pubKey is Uint8List))
+      throw new Exception("Unsupported input types. Read documentation.");
     return new ScriptBuilder(encoded)
       .data(signature)
       .data(pubKey)
@@ -19,12 +28,12 @@ class PayToAddressInputScript extends Script {
     if(!matchesType(script)) throw new Exception("Given script is not an instance of this script type.");
   }
   
-  Uint8List get signature {
-    return chunks[0].data;
+  TransactionSignature get signature {
+    return new TransactionSignature.deserialize(chunks[0].data, false);
   }
   
-  Uint8List get pubKey {
-    return chunks[1].data;
+  KeyPair get pubKey {
+    return new KeyPair(chunks[1].data);
   }
   
   Address getAddress([NetworkParameters params]) {
