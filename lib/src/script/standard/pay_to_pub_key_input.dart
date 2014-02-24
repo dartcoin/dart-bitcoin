@@ -14,14 +14,14 @@ class PayToPubKeyInput extends Script {
     if(signature is TransactionSignature)
       signature = signature.encodeToDER();
     if(!(signature is Uint8List))
-      throw new Exception("The value for signature can be either a TransactionSignature or a Uint8List.");
+      throw new ScriptException("The value for signature can be either a TransactionSignature or a Uint8List.");
     return new ScriptBuilder(encoded)
       .data(signature)
       .build();
   }
   
   PayToPubKeyInput.convert(Script script) : super(script.bytes) {
-    if(!matchesType(script)) throw new Exception("Given script is not an instance of this script type.");
+    if(!matchesType(script)) throw new ScriptException("Given script is not an instance of this script type.");
   }
   
   TransactionSignature get signature {

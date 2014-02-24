@@ -66,6 +66,7 @@ part "../src/script/script_chunk.dart";
 part "../src/script/script_op_codes.dart";
 part "../src/script/script_executor.dart";
 part "../src/script/script_builder.dart";
+part "../src/script/script_exception.dart";
 part "../src/script/standard/pay_to_address_output.dart";
 part "../src/script/standard/pay_to_address_input.dart";
 part "../src/script/standard/pay_to_pub_key_output.dart";

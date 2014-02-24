@@ -17,7 +17,7 @@ class PayToAddressInputScript extends Script {
     if(pubKey is KeyPair)
       pubKey = pubKey.publicKey;
     if(!(signature is Uint8List && pubKey is Uint8List))
-      throw new Exception("Unsupported input types. Read documentation.");
+      throw new ScriptException("Unsupported input types. Read documentation.");
     return new ScriptBuilder(encoded)
       .data(signature)
       .data(pubKey)
@@ -25,7 +25,7 @@ class PayToAddressInputScript extends Script {
   }
   
   PayToAddressInputScript.convert(Script script) : super(script.bytes) {
-    if(!matchesType(script)) throw new Exception("Given script is not an instance of this script type.");
+    if(!matchesType(script)) throw new ScriptException("Given script is not an instance of this script type.");
   }
   
   TransactionSignature get signature {

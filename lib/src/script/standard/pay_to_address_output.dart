@@ -21,7 +21,7 @@ class PayToAddressOutputScript extends Script {
   }
   
   PayToAddressOutputScript.convert(Script script) : super(script.bytes) {
-    if(!matchesType(script)) throw new Exception("Given script is not an instance of this script type.");
+    if(!matchesType(script)) throw new ScriptException("Given script is not an instance of this script type.");
   }
   
   Address get address {

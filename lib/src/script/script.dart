@@ -88,15 +88,15 @@ class Script {
         dataToRead = opcode;
       }
       else if(opcode == ScriptOpCodes.OP_PUSHDATA1) {
-        if(bytes.length < 1) throw new Exception("Unexpected end of script");
+        if(bytes.length < 1) throw new ScriptException("Unexpected end of script", this, opcode);
         dataToRead = bytes.removeFirst();
       }
       else if(opcode == ScriptOpCodes.OP_PUSHDATA2) {
-        if(bytes.length < 2) throw new Exception("Unexpected end of script");
+        if(bytes.length < 2) throw new ScriptException("Unexpected end of script", this, opcode);
         dataToRead = bytes.removeFirst() | (bytes.removeFirst() << 8);
       }
       else if(opcode == ScriptOpCodes.OP_PUSHDATA4) {
-        if(bytes.length < 2) throw new Exception("Unexpected end of script");
+        if(bytes.length < 2) throw new ScriptException("Unexpected end of script", this, opcode);
         dataToRead = bytes.removeFirst() | (bytes.removeFirst() << 8) | (bytes.removeFirst() << 16) | (bytes.removeFirst() << 24);
       }
       
@@ -105,7 +105,7 @@ class Script {
       }
       else {
         if (dataToRead > bytes.length)
-          throw new Exception("Push of data element that is larger than remaining data");
+          throw new ScriptException("Push of data element that is larger than remaining data", this, opcode);
         chunks.add(new ScriptChunk(false, new Uint8List.fromList(_takeFirstN(dataToRead, bytes)), startLocationInProgram));
       }
     }
@@ -151,7 +151,7 @@ class Script {
   static int decodeFromOpN(int opcode) {
     if(! (opcode == ScriptOpCodes.OP_0 || opcode == ScriptOpCodes.OP_1NEGATE || 
         (opcode >= ScriptOpCodes.OP_1 && opcode <= ScriptOpCodes.OP_16)) ) {
-      throw new Exception("Method should be called on an OP_N opcode.");
+      throw new ScriptException("Method should be called on an OP_N opcode.", null, opcode);
     }
     if (opcode == ScriptOpCodes.OP_0)
       return 0;
@@ -163,7 +163,7 @@ class Script {
   
   static int encodeToOpN(int value) {
     if(! (value >= -1 && value <= 16) ) {
-      throw new Exception("Can only encode for values -1 <= value <= 16.");
+      throw new ScriptException("Can only encode for values -1 <= value <= 16.");
     }
     if (value == 0)
       return ScriptOpCodes.OP_0;
@@ -181,7 +181,7 @@ class _ImmutableScript extends Script {
   
   @override
   void set bytes(Uint8List bytes) {
-    throw new Exception("Operation not allowed");
+    throw new ScriptException("Operation not allowed on immutable script.", this);
   }
   
 }

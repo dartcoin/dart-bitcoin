@@ -10,7 +10,7 @@ class PayToScriptHash extends Script {
    */
   factory PayToScriptHash(Uint8List scriptHash, [bool encoded = true]) {
     if(scriptHash == null || scriptHash.length != 20)
-      throw new Exception("The script hash must be of size 20!");
+      throw new ScriptException("The script hash must be of size 20!");
     return new ScriptBuilder(encoded)
       .op(ScriptOpCodes.OP_HASH160)
       .data(scriptHash)
@@ -19,7 +19,7 @@ class PayToScriptHash extends Script {
   }
   
   PayToScriptHash.convert(Script script) : super(script.bytes) {
-    if(!matchesType(script)) throw new Exception("Given script is not an instance of this script type.");
+    if(!matchesType(script)) throw new ScriptException("Given script is not an instance of this script type.");
   }
   
   Uint8List get scriptHash {

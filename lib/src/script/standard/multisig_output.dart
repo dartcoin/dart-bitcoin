@@ -12,8 +12,8 @@ class MultiSigOutputScript extends Script {
    * performance when the script is intended for execution.
    */
   factory MultiSigOutputScript(int threshold, List<KeyPair> pubkeys, [bool encoded = true]) {
-    if(threshold <= 0 || threshold > pubkeys.length) throw new Exception("Invalid threshold value.");
-    if(pubkeys.length > 16) throw new Exception("Maximum 16 public keys.");
+    if(threshold <= 0 || threshold > pubkeys.length) throw new ScriptException("Invalid threshold value.");
+    if(pubkeys.length > 16) throw new ScriptException("Maximum 16 public keys.");
     
     ScriptBuilder builder = new ScriptBuilder(encoded)
       .smallNum(threshold);
@@ -24,7 +24,7 @@ class MultiSigOutputScript extends Script {
   }
   
   MultiSigOutputScript.convert(Script script) : super(script.bytes) {
-    if(!matchesType(script)) throw new Exception("Given script is not an instance of this script type.");
+    if(!matchesType(script)) throw new ScriptException("Given script is not an instance of this script type.");
   }
   
   int get threshold {

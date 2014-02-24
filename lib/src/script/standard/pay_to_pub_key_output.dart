@@ -12,7 +12,7 @@ class PayToPubKeyOutputScript extends Script {
    */
   factory PayToPubKeyOutputScript(dynamic pubKey, [bool encoded = true]) {
     if(pubKey is KeyPair) pubKey = pubKey.publicKey;
-    if(!(pubKey is Uint8List)) throw new Exception("The public key can be either of type Uint8List or KeyPair.");
+    if(!(pubKey is Uint8List)) throw new ScriptException("The public key can be either of type Uint8List or KeyPair.");
     return new ScriptBuilder(encoded)
       .data(pubKey)
       .op(ScriptOpCodes.OP_CHECKSIG)
@@ -20,7 +20,7 @@ class PayToPubKeyOutputScript extends Script {
   }
   
   PayToPubKeyOutputScript.convert(Script script) : super(script.bytes) {
-    if(!matchesType(script)) throw new Exception("Given script is not an instance of this script type.");
+    if(!matchesType(script)) throw new ScriptException("Given script is not an instance of this script type.");
   }
   
   KeyPair get pubKey {
