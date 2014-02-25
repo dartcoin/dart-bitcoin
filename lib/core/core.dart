@@ -61,6 +61,11 @@ part "../src/core/transaction_output.dart";
 // blocks
 part "../src/core/block.dart";
 
+// bloom filters
+part "../src/core/bloom_filter.dart";
+part "../src/core/filtered_block.dart";
+part "../src/core/partial_merkle_tree.dart";
+
 // scripts
 part "../src/script/script.dart";
 part "../src/script/script_chunk.dart";
@@ -97,3 +102,7 @@ part "../src/wire/messages/mempool_message.dart";
 part "../src/wire/messages/ping_message.dart";
 part "../src/wire/messages/pong_message.dart";
 part "../src/wire/messages/alert_message.dart";
+part "../src/wire/messages/filterload_message.dart";
+part "../src/wire/messages/filteradd_message.dart";
+part "../src/wire/messages/filterclear_message.dart";
+part "../src/wire/messages/merkleblock_message.dart";
