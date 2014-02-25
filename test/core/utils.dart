@@ -49,10 +49,13 @@ void _formatMessageForSigning() {
 void _equalList() {
   var hash = Utils.hexToBytes("010966776006953D5567439E5E39F86A0D273BEE");
   var hash2 = Utils.hexToBytes("010966776006953D5567439E5E39F86A0D273BEE");
-  var hash3 = Utils.hexToBytes("0966776006953D5567439E5E39F86A0D273BEE");
+  var hash3 = Utils.hexToBytes("475dbd9278ce464097f8dd241b088ac96615bfdea9e496bc05828aca94aabfca");
+  var list1 = [new Sha256Hash(hash3), new Sha256Hash(hash3)];
+  var list2 = [new Sha256Hash(hash3), new Sha256Hash(hash3)];
   expect(Utils.equalLists(hash, hash2), isTrue);
   expect(Utils.equalLists(hash, hash), isTrue);
   expect(Utils.equalLists(hash, hash3), isFalse);
+  expect(Utils.equalLists(list1, list2), isTrue);
 }
 
 void _bigIntToBytes() {

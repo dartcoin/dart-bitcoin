@@ -8,6 +8,7 @@ import "dart:math";
 import "package:crypto/crypto.dart";
 import "package:bignum/bignum.dart";
 import "package:collection/equality.dart";
+import 'package:collection/wrappers.dart';
 
 // cherry picking cipher dependencies
 import "package:cipher/api.dart";

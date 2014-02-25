@@ -17,10 +17,21 @@ class Utils {
   static Uint8List doubleDigest(Uint8List input) {
     SHA256 digest = new SHA256();
     digest.add(input);
-    List<int> tmp = digest.close();
-    digest = digest.newInstance();
-    digest.add(tmp);
-    return new Uint8List.fromList(digest.close());
+    SHA256 digest2 = new SHA256()
+      ..add(digest.close());
+    return new Uint8List.fromList(digest2.close());
+  }
+  
+  /**
+   * Calculates the double-round SHA-256 hash of the input data concatenated together.
+   */
+  static Uint8List doubleDigestTwoInputs(Uint8List input1, Uint8List input2) {
+    SHA256 digest = new SHA256()
+      ..add(input1)
+      ..add(input2);
+    SHA256 digest2 = new SHA256()
+      ..add(digest.close());
+    return new Uint8List.fromList(digest2.close());
   }
   
   /**
@@ -107,18 +118,7 @@ class Utils {
    * 
    * "==" operator is used to compare the elements in the lists.
    */
-  //TODO replace with dart:collections/equality
-  static bool equalLists(List list1, List list2) {
-    if(list1.length != list2.length) {
-      return false;
-    }
-    for(int i = 0 ; i < list1.length ; i++) {
-      if(list1[i] != list2[i]) {
-        return false;
-      }
-    }
-    return true;
-  }
+  static bool equalLists(List list1, List list2) => new ListEquality(new DefaultEquality()).equals(list1, list2);
 
   /**
    * The regular BigInteger.toByteArray() method isn't quite what we often need: it appends a
@@ -280,4 +280,38 @@ class Utils {
       return result;
     }
   }
+  
+  /**
+   * Compute 32-bit logical shift right of a value. This emulates the JavaScript >>> operator.
+   */
+  static int lsr(int n, int shift) {
+    int shift5 = shift & 0x1f;
+    int n32 = 0xffffffff & n;
+    if (shift5 == 0) {
+      return n32;
+    } else {
+      return (n32 >> shift5) & ((0x7fffffff >> (shift5-1)));
+    }
+  }
+  
+  static final List<int> _bitMask = [0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80];
+  /**
+   * Checks if the given bit is set in data
+   */
+  static bool checkBitLE(Uint8List data, int index) {
+    return (data[Utils.lsr(index, 3)] & _bitMask[7 & index]) != 0;
+  }
+  
+  /**
+   * Sets the given bit in data to one
+   */
+  static void setBitLE(Uint8List data, int index) {
+    data[Utils.lsr(index, 3)] |= _bitMask[7 & index];
+  }
 }
+
+
+
+
+
+

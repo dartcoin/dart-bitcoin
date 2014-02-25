@@ -3,6 +3,19 @@ part of dartcoin.core;
 class Block extends Object with BitcoinSerialization {
   
   static const int HEADER_SIZE = 80;
+
+  /**
+   * A constant shared by the entire network: how large in bytes a block is allowed to be. One day we may have to
+   * upgrade everyone to change this, so Bitcoin can continue to grow. For now it exists as an anti-DoS measure to
+   * avoid somebody creating a titanically huge but valid block and forcing everyone to download/store it forever.
+   */
+  static const int MAX_BLOCK_SIZE = 1 * 1000 * 1000;
+  /**
+   * A "sigop" is a signature verification operation. Because they're expensive we also impose a separate limit on
+   * the number in a block to prevent somebody mining a huge block that has way more sigops than normal, so is very
+   * expensive/slow to verify.
+   */
+  static const int MAX_BLOCK_SIGOPS = MAX_BLOCK_SIZE ~/ 50;
   
   Sha256Hash _hash;
   
