@@ -14,8 +14,8 @@ class PongMessage extends Message {
     _nonce = ping.nonce;
   }
 
-  factory PongMessage.deserialize(Uint8List bytes, {bool lazy: true}) => 
-      new BitcoinSerialization.deserialize(new PongMessage(), bytes, length: Message.HEADER_LENGTH + 8, lazy: lazy);
+  factory PongMessage.deserialize(Uint8List bytes, {bool lazy, NetworkParameters params, int protocolVersion}) => 
+      new BitcoinSerialization.deserialize(new PongMessage(), bytes, length: Message.HEADER_LENGTH + 8, lazy: lazy, params: params, protocolVersion: protocolVersion);
   
   int get nonce {
     _needInstance();

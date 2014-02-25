@@ -37,9 +37,8 @@ class TransactionInput extends Object with BitcoinSerialization {
     _outpoint = new TransactionOutPoint(txid: Sha256Hash.ZERO_HASH, index: -1); //TODO verify
   }
   
-  factory TransactionInput.deserialize(Uint8List bytes, 
-      {int length: BitcoinSerialization.UNKNOWN_LENGTH, bool lazy: true}) =>
-      new BitcoinSerialization.deserialize(new TransactionInput(), bytes, length: length, lazy: lazy);
+  factory TransactionInput.deserialize(Uint8List bytes, {int length, bool lazy, NetworkParameters params}) =>
+      new BitcoinSerialization.deserialize(new TransactionInput(), bytes, length: length, lazy: lazy, params: params);
   
   TransactionOutPoint get outpoint {
     _needInstance();

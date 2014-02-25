@@ -21,8 +21,8 @@ class TransactionOutPoint extends Object with BitcoinSerialization {
     this.params = params;
   }
   
-  factory TransactionOutPoint.deserialize(Uint8List bytes, {bool lazy: true}) =>
-      new BitcoinSerialization.deserialize(new TransactionOutPoint(), bytes, length: 36, lazy: lazy);
+  factory TransactionOutPoint.deserialize(Uint8List bytes, {bool lazy, NetworkParameters params}) =>
+      new BitcoinSerialization.deserialize(new TransactionOutPoint(), bytes, length: 36, lazy: lazy, params: params);
   
   Sha256Hash get txid {
     _needInstance();

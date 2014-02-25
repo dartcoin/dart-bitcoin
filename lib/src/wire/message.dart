@@ -1,27 +1,27 @@
 part of dartcoin.core;
 
-typedef Message _MessageDeserializer(Uint8List);
+typedef Message _MessageDeserializer(Uint8List bytes, int length, bool lazy, NetworkParameters params, int protocolVersion);
 
 abstract class Message extends Object with BitcoinSerialization {
   
   // closurizing constructors is not (yet) possible
   static final Map<String, _MessageDeserializer> _MESSAGE_DESERIALIZERS = {
-        "addr"         : (Uint8List bytes) => new AddrMessage.deserialize(bytes),
-        "alert"        : (Uint8List bytes) => new AlertMessage.deserialize(bytes),
-        "block"        : (Uint8List bytes) => new BlockMessage.deserialize(bytes),
-        "getaddr"      : (Uint8List bytes) => new GetAddrMessage.deserialize(bytes),
-        "getblocks"    : (Uint8List bytes) => new GetBlocksMessage.deserialize(bytes),
-        "getdata"      : (Uint8List bytes) => new GetDataMessage.deserialize(bytes),
-        "getheaders"   : (Uint8List bytes) => new GetHeadersMessage.deserialize(bytes),
-        "headers"      : (Uint8List bytes) => new HeadersMessage.deserialize(bytes),
-        "inv"          : (Uint8List bytes) => new InvMessage.deserialize(bytes),
-        "mempool"      : (Uint8List bytes) => new MemPoolMessage.deserialize(bytes),
-        "notfound"     : (Uint8List bytes) => new NotFoundMessage.deserialize(bytes),
-        "ping"         : (Uint8List bytes) => new PingMessage.deserialize(bytes),
-        "pong"         : (Uint8List bytes) => new PongMessage.deserialize(bytes),
-        "tx"           : (Uint8List bytes) => new TxMessage.deserialize(bytes),
-        "verack"       : (Uint8List bytes) => new VerackMessage.deserialize(bytes),
-        "version"      : (Uint8List bytes) => new VersionMessage.deserialize(bytes),
+        "addr"         : (Uint8List bts, int len, bool laz, NetworkParameters par, int prv) => new AddrMessage.deserialize(bts, length: len, lazy: laz, params: par, protocolVersion: prv),
+        "alert"        : (Uint8List bts, int len, bool laz, NetworkParameters par, int prv) => new AlertMessage.deserialize(bts, length: len, lazy: laz, params: par, protocolVersion: prv),
+        "block"        : (Uint8List bts, int len, bool laz, NetworkParameters par, int prv) => new BlockMessage.deserialize(bts, length: len, lazy: laz, params: par, protocolVersion: prv),
+        "getaddr"      : (Uint8List bts, int len, bool laz, NetworkParameters par, int prv) => new GetAddrMessage.deserialize(bts, lazy: laz, params: par, protocolVersion: prv),
+        "getblocks"    : (Uint8List bts, int len, bool laz, NetworkParameters par, int prv) => new GetBlocksMessage.deserialize(bts, length: len, lazy: laz, params: par, protocolVersion: prv),
+        "getdata"      : (Uint8List bts, int len, bool laz, NetworkParameters par, int prv) => new GetDataMessage.deserialize(bts, length: len, lazy: laz, params: par, protocolVersion: prv),
+        "getheaders"   : (Uint8List bts, int len, bool laz, NetworkParameters par, int prv) => new GetHeadersMessage.deserialize(bts, length: len, lazy: laz, params: par, protocolVersion: prv),
+        "headers"      : (Uint8List bts, int len, bool laz, NetworkParameters par, int prv) => new HeadersMessage.deserialize(bts, length: len, lazy: laz, params: par, protocolVersion: prv),
+        "inv"          : (Uint8List bts, int len, bool laz, NetworkParameters par, int prv) => new InvMessage.deserialize(bts, length: len, lazy: laz, params: par, protocolVersion: prv),
+        "mempool"      : (Uint8List bts, int len, bool laz, NetworkParameters par, int prv) => new MemPoolMessage.deserialize(bts, length: len, lazy: laz, params: par, protocolVersion: prv),
+        "notfound"     : (Uint8List bts, int len, bool laz, NetworkParameters par, int prv) => new NotFoundMessage.deserialize(bts, length: len, lazy: laz, params: par, protocolVersion: prv),
+        "ping"         : (Uint8List bts, int len, bool laz, NetworkParameters par, int prv) => new PingMessage.deserialize(bts, lazy: laz, params: par, protocolVersion: prv),
+        "pong"         : (Uint8List bts, int len, bool laz, NetworkParameters par, int prv) => new PongMessage.deserialize(bts, lazy: laz, params: par, protocolVersion: prv),
+        "tx"           : (Uint8List bts, int len, bool laz, NetworkParameters par, int prv) => new TxMessage.deserialize(bts, length: len, lazy: laz, params: par, protocolVersion: prv),
+        "verack"       : (Uint8List bts, int len, bool laz, NetworkParameters par, int prv) => new VerackMessage.deserialize(bts, lazy: laz, params: par, protocolVersion: prv),
+        "version"      : (Uint8List bts, int len, bool laz, NetworkParameters par, int prv) => new VersionMessage.deserialize(bts, length: len, lazy: laz, params: par, protocolVersion: prv),
   };
   
   Map<String, Function> _messageConstructors = {
@@ -51,10 +51,9 @@ abstract class Message extends Object with BitcoinSerialization {
     _payload = payload;
   }
   
-  factory Message.deserialize(Uint8List bytes, 
-      {int length: BitcoinSerialization.UNKNOWN_LENGTH, bool lazy: true}) {
+  factory Message.deserialize(Uint8List bytes, {int length, bool lazy, NetworkParameters params, int protocolVersion}) {
     String command = _parseCommand(bytes.sublist(4));
-    return _MESSAGE_DESERIALIZERS[command](bytes);
+    return _MESSAGE_DESERIALIZERS[command](bytes, length, lazy, params, protocolVersion); 
   }
   
   /**

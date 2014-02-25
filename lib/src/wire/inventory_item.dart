@@ -15,8 +15,8 @@ class InventoryItem extends Object with BitcoinSerialization {
   InventoryItem.fromTransaction(Transaction tx) : this(InventoryItemType.MSG_TX, tx.hash);
   InventoryItem.fromBlock(Block block) : this(InventoryItemType.MSG_BLOCK, block.hash);
   
-  factory InventoryItem.deserialize(Uint8List bytes, {bool lazy: true}) => 
-          new BitcoinSerialization.deserialize(new InventoryItem(null, null), bytes, length: SERIALIZATION_LENGTH, lazy: lazy);
+  factory InventoryItem.deserialize(Uint8List bytes, {bool lazy, NetworkParameters params}) => 
+          new BitcoinSerialization.deserialize(new InventoryItem(null, null), bytes, length: SERIALIZATION_LENGTH, lazy: lazy, params: params);
   
   InventoryItemType get type {
     _needInstance();

@@ -17,9 +17,8 @@ class TransactionOutput extends Object with BitcoinSerialization {
     this.params = params;
   }
   
-  factory TransactionOutput.deserialize(Uint8List bytes, 
-      {int length: BitcoinSerialization.UNKNOWN_LENGTH, bool lazy: true}) =>
-      new BitcoinSerialization.deserialize(new TransactionOutput(), bytes, length: length, lazy: lazy);
+  factory TransactionOutput.deserialize(Uint8List bytes, {int length, bool lazy, NetworkParameters params}) =>
+      new BitcoinSerialization.deserialize(new TransactionOutput(), bytes, length: length, lazy: lazy, params: params);
   
   factory TransactionOutput.payToAddress(Address to, int amount, 
       [Transaction parent, NetworkParameters params = NetworkParameters.MAIN_NET]) {

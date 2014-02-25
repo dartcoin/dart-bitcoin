@@ -7,8 +7,8 @@ class AddrMessage extends Message {
     
   }
   
-  factory AddrMessage.deserialize(Uint8List bytes, {int length: BitcoinSerialization.UNKNOWN_LENGTH, bool lazy: true}) => 
-          new BitcoinSerialization.deserialize(new AddrMessage(), bytes, length: length, lazy: lazy);
+  factory AddrMessage.deserialize(Uint8List bytes, {int length, bool lazy, NetworkParameters params, int protocolVersion}) => 
+          new BitcoinSerialization.deserialize(new AddrMessage(), bytes, length: length, lazy: lazy, params: params, protocolVersion: protocolVersion);
   
   int _deserialize(Uint8List bytes) {
     

@@ -4,8 +4,8 @@ class MemPoolMessage extends Message {
   
   MemPoolMessage() : super("mempool");
 
-  factory MemPoolMessage.deserialize(Uint8List bytes, {int length: BitcoinSerialization.UNKNOWN_LENGTH, bool lazy: true}) => 
-      new BitcoinSerialization.deserialize(new MemPoolMessage(), bytes, length: length, lazy: lazy);
+  factory MemPoolMessage.deserialize(Uint8List bytes, {int length, bool lazy, NetworkParameters params, int protocolVersion}) => 
+      new BitcoinSerialization.deserialize(new MemPoolMessage(), bytes, length: length, lazy: lazy, params: params, protocolVersion: protocolVersion);
   
   int _deserialize(Uint8List bytes) {
     int offset = Message._preparePayloadSerialization(bytes, this);

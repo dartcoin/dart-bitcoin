@@ -25,9 +25,8 @@ class Transaction extends Object with BitcoinSerialization {
     this.params = params;
   }
   
-  factory Transaction.deserialize(Uint8List bytes, 
-      {int length: BitcoinSerialization.UNKNOWN_LENGTH, bool lazy: true}) => 
-        new BitcoinSerialization.deserialize(new Transaction(), bytes, length: length, lazy: lazy);
+  factory Transaction.deserialize(Uint8List bytes, {int length, bool lazy, NetworkParameters params}) => 
+        new BitcoinSerialization.deserialize(new Transaction(), bytes, length: length, lazy: lazy, params: params);
   
   int get version {
     _needInstance();

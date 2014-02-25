@@ -8,8 +8,8 @@ class HeadersMessage extends Message {
     _headers = headers;
   }
 
-  factory HeadersMessage.deserialize(Uint8List bytes, {int length: BitcoinSerialization.UNKNOWN_LENGTH, bool lazy: true}) => 
-      new BitcoinSerialization.deserialize(new HeadersMessage(null), bytes, length: length, lazy: lazy);
+  factory HeadersMessage.deserialize(Uint8List bytes, {int length, bool lazy, NetworkParameters params, int protocolVersion}) => 
+      new BitcoinSerialization.deserialize(new HeadersMessage(null), bytes, length: length, lazy: lazy, params: params, protocolVersion: protocolVersion);
   
   List<Block> get headers { 
     _needInstance();

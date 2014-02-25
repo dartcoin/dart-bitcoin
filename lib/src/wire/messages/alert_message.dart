@@ -25,8 +25,8 @@ class AlertMessage extends Message {
     this._signature = signature;
   }
 
-  factory AlertMessage.deserialize(Uint8List bytes, {int length: BitcoinSerialization.UNKNOWN_LENGTH, bool lazy: true}) => 
-          new BitcoinSerialization.deserialize(new AlertMessage(null, null), bytes, length: length, lazy: lazy);
+  factory AlertMessage.deserialize(Uint8List bytes, {int length, bool lazy, NetworkParameters params, int protocolVersion}) => 
+          new BitcoinSerialization.deserialize(new AlertMessage(null, null), bytes, length: length, lazy: lazy, params: params, protocolVersion: protocolVersion);
   
   Uint8List get message {
     _needInstance();

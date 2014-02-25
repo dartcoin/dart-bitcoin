@@ -18,7 +18,9 @@ abstract class BitcoinSerialization {
   bool retainSerialization = false;
   int _serializationLength = UNKNOWN_LENGTH;
   
+  // use getters for these attributes
   NetworkParameters _params;
+  int _protocolVersion;
   
   /**
    * Serialize this object according to the Bitcoin protocol.
@@ -46,11 +48,16 @@ abstract class BitcoinSerialization {
    *   new BitcoinSerialization.deserialize(new Transaction(), bytes, length);
    */
   factory BitcoinSerialization.deserialize(BitcoinSerialization instance, Uint8List bytes, 
-      {int length: UNKNOWN_LENGTH, bool lazy: true}) {
+      { int length: UNKNOWN_LENGTH, 
+        bool lazy: true, 
+        NetworkParameters params: NetworkParameters.MAIN_NET, 
+        int protocolVersion }) {
     _serialization = bytes;
     if(length != UNKNOWN_LENGTH)
       _serializationLength = length;
     _isSerialized = true;
+    instance._params = params;
+    instance._protocolVersion = protocolVersion;
     if(!lazy) {
       instance._needInstance();
     }
@@ -94,6 +101,11 @@ abstract class BitcoinSerialization {
       return serialize().length;
   }
   
+  /**
+   * Call this method to trigger deserialization when required.
+   * 
+   * This method is called when access to object attributes is required.
+   */
   void _needInstance() {
     if(!_isSerialized)
       return;
@@ -103,13 +115,19 @@ abstract class BitcoinSerialization {
     _isSerialized = false;
   }
   
-  NetworkParameters get params {
-    return _params;
-  }
+  NetworkParameters get params => (_params != null) ? _params : NetworkParameters.MAIN_NET;
   
   void set params(NetworkParameters params) {
-    _params = params != null ? params : NetworkParameters.MAIN_NET;
+    _params = params;
   }
+  
+  int get protocolVersion => (_protocolVersion != null) ? _protocolVersion : NetworkParameters.PROTOCOL_VERSION;
+  
+  void set protocolVersion(int protocolVersion) {
+    _protocolVersion = protocolVersion;
+  }
+  
+  
 }
 
 

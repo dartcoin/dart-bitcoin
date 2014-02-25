@@ -8,9 +8,8 @@ class VarStr extends Object with BitcoinSerialization {
     _content = content;
   }
   
-  factory VarStr.deserialize(Uint8List bytes, 
-      {int length: BitcoinSerialization.UNKNOWN_LENGTH, bool lazy: true}) =>
-      new BitcoinSerialization.deserialize(new VarStr(""), bytes, length: length, lazy: lazy);
+  factory VarStr.deserialize(Uint8List bytes, {int length, bool lazy, NetworkParameters params}) =>
+      new BitcoinSerialization.deserialize(new VarStr(""), bytes, length: length, lazy: lazy, params: params);
   
   String get content {
     _needInstance();

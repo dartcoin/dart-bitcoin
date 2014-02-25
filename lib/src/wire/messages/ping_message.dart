@@ -15,8 +15,8 @@ class PingMessage extends Message {
     return new PingMessage(nonce);
   }
 
-  factory PingMessage.deserialize(Uint8List bytes, {bool lazy: true}) => 
-      new BitcoinSerialization.deserialize(new PingMessage(), bytes, length: Message.HEADER_LENGTH + 8, lazy: lazy);
+  factory PingMessage.deserialize(Uint8List bytes, {bool lazy, NetworkParameters params, int protocolVersion}) => 
+      new BitcoinSerialization.deserialize(new PingMessage(), bytes, length: Message.HEADER_LENGTH + 8, lazy: lazy, params: params, protocolVersion: protocolVersion);
   
   int get nonce {
     _needInstance();
