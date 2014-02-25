@@ -8,6 +8,11 @@ class BlockMessage extends Message {
     _block = block;
   }
   
+  Block get block {
+    _needInstance();
+    return _block;
+  }
+  
   factory BlockMessage.deserialize(Uint8List bytes, {int length: BitcoinSerialization.UNKNOWN_LENGTH, bool lazy: true}) => 
           new BitcoinSerialization.deserialize(new BlockMessage(null), bytes, length: length, lazy: lazy);
   
