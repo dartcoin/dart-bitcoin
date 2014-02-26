@@ -212,6 +212,55 @@ class Utils {
       result = result - pow(2, 8 * size);
     }
   }
+  
+  /**
+   * Encodes the [InternetAddress] to bytes.
+   * 
+   * TODO does not yet work for hybrid addresses like
+   * 0:0:0:0:0:0:127.0.0.1
+   * 
+   * Implementation based on this SO post: 
+   * https://stackoverflow.com/questions/3437773/php-convert-ipv6-to-binary-memory-representation
+   */
+  static Uint8List encodeInternetAddressAsIPv6(InternetAddress address) {
+    if(address.type == InternetAddressType.IP_V4) {
+      Uint8List v6addr = new Uint8List(16);
+      int i = 12;
+      for(String part in address.address.split(".")) {
+        v6addr[i++] = int.parse(part);
+      }
+      v6addr[10] = 0xFF;
+      v6addr[11] = 0xFF;
+      return new Uint8List.fromList(v6addr);
+    }
+    int delimCount = address.address.split(":").length - 1;
+    if (delimCount < 1 || delimCount > 7) throw new FormatException("illegal format");
+    List<String> r = address.address.split(":");
+    int rcount = r.length;
+    int doub = r.indexOf("");
+    if(doub >= 0) {
+        int len = (doub == 0 || doub == rcount - 1 ? 2 : 1);
+        r.replaceRange(doub, doub + len, new List.filled(8 + len - rcount, "0"));
+    }
+    return new Uint8List.fromList(Utils.hexToBytes(r.map((elem) => _zeroPad(elem, 4)).join()));
+  }
+  
+  static String _zeroPad(String toPad, int size) {
+    return new List.filled(size - toPad.length, "0").join() + toPad;
+  }
+  
+  /**
+   * Decode the bytes to an [InternetAddress].
+   */
+  static InternetAddress decodeInternetAddressAsIPv6(Uint8List bytes) {
+    if(bytes.length != 16) throw new FormatException("illegal format");
+    String address = "";
+    for(int i = 0 ; i < 8 ; i++) {
+      if(i != 0) address += ":";
+      address += Utils.bytesToHex(bytes.sublist(i * 2, i * 2 + 2));
+    }
+    return new InternetAddress(address);
+  }
 
 
   /**
