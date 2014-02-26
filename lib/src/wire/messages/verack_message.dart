@@ -7,10 +7,7 @@ class VerackMessage extends Message {
   factory VerackMessage.deserialize(Uint8List bytes, {bool lazy, NetworkParameters params, int protocolVersion}) => 
           new BitcoinSerialization.deserialize(new VerackMessage(), bytes, length: Message.HEADER_LENGTH, lazy: lazy, params: params, protocolVersion: protocolVersion);
   
-  int _deserialize(Uint8List bytes) {
-    int offset = Message._preparePayloadDeserialization(bytes, this);
-    return offset;
-  }
+  int _deserializePayload(Uint8List bytes) => 0;
   
   Uint8List _serialize_payload() {
     return new Uint8List(0);

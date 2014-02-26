@@ -26,8 +26,8 @@ abstract class RequestMessage extends Message {
     return _stop;
   }
   
-  int _deserialize(Uint8List bytes) {
-    int offset = Message._preparePayloadDeserialization(bytes, this);
+  int _deserializePayload(Uint8List bytes) {
+    int offset = 0;
     protocolVersion = Utils.bytesToUintLE(bytes.sublist(offset), 4);
     offset += 4;
     VarInt nbLocators = new VarInt.deserialize(bytes.sublist(offset));

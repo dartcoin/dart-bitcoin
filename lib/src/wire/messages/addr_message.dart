@@ -32,8 +32,8 @@ class AddrMessage extends Message {
     _addresses.remove(address);
   }
   
-  int _deserialize(Uint8List bytes) {
-    int offset = Message._preparePayloadDeserialization(bytes, this);
+  int _deserializePayload(Uint8List bytes) {
+    int offset = 0;
     VarInt nbAddrs = new VarInt.deserialize(bytes.sublist(offset), lazy: false);
     offset += nbAddrs.serializationLength;
     if(nbAddrs.value > MAX_ADDRESSES) 

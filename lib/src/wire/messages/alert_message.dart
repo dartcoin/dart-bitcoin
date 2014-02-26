@@ -43,7 +43,7 @@ class AlertMessage extends Message {
     return _signature;
   }
   
-  int _deserialize(Uint8List bytes) {
+  int _deserializePayload(Uint8List bytes) {
     //TODO
   }
   

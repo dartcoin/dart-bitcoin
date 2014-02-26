@@ -20,8 +20,8 @@ class FilterAddMessage extends Message {
   factory FilterAddMessage.deserialize(Uint8List bytes, {int length, bool lazy, NetworkParameters params, int protocolVersion}) => 
           new BitcoinSerialization.deserialize(new FilterAddMessage(null), bytes, length: length, lazy: lazy, params: params, protocolVersion: protocolVersion);
 
-  int _deserialize(Uint8List bytes) {
-    int offset = Message._preparePayloadDeserialization(bytes, this);
+  int _deserializePayload(Uint8List bytes) {
+    int offset = 0;
     VarInt dataSize = new VarInt.deserialize(bytes, lazy: false);
     offset += dataSize.size;
     _data = bytes.sublist(offset, offset + dataSize.value);

@@ -27,8 +27,8 @@ class PingMessage extends Message {
     nonce != null;
   }
   
-  int _deserialize(Uint8List bytes) {
-    int offset = Message._preparePayloadDeserialization(bytes, this);
+  int _deserializePayload(Uint8List bytes) {
+    int offset = 0;
     _nonce = Utils.bytesToUintLE(bytes.sublist(offset), 8);
     offset += 8;
     return offset;

@@ -16,8 +16,8 @@ class MerkleBlockMessage extends Message {
     return _block;
   }
   
-  int _deserialize(Uint8List bytes) {
-    int offset = Message._preparePayloadDeserialization(bytes, this);
+  int _deserializePayload(Uint8List bytes) {
+    int offset = 0;
     _block = new FilteredBlock.deserialize(bytes.sublist(offset), lazy: false);
     offset += _block.serializationLength;
     return offset;

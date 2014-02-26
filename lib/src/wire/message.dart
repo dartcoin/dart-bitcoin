@@ -32,27 +32,17 @@ abstract class Message extends Object with BitcoinSerialization {
     "block": BlockMessage
   };
   
-  static const int HEADER_LENGTH = 4 + COMMAND_LENGTH;
+  static const int HEADER_LENGTH = 4 + COMMAND_LENGTH + 4 + 4;
   static const int COMMAND_LENGTH = 12;
   
   int _magic;
   String command;
   
-  Uint8List _payload;
+  int _payloadLength;
   Uint8List _checksum;
   
   Message(String this.command) {
     _magic = NetworkParameters.MAIN_NET.magicValue;
-  }
-  
-  Message.withPayload(String this.command, Uint8List payload) {
-    _magic = NetworkParameters.MAIN_NET.magicValue;
-    _payload = payload;
-  }
-  
-  Message.withMagic(int magic, String this.command, [Uint8List payload]) {
-    _magic = magic;
-    _payload = payload;
   }
   
   factory Message.deserialize(Uint8List bytes, {int length, bool lazy, NetworkParameters params, int protocolVersion}) {
@@ -60,52 +50,58 @@ abstract class Message extends Object with BitcoinSerialization {
     return _MESSAGE_DESERIALIZERS[command](bytes, length, lazy, params, protocolVersion); 
   }
   
-  /**
-   * This method is used by Message subclasses when deserializing themselves.
-   * Because they only need the payload to deserialize, this method does the following:
-   * - parses the magic and command value fro [bytes] and returns the offset at which the payload begins 
-   * - sets the magic value of [message]
-   * - verifies the command string from the serialization with [message.command]
-   *    (TODO it might be a possibility to make it possible to skip this check when it has already been performed)
-   */
-  static int _preparePayloadDeserialization(Uint8List bytes, Message message) {
-    if(bytes.length < 16) 
-      throw new SerializationException("Cannot deserialize because serialization is too short.");
-    message._magic = Utils.bytesToUintLE(bytes, 4);
-    String cmd = _parseCommand(bytes.sublist(4, HEADER_LENGTH));
-    if(cmd != message.command)
-      throw new SerializationException("Deserialization error: serialization belongs to different message type.");
-    return HEADER_LENGTH;
-  }
-  
-  /**
-   * This is used to deserialize a message object from it's payload. 
-   * The magic value is added afterwards. 
-   */
-  //Message._fromPayload(Uint8List payloadBytes);
-  
-  Uint8List _serialize_payload();
-  
   int get magic {
     _needInstance();
     return _magic;
   }
   
-  Uint8List get payload {
-    if(_payload == null)
-      return _serialize_payload();
-    return _payload;
-  }
-  
+  /**
+   * It is important to note that the checksum invalidates when objects embedded,
+   * like blocks and transactions, change. 
+   * Use [calculateChecksum()] to manually refresh the sum after a change.
+   */
   Uint8List get checksum {
     if(_checksum == null)
-      _checksum = _calculateChecksum();
+      calculateChecksum();
     return _checksum;
   }
   
-  Uint8List _calculateChecksum() {
+  Uint8List calculateChecksum() {
     Sha256Hash sum = Sha256Hash.doubleDigest(payload);
     _checksum = sum.bytes.getRange(0, 4);
+  }
+  
+  Uint8List get payload {
+    return serialize().sublist(HEADER_LENGTH);
+  }
+  
+  int _deserialize(Uint8List bytes) {
+    int offset = 0;
+    if(bytes.length < 16) 
+      throw new SerializationException("Cannot deserialize because serialization is too short.");
+    _magic = Utils.bytesToUintLE(bytes, 4);
+    offset += 4;
+    String cmd = _parseCommand(bytes.sublist(offset, offset + COMMAND_LENGTH));
+    offset += COMMAND_LENGTH;
+    if(command != null && command != cmd)
+      throw new SerializationException("Deserialization error: serialization belongs to different message type.");
+    int payloadLength = Utils.bytesToUintLE(bytes.sublist(offset), 4);
+    _serializationLength = HEADER_LENGTH + payloadLength; // must be set here because _validSum requires payload, which requires this value
+    offset += 4;
+    Uint8List sum = bytes.sublist(offset, offset + 4);
+    offset += 4;
+    if(payloadLength != _deserializePayload(bytes.sublist(HEADER_LENGTH)))
+      throw new SerializationException("Incorrect payload length");
+    if(!_validChecksum(sum))
+      throw new SerializationException("Incorrect checksum provided in serialized message");
+    return HEADER_LENGTH + payloadLength;
+  }
+  
+  int _deserializePayload(Uint8List bytes);
+  
+  bool _validChecksum(Uint8List sum) {
+    calculateChecksum();
+    return Utils.equalLists(sum, _checksum);
   }
   
   Uint8List _serialize() {
@@ -132,15 +128,22 @@ abstract class Message extends Object with BitcoinSerialization {
     return new Uint8List.fromList(result);
   }
   
+  Uint8List _serialize_payload();
+  
   static String _parseCommand(Uint8List bytes) {
-    int word = COMMAND_LENGTH - 1;
-    while(bytes[word] == 0) word--;
+    int word = COMMAND_LENGTH;
+    while(bytes[word - 1] == 0) word--;
     return new AsciiCodec().decode(bytes.sublist(0, word));
   }
   
   int _lazySerializationLength(Uint8List bytes) {
     int payloadLength = Utils.bytesToUintLE(bytes.sublist(4 + COMMAND_LENGTH), 4);
-    return 4 + COMMAND_LENGTH + 4 + 4 + payloadLength;
+    return HEADER_LENGTH + payloadLength;
+  }
+  
+  void _needInstance([bool clearCache]) {
+    super._needInstance(clearCache);
+    _checksum = null;
   }
   
   
