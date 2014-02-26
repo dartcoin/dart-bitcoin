@@ -3,20 +3,17 @@ part of dartcoin.core;
 //TODO implement locator stacking here?
 abstract class RequestMessage extends Message {
   
-  static final int _VERSION = 0x01000000;
-  
-  final int version = _VERSION;
-  
   List<Sha256Hash> _locators;
   Sha256Hash _stop;
   
-  RequestMessage(String command, List<Sha256Hash> locators, [Sha256Hash stop]) : super(command) {
+  RequestMessage(String command, List<Sha256Hash> locators, [Sha256Hash stop, int protocolVersion = NetworkParameters.PROTOCOL_VERSION]) : super(command) {
     if(stop == null) {
       //TODO is this correct?
       stop = new Sha256Hash(Utils.uintToBytesLE(0, 32));
     }
     _locators = locators;
     _stop = stop;
+    this.protocolVersion = protocolVersion;
   }
   
   List<Sha256Hash> get locators {
@@ -31,9 +28,7 @@ abstract class RequestMessage extends Message {
   
   int _deserialize(Uint8List bytes) {
     int offset = Message._preparePayloadDeserialization(bytes, this);
-    int version = Utils.bytesToUintLE(bytes.sublist(offset), 4);
-    if(version != _VERSION)
-      throw new SerializationException("Version mismatch!");
+    protocolVersion = Utils.bytesToUintLE(bytes.sublist(offset), 4);
     offset += 4;
     VarInt nbLocators = new VarInt.deserialize(bytes.sublist(offset));
     offset += nbLocators.size;
@@ -49,7 +44,7 @@ abstract class RequestMessage extends Message {
   
   Uint8List _serialize_payload() {
     List<int> result = new List<int>()
-      ..addAll(Utils.uintToBytesLE(version, 4))
+      ..addAll(Utils.uintToBytesLE(protocolVersion, 4))
       ..addAll(new VarInt(locators.length).serialize());
     for(Sha256Hash hash in locators) {
       result.addAll(hash.bytes);

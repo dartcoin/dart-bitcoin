@@ -2,6 +2,8 @@ part of dartcoin.core;
 
 class Block extends Object with BitcoinSerialization {
   
+  static const int BLOCK_VERSION = 1;
+  
   static const int HEADER_SIZE = 80;
 
   /**
@@ -19,7 +21,7 @@ class Block extends Object with BitcoinSerialization {
   
   Sha256Hash _hash;
   
-  int _version = 0x01000000;
+  int _version;
   Sha256Hash _previous;
   Sha256Hash _merkle;
   int _timestamp;
@@ -37,6 +39,7 @@ class Block extends Object with BitcoinSerialization {
           int nonce,
           List<Transaction> transactions,
           int height,
+          int version: BLOCK_VERSION,
           NetworkParameters params: NetworkParameters.MAIN_NET}) {
     _hash = hash;
     _previous = previousBlock;
@@ -46,6 +49,7 @@ class Block extends Object with BitcoinSerialization {
     _nonce = nonce;
     _txs = transactions;
     _height = height;
+    _version = version;
     this.params = params;
   }
   

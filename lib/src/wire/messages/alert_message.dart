@@ -3,10 +3,12 @@ part of dartcoin.core;
 class AlertMessage extends Message {
   //TODO implement
   
+  static const int ALERT_VERSION = 1;
+  
   Uint8List _message;
   Uint8List _signature;
   
-  int version;
+  int version; // specific version for alert messages
   int relayUntil;
   int expiration;
   int id;

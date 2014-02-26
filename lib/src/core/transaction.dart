@@ -2,9 +2,11 @@ part of dartcoin.core;
 
 class Transaction extends Object with BitcoinSerialization {
   
+  static const int TRANSACTION_VERSION = 1;
+  
   Sha256Hash _hash;
   
-  int _version = 0x01000000;
+  int _version;
   List<TransactionInput> _inputs;
   List<TransactionOutput> _outputs;
   int _lockTime;
@@ -16,12 +18,14 @@ class Transaction extends Object with BitcoinSerialization {
                 List<TransactionOutput> outputs,
                 int lockTime,
                 Block parentBlock,
+                int version: TRANSACTION_VERSION,
                 NetworkParameters params: NetworkParameters.MAIN_NET}) {
     _hash = txid;
     _inputs = inputs;
     _outputs = outputs;
     _lockTime = lockTime;
     _parent = parentBlock;
+    _version = version;
     this.params = params;
   }
   
@@ -277,7 +281,7 @@ class Transaction extends Object with BitcoinSerialization {
   
   int _deserialize(Uint8List bytes) {
     int offset = 0;
-    _version = Utils.bytesToUintBE(bytes.sublist(0), 4);
+    _version = Utils.bytesToUintBE(bytes, 4);
     offset += 4;
     _inputs = new List<TransactionInput>();
     VarInt nbInputs = new VarInt.deserialize(bytes.sublist(offset), lazy: false);
