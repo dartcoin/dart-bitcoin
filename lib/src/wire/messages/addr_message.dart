@@ -23,12 +23,12 @@ class AddrMessage extends Message {
           new BitcoinSerialization.deserialize(new AddrMessage(null), bytes, length: length, lazy: lazy, params: params, protocolVersion: protocolVersion);
   
   void addAddress(PeerAddress address) {
-    _needInstance();
+    _needInstance(true);
     _addresses.add(address);
   }
   
   void removeAddress(PeerAddress address) {
-    _needInstance();
+    _needInstance(true);
     _addresses.remove(address);
   }
   

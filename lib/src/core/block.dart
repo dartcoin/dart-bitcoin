@@ -52,7 +52,7 @@ class Block extends Object with BitcoinSerialization {
   factory Block.deserialize(Uint8List bytes, {int length, bool lazy, NetworkParameters params}) =>  
           new BitcoinSerialization.deserialize(new Block(), bytes, length: length, lazy: lazy, params: params);
   
-  int get version {
+  int get version { //TODO look into this, should be 1 or 2 (somehign with coinbase input)
     _needInstance();
     return _version;
   }
@@ -66,7 +66,7 @@ class Block extends Object with BitcoinSerialization {
   }
   
   void set hash(Sha256Hash hash) {
-    _needInstance();
+    _needInstance(true);
     _hash = hash;
   }
   
@@ -76,9 +76,8 @@ class Block extends Object with BitcoinSerialization {
   }
   
   void set previousBlock(Sha256Hash previousBlock) {
-    _needInstance();
+    _needInstance(true);
     _previous = previousBlock;
-    _hash = null;
   }
   
   Sha256Hash get merkleRoot {
@@ -90,9 +89,8 @@ class Block extends Object with BitcoinSerialization {
   }
   
   void set merkleRoot(Sha256Hash merkleRoot) {
-    _needInstance();
+    _needInstance(true);
     _merkle = merkleRoot;
-    _hash = null;
   }
   
   int get timestamp {
@@ -101,9 +99,8 @@ class Block extends Object with BitcoinSerialization {
   }
   
   void set timestamp(int timestamp) {
-    _needInstance();
+    _needInstance(true);
     _timestamp = timestamp;
-    _hash = null;
   }
   
   int get bits {
@@ -112,9 +109,8 @@ class Block extends Object with BitcoinSerialization {
   }
   
   void set bits(int bits) {
-    _needInstance();
+    _needInstance(true);
     _bits = bits;
-    _hash = null;
   }
   
   int get nonce {
@@ -123,9 +119,8 @@ class Block extends Object with BitcoinSerialization {
   }
   
   void set nonce(int nonce) {
-    _needInstance();
+    _needInstance(true);
     _nonce = nonce;
-    _hash = null;
   }
   
   int get height {
@@ -142,7 +137,7 @@ class Block extends Object with BitcoinSerialization {
   }
   
   void set transactions(List<Transaction> transactions) {
-    _needInstance();
+    _needInstance(true);
     _txs = transactions;
     _merkle = null;
   }
@@ -173,7 +168,7 @@ class Block extends Object with BitcoinSerialization {
    * Adds a transaction to this block, with or without checking the sanity of doing so. 
    */
   void addTransaction(Transaction t, [bool runSanityChecks = true]) {
-    _needInstance();
+    _needInstance(true);
     if (_txs == null) {
       _txs = new List<Transaction>();
     }
@@ -185,16 +180,15 @@ class Block extends Object with BitcoinSerialization {
     _txs.add(t);
     // Force a recalculation next time the values are needed.
     _merkle = null;
-    _hash = null;
   }
   
   void _calculateHash() {
-    _needInstance();
+    _needInstance(true);
     _hash = Sha256Hash.doubleDigest(_serializeHeader());
   }
   
   void _calculateMerkleRoot() {
-    _needInstance();
+    _needInstance(true);
     // first add all tx hashes to the tree
     List<Sha256Hash> tree = new List();
     for(Transaction tx in transactions) {
@@ -202,7 +196,7 @@ class Block extends Object with BitcoinSerialization {
     }
     // then complete the tree
     _buildMerkleTree(tree);
-    merkleRoot = tree.last;
+    _merkle = tree.last;
   }
   
   static List<Sha256Hash> _buildMerkleTree(List<Sha256Hash> tree) {
@@ -258,14 +252,13 @@ class Block extends Object with BitcoinSerialization {
   }
   
   Uint8List _serializeHeader() {
-    List<int> result = new List()
+    return new Uint8List.fromList(new List<int>()
       ..addAll(Utils.uintToBytesBE(version, 4))
       ..addAll(previousBlock.bytes)
       ..addAll(merkleRoot.bytes)
       ..addAll(Utils.uintToBytesBE(timestamp, 4))
       ..addAll(Utils.uintToBytesBE(bits, 4))
-      ..addAll(Utils.uintToBytesBE(nonce, 4));
-    return new Uint8List.fromList(result);
+      ..addAll(Utils.uintToBytesBE(nonce, 4)));
   }
   
   /**
@@ -303,6 +296,12 @@ class Block extends Object with BitcoinSerialization {
       _txs.add(tx);
     }
     return offset;
+  }
+  
+  @override
+  void _needInstance([bool clearCache = false]) {
+    super._needInstance(clearCache);
+    _hash = null;
   }
 }
 

@@ -106,9 +106,12 @@ abstract class BitcoinSerialization {
    * 
    * This method is called when access to object attributes is required.
    */
-  void _needInstance() {
-    if(!_isSerialized)
+  void _needInstance([bool clearCache = false]) {
+    if(!_isSerialized) {
+      if(clearCache && retainSerialization)
+        _serialization = null;
       return;
+    }
     _serializationLength = _deserialize(_serialization);
     if(!retainSerialization)
       _serialization = null;

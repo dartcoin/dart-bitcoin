@@ -113,7 +113,7 @@ class Transaction extends Object with BitcoinSerialization {
       throw new Exception("The input must be either a TransactionInput or TransactionOutput object.");
     if(input is TransactionOutput)
       input = new TransactionInput(params: params, parentTransaction: this, output: input);
-    _needInstance();
+    _needInstance(true);
     input.parentTransaction = this;
     _inputs.add(input);
     return input;
@@ -122,6 +122,7 @@ class Transaction extends Object with BitcoinSerialization {
   //TODO add signedinput
   
   void clearInputs() {
+    _needInstance(true);
     _inputs.forEach((i) => i.parentTransaction = null);
     _inputs.clear();
   }
@@ -130,21 +131,22 @@ class Transaction extends Object with BitcoinSerialization {
    * Adds the transaction output to this transaction and returns it.
    */
   TransactionOutput addOutput(TransactionOutput output) {
-    _needInstance();
+    _needInstance(true);
     output.parentTransaction = this;
     _outputs.add(output);
     return output;
   }
   
   void clearOutputs() {
+    _needInstance(true);
     _outputs.forEach((o) => o.parentTransaction = null);
     _outputs.clear();
   }
   
   @override
   operator ==(Transaction other) {
-    if(!(other is Transaction)) return false;
-    return version == other.version && 
+    return other is Transaction &&
+        version == other.version && 
         Utils.equalLists(inputs, other.inputs) && 
         Utils.equalLists(outputs, other.outputs) &&
         lockTime == other.lockTime;
@@ -152,11 +154,13 @@ class Transaction extends Object with BitcoinSerialization {
   
   @override
   int get hashCode {
+    _needInstance();
     // first 32 bits of txid hash
-    return txid.bytes[0] << 24 + txid.bytes[1] << 16 + txid.bytes[2] << 8 + txid.bytes[3];
+    return _hash.bytes[0] << 24 + _hash.bytes[1] << 16 + _hash.bytes[2] << 8 + _hash.bytes[3];
   }
   
   void _calculateHash() {
+    _needInstance(true);
     _hash = Sha256Hash.doubleDigest(serialize());
   }
   
@@ -262,14 +266,13 @@ class Transaction extends Object with BitcoinSerialization {
   }
   
   Uint8List _serialize() {
-    List<int> result = new List()
+    return new Uint8List.fromList(new List<int>()
       ..addAll(Utils.uintToBytesBE(version, 4))
       ..addAll(new VarInt(inputs.length).serialize())
       ..addAll(inputs.map((input) => input.serialize()))
       ..addAll(new VarInt(outputs.length).serialize())
       ..addAll(outputs.map((output) => output.serialize()))
-      ..addAll(Utils.uintToBytesBE(lockTime, 4));
-    return new Uint8List.fromList(result);
+      ..addAll(Utils.uintToBytesBE(lockTime, 4)));
   }
   
   int _deserialize(Uint8List bytes) {
@@ -295,6 +298,12 @@ class Transaction extends Object with BitcoinSerialization {
     _lockTime = Utils.bytesToUintBE(bytes.sublist(offset), 4);
     offset += 4;
     return offset;
+  }
+  
+  @override
+  void _needInstance([bool clearCache]) {
+    super._needInstance(clearCache);
+    _hash = null;
   }
 }
 

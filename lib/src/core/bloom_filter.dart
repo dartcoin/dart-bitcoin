@@ -210,7 +210,7 @@ class BloomFilter extends Object with BitcoinSerialization {
    * Insert the given arbitrary data into the filter
    */
   void insert(Uint8List object) {
-    _needInstance();
+    _needInstance(true);
     for (int i = 0; i < _hashFuncs; i++)
       Utils.setBitLE(_data, _hash(i, object));
   }
@@ -223,7 +223,7 @@ class BloomFilter extends Object with BitcoinSerialization {
    * transaction instead of 100-300 bytes as per usual.
    */
   void setMatchAll() {
-    _needInstance();
+    _needInstance(true);
     _data = new Uint8List.fromList([0xff]);
   }
 
@@ -232,7 +232,7 @@ class BloomFilter extends Object with BitcoinSerialization {
    * IllegalArgumentException will be thrown.
    */
   void merge(BloomFilter filter) {
-    _needInstance();
+    _needInstance(true);
     filter._needInstance();
     if (!this.matchesAll() && !filter.matchesAll()) {
       if(!(filter._data.length == _data.length &&

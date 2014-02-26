@@ -40,7 +40,7 @@ class PeerAddress extends Object with BitcoinSerialization {
   }
   
   void set address(InternetAddress address) {
-    _needInstance();
+    _needInstance(true);
     _addr = address;
   }
   
@@ -50,7 +50,7 @@ class PeerAddress extends Object with BitcoinSerialization {
   }
   
   void set port(int port) {
-    _needInstance();
+    _needInstance(true);
     _port = port;
   }
   
@@ -60,7 +60,7 @@ class PeerAddress extends Object with BitcoinSerialization {
   }
   
   void set services(BigInteger services) {
-    _needInstance();
+    _needInstance(true);
     _services = services;
   }
   
@@ -70,7 +70,7 @@ class PeerAddress extends Object with BitcoinSerialization {
   }
   
   void set time(int time) {
-    _needInstance();
+    _needInstance(true);
     _time = time;
   }
   
@@ -127,7 +127,6 @@ class PeerAddress extends Object with BitcoinSerialization {
       ..add(0xFF & _port);
     return new Uint8List.fromList(result);
   }
-  
   
   @override
   int _lazySerializationLength(Uint8List bytes) {
