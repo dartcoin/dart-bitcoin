@@ -1,6 +1,5 @@
 part of dartcoin.core;
 
-//TODO implement locator stacking here?
 abstract class RequestMessage extends Message {
   
   List<Sha256Hash> _locators;
@@ -24,6 +23,21 @@ abstract class RequestMessage extends Message {
   Sha256Hash get stop {
     _needInstance();
     return _stop;
+  }
+  
+  void set stop(Sha256Hash stop) {
+    _needInstance(true);
+    _stop = stop;
+  }
+  
+  void addLocator(Sha256Hash locator) {
+    _needInstance(true);
+    _locators.add(locator);
+  }
+  
+  void removeLocator(Sha256Hash locator) {
+    _needInstance(true);
+    _locators.remove(locator);
   }
   
   int _deserializePayload(Uint8List bytes) {
