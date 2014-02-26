@@ -17,7 +17,7 @@ class FilterLoadMessage extends Message {
   }
   
   int _deserialize(Uint8List bytes) {
-    int offset = Message._preparePayloadSerialization(bytes, this);
+    int offset = Message._preparePayloadDeserialization(bytes, this);
     _filter = new BloomFilter.deserialize(bytes.sublist(offset), lazy: false);
     offset += _filter.serializationLength;
     return offset;

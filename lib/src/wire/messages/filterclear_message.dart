@@ -8,7 +8,7 @@ class FilterClearMessage extends Message {
       new BitcoinSerialization.deserialize(new FilterClearMessage(), bytes, length: length, lazy: lazy, params: params, protocolVersion: protocolVersion);
   
   int _deserialize(Uint8List bytes) {
-    int offset = Message._preparePayloadSerialization(bytes, this);
+    int offset = Message._preparePayloadDeserialization(bytes, this);
     return offset;
   }
   

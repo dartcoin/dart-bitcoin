@@ -30,10 +30,10 @@ abstract class RequestMessage extends Message {
   }
   
   int _deserialize(Uint8List bytes) {
-    int offset = Message._preparePayloadSerialization(bytes, this);
+    int offset = Message._preparePayloadDeserialization(bytes, this);
     int version = Utils.bytesToUintLE(bytes.sublist(offset), 4);
     if(version != _VERSION)
-      throw new Exception("Version mismatch!");
+      throw new SerializationException("Version mismatch!");
     offset += 4;
     VarInt nbLocators = new VarInt.deserialize(bytes.sublist(offset));
     offset += nbLocators.size;

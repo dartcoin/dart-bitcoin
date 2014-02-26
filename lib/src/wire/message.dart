@@ -68,13 +68,13 @@ abstract class Message extends Object with BitcoinSerialization {
    * - verifies the command string from the serialization with [message.command]
    *    (TODO it might be a possibility to make it possible to skip this check when it has already been performed)
    */
-  static int _preparePayloadSerialization(Uint8List bytes, Message message) {
+  static int _preparePayloadDeserialization(Uint8List bytes, Message message) {
     if(bytes.length < 16) 
-      throw new Exception("Cannot deserialize because serialization is too short.");
+      throw new SerializationException("Cannot deserialize because serialization is too short.");
     message._magic = Utils.bytesToUintLE(bytes, 4);
     String cmd = _parseCommand(bytes.sublist(4, HEADER_LENGTH));
     if(cmd != message.command)
-      throw new Exception("Deserialization error: serialization belongs to different message type.");
+      throw new SerializationException("Deserialization error: serialization belongs to different message type.");
     return HEADER_LENGTH;
   }
   
@@ -110,7 +110,7 @@ abstract class Message extends Object with BitcoinSerialization {
   
   Uint8List _serialize() {
     if(command.length > 12)
-      throw new Exception("Command length should not be greater than 12.");
+      throw new SerializationException("Command length should not be greater than 12.");
     List<int> result = new List<int>();
     // the magic value
     result.addAll(Utils.uintToBytesLE(magic, 4));

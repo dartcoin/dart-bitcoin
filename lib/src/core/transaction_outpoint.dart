@@ -48,8 +48,8 @@ class TransactionOutPoint extends Object with BitcoinSerialization {
   
   @override
   operator ==(TransactionOutPoint other) {
-    if(!(other is TransactionOutPoint)) return false;
-    return txid == other.txid &&
+    return other is TransactionOutPoint &&
+        txid == other.txid &&
         index == other.index &&
         (transaction == null || other.transaction == null || transaction == other.transaction);
   }

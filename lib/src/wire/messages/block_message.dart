@@ -17,7 +17,7 @@ class BlockMessage extends Message {
           new BitcoinSerialization.deserialize(new BlockMessage(null), bytes, length: length, lazy: lazy, params: params, protocolVersion: protocolVersion);
   
   int _deserialize(Uint8List bytes) {
-    int offset = Message._preparePayloadSerialization(bytes, this);
+    int offset = Message._preparePayloadDeserialization(bytes, this);
     _block = new Block.deserialize(bytes.sublist(offset), lazy: false);
     offset += _block.serializationLength;
     return offset;

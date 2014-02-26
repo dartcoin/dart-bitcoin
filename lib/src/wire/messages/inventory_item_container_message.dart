@@ -17,7 +17,7 @@ abstract class InventoryItemContainerMessage extends Message {
   }
   
   int _deserialize(Uint8List bytes) {
-    int offset = Message._preparePayloadSerialization(bytes, this);
+    int offset = Message._preparePayloadDeserialization(bytes, this);
     VarInt nbItems = new VarInt.deserialize(bytes.sublist(offset));
     offset += nbItems.size;
     _items = new List<InventoryItem>();

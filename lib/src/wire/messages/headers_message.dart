@@ -18,7 +18,7 @@ class HeadersMessage extends Message {
   
   //TODO there's something phishy with the 80 vs 81 block header size
   int _deserialize(Uint8List bytes) {
-    int offset = Message._preparePayloadSerialization(bytes, this);
+    int offset = Message._preparePayloadDeserialization(bytes, this);
     VarInt nbHeaders = new VarInt.deserialize(bytes.sublist(offset), lazy: false);
     offset += nbHeaders.size;
     _headers = new List<Block>(nbHeaders.value);

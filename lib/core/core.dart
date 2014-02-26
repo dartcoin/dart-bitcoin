@@ -36,9 +36,12 @@ import "package:cipher/modes/cbc.dart";
 part "../src/core/utils.dart";
 part "../src/core/units.dart";
 part "../src/core/sha256hash.dart";
-part "../src/core/varint.dart";
-part "../src/core/varstr.dart";
-part "../src/core/bitcoin_serialization.dart";
+
+// serialization
+part "../src/serialization/varint.dart";
+part "../src/serialization/varstr.dart";
+part "../src/serialization/bitcoin_serialization.dart";
+part "../src/serialization/serialization_exception.dart";
 
 // addresses and private keys
 part "../src/core/address.dart";

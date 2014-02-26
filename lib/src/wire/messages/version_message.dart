@@ -127,7 +127,7 @@ class VersionMessage extends Message {
   }
   
   int _deserialize(Uint8List bytes) {
-    int offset = Message._preparePayloadSerialization(bytes, this);
+    int offset = Message._preparePayloadDeserialization(bytes, this);
     clientVersion = Utils.bytesToUintLE(bytes, 4);
     offset += 4;
     services = Utils.bytesToUBigIntLE(bytes.sublist(offset), 8);

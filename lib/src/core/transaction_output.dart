@@ -60,8 +60,8 @@ class TransactionOutput extends Object with BitcoinSerialization {
   
   @override
   operator ==(TransactionOutput other) {
-    if(!(other is TransactionOutput)) return false;
-    return value == other.value &&
+    return other is TransactionOutput &&
+        value == other.value &&
         scriptPubKey == other.scriptPubKey &&
         (parentTransaction == null || other.parentTransaction == null || parentTransaction == other.parentTransaction);
   }
