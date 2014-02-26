@@ -6,6 +6,7 @@ import "package:dartcoin/core/core.dart";
 
 import "dart:convert";
 import "dart:typed_data";
+import "dart:io";
 
 void _testSingleDigest() {
   var _testString1 = new Uint8List.fromList(new Utf8Encoder().convert("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"));
@@ -66,6 +67,30 @@ void _uintsToBytes() {
   //TODO all variants
 }
 
+void _ipv6EncodingTest() {
+  var add1  = new InternetAddress("2001:db8:0000:1:1:1:1:1");
+  var add1_ = [32, 1, 13, -72, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1];
+  var add2  = new InternetAddress("2001:db8::1:0:0:1");
+  var add2_ = [32, 1, 13, -72, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1];
+  var add3  = new InternetAddress("2001:db8:85a3:8d3:1319:8a2e:370:7348");
+  var add3_ = [32, 1, 13, -72, -123, -93, 8, -45, 19, 25, -118, 46, 3, 112, 115, 72];
+    
+  var v4add1  = new InternetAddress("192.168.0.1");
+  var v4add1_ = Utils.encodeInternetAddressAsIPv6(new InternetAddress("0:0:0:0:0:ffff:c0a8:1"));  
+  var v4add2  = new InternetAddress("193.190.253.144");
+  var v4add2_ = Utils.encodeInternetAddressAsIPv6(new InternetAddress("0:0:0:0:0:ffff:c1be:fd90"));
+
+  _ipv6EncodingTest_helper(add1, add1_);
+  _ipv6EncodingTest_helper(add2, add2_);
+
+  _ipv6EncodingTest_helper(v4add1, v4add1_);
+  _ipv6EncodingTest_helper(v4add2, v4add2_);
+}
+
+void _ipv6EncodingTest_helper(var val, var exp) {
+  expect(Utils.encodeInternetAddressAsIPv6(val), equals(new List.from(exp.map((e) => e % 256))));
+}
+
 void main() {
   test("utils_singledigest", () => _testSingleDigest());
   test("utils_doubledigest", () => _testDoubleDigest());
@@ -77,6 +102,7 @@ void main() {
   test("utils_equallists", () => _equalList());
   test("utils_bigintToBytes", () => _bigIntToBytes());
   test("utils_uintToBytes", () => _uintsToBytes());
+  test("utils_ipv6encoding", () => _ipv6EncodingTest());
 }
 
 

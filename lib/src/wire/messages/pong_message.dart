@@ -2,6 +2,9 @@ part of dartcoin.core;
 
 class PongMessage extends Message {
   
+  /** The smallest protocol version that supports the pong response (BIP 31). Anything beyond version 60000. */
+  static const int MIN_PROTOCOL_VERSION = 60001;
+  
   int _nonce;
   
   PongMessage([int nonce = null]) : super("pong") {

@@ -25,7 +25,7 @@ abstract class Message extends Object with BitcoinSerialization {
         "pong"         : (Uint8List bts, int len, bool laz, NetworkParameters par, int prv) => new PongMessage.deserialize(bts, lazy: laz, params: par, protocolVersion: prv),
         "tx"           : (Uint8List bts, int len, bool laz, NetworkParameters par, int prv) => new TxMessage.deserialize(bts, length: len, lazy: laz, params: par, protocolVersion: prv),
         "verack"       : (Uint8List bts, int len, bool laz, NetworkParameters par, int prv) => new VerackMessage.deserialize(bts, lazy: laz, params: par, protocolVersion: prv),
-        "version"      : (Uint8List bts, int len, bool laz, NetworkParameters par, int prv) => new VersionMessage.deserialize(bts, length: len, lazy: laz, params: par, protocolVersion: prv),
+        "version"      : (Uint8List bts, int len, bool laz, NetworkParameters par, int prv) => new VersionMessage.deserialize(bts, length: len, params: par, protocolVersion: prv),
   };
   
   Map<String, Function> _messageConstructors = {
@@ -142,6 +142,8 @@ abstract class Message extends Object with BitcoinSerialization {
     int payloadLength = Utils.bytesToUintLE(bytes.sublist(4 + COMMAND_LENGTH), 4);
     return 4 + COMMAND_LENGTH + 4 + 4 + payloadLength;
   }
+  
+  
 }
 
 

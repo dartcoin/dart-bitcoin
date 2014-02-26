@@ -5,6 +5,7 @@ import "dart:collection";
 import "dart:convert";
 import "dart:typed_data";
 import "dart:math";
+import "dart:io";
 import "package:crypto/crypto.dart";
 import "package:bignum/bignum.dart";
 import "package:collection/equality.dart";
@@ -83,6 +84,7 @@ part "../src/script/standard/multisig_output.dart";
 // wire
 part "../src/wire/inventory_item.dart";
 part "../src/wire/message.dart";
+part "../src/wire/peer_address.dart";
 // messages
 part "../src/wire/messages/version_message.dart";
 part "../src/wire/messages/verack_message.dart";
