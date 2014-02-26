@@ -59,11 +59,16 @@ class InventoryItem extends Object with BitcoinSerialization {
 
   @override
   int get hashCode {
-    return type.hashCode + hash.hashCode;
+    _needInstance();
+    return _type.hashCode + _hash.hashCode;
+    // because hash collision is negligible, _hash.hashCode is enough. but we do it this way for elegance
   }
 
   @override
   bool operator ==(InventoryItem other) {
-    return type == other.type && hash == other.hash;
+    if(!(other is InventoryItem)) return false;
+    _needInstance();
+    other._needInstance();
+    return _type == other._type && _hash == other._hash;
   }
 }

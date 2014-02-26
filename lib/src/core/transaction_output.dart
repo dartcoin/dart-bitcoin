@@ -60,13 +60,19 @@ class TransactionOutput extends Object with BitcoinSerialization {
   
   @override
   operator ==(TransactionOutput other) {
-    return other is TransactionOutput &&
-        value == other.value &&
-        scriptPubKey == other.scriptPubKey &&
-        (parentTransaction == null || other.parentTransaction == null || parentTransaction == other.parentTransaction);
+    if(!(other is TransactionOutput)) return false;
+    _needInstance();
+    other._needInstance();
+    return _value == other._value &&
+        _scriptPubKey == other._scriptPubKey &&
+        (_parent == null || other._parent == null || _parent == other._parent);
   }
   
-  //TODO hashcode?
+  @override
+  int get hashCode {
+    _needInstance();
+    return _value.hashCode ^ _scriptPubKey.hashCode;
+  }
   
   Uint8List _serialize() {
     Uint8List encodedScript = scriptPubKey.encode();

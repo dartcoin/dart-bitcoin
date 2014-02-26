@@ -259,17 +259,18 @@ class BloomFilter extends Object with BitcoinSerialization {
   }
   
   @override
-  bool equals(Object other) {
-    return other is BloomFilter &&
-           other.hashFuncs == this.hashFuncs &&
-           other.nTweak == this.nTweak &&
-           Utils.equalLists(other.data, this.data);
+  bool operator ==(BloomFilter other) {
+    if(!(other is BloomFilter)) return false;
+    _needInstance();
+    other._needInstance();
+    return other._hashFuncs == this._hashFuncs &&
+           other._nTweak == this._nTweak &&
+           Utils.equalLists(other._data, this._data);
   }
 
   @override
   int get hashCode {
-    //TODO
-      //return Objects.hashCode(hashFuncs, nTweak, Arrays.hashCode(data));
+    return hashFuncs ^ nTweak ^ Utils.listHashCode(_data);
   }
 }
 

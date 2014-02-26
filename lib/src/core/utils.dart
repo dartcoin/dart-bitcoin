@@ -119,6 +119,11 @@ class Utils {
    * "==" operator is used to compare the elements in the lists.
    */
   static bool equalLists(List list1, List list2) => new ListEquality(new DefaultEquality()).equals(list1, list2);
+  
+  /**
+   * Generate a valid hashcode for the list.
+   */
+  static int listHashCode(List<int> list) => new ListEquality().hash(list);
 
   /**
    * The regular BigInteger.toByteArray() method isn't quite what we often need: it appends a

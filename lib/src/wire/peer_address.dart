@@ -94,7 +94,7 @@ class PeerAddress extends Object with BitcoinSerialization {
   @override
   int get hashCode {
     _needInstance();
-    return _addr.hashCode ^ port ^ time ^ _services.hashCode;
+    return _addr.hashCode ^ port.hashCode ^ time.hashCode ^ _services.hashCode;
   }
   
   int _deserialize(Uint8List bytes) {

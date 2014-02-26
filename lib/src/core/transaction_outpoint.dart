@@ -48,13 +48,19 @@ class TransactionOutPoint extends Object with BitcoinSerialization {
   
   @override
   operator ==(TransactionOutPoint other) {
-    return other is TransactionOutPoint &&
-        txid == other.txid &&
-        index == other.index &&
-        (transaction == null || other.transaction == null || transaction == other.transaction);
+    if(!(other is TransactionOutPoint)) return false;
+    _needInstance();
+    other._needInstance();
+    return _txid == other._txid &&
+        _index == other._index &&
+        (_tx == null || other._tx == null || _tx == other._tx);
   }
   
-  //TODO hashcode?
+  @override
+  int get hashCode {
+    _needInstance();
+    return _index.hashCode ^ _txid.hashCode;
+  }
   
   Uint8List _serialize() {
     List<int> result = new List()

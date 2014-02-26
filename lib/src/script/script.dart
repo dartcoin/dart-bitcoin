@@ -43,7 +43,10 @@ class Script {
     return Utils.equalLists(bytes, other.bytes);
   }
   
-  //TODO hashcode?
+  @override
+  int get hashCode {
+    return Utils.listHashCode(bytes);
+  }
   
   String toString() {
     StringBuffer buf = new StringBuffer();

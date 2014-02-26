@@ -72,12 +72,18 @@ class TransactionInput extends Object with BitcoinSerialization {
   @override
   operator ==(TransactionInput other) {
     if(!(other is TransactionInput)) return false;
-    return outpoint == other.outpoint &&
-        scriptSig == other.scriptSig &&
-        sequence == other.sequence;
+    _needInstance();
+    other._needInstance();
+    return _outpoint == other._outpoint &&
+        _scriptSig == other._scriptSig &&
+        _sequence == other._sequence;
   }
   
-  //TODO hashcode
+  @override
+  int get hashCode {
+    _needInstance();
+    return _outpoint.hashCode ^ _scriptSig.hashCode ^ _sequence.hashCode;
+  }
   
   Uint8List _serialize() {
     Uint8List encodedScript = scriptSig.encode();

@@ -29,6 +29,23 @@ class VarStr extends Object with BitcoinSerialization {
    */
   int get length => content.length;
   
+  @override
+  String toString() => content;
+  
+  @override
+  bool operator ==(VarStr other) {
+    if(!(other is VarStr)) return false;
+    _needInstance();
+    other._needInstance();
+    return _content == other._content;
+  }
+  
+  @override
+  int get hashCode {
+    _needInstance();
+    return _content.hashCode;
+  }
+  
   Uint8List _serialize() {
     List<int> result = new List<int>();
     List<int> contentBytes = new Utf8Codec().encode(content);

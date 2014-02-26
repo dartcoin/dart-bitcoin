@@ -168,7 +168,6 @@ class KeyPair {
   
   bool operator ==(KeyPair other) {
     if(!(other is KeyPair)) return false;
-    if(identical(this, other)) return true;
     return Utils.equalLists(publicKey, other.publicKey);
   }
   

@@ -24,6 +24,23 @@ class VarInt extends Object with BitcoinSerialization {
     return sizeOf(this._value);
   }
   
+  @override
+  String toString() => "$value";
+  
+  @override
+  bool operator ==(VarInt other) {
+    if(!(other is VarInt)) return false;
+    _needInstance();
+    other._needInstance();
+    return _value == other._value;
+  }
+  
+  @override
+  int get hashCode {
+    _needInstance();
+    return _value.hashCode;
+  }
+  
   Uint8List _serialize() {
     List<int> result;
     if(_value < 0xfd)        result =  [_value];

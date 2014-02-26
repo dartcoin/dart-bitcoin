@@ -149,11 +149,13 @@ class Transaction extends Object with BitcoinSerialization {
   
   @override
   operator ==(Transaction other) {
-    return other is Transaction &&
-        version == other.version && 
-        Utils.equalLists(inputs, other.inputs) && 
-        Utils.equalLists(outputs, other.outputs) &&
-        lockTime == other.lockTime;
+    if(!(other is Transaction)) return false;
+    _needInstance();
+    other._needInstance();
+    return _version == other._version && 
+        Utils.equalLists(_inputs, other._inputs) && 
+        Utils.equalLists(_outputs, other._outputs) &&
+        _lockTime == other._lockTime;
   }
   
   @override
