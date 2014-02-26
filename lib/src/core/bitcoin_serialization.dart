@@ -52,10 +52,10 @@ abstract class BitcoinSerialization {
         bool lazy: true, 
         NetworkParameters params: NetworkParameters.MAIN_NET, 
         int protocolVersion }) {
-    _serialization = bytes;
+    instance._serialization = bytes;
     if(length != UNKNOWN_LENGTH)
-      _serializationLength = length;
-    _isSerialized = true;
+      instance._serializationLength = length;
+    instance._isSerialized = true;
     instance._params = params;
     instance._protocolVersion = protocolVersion;
     if(!lazy) {

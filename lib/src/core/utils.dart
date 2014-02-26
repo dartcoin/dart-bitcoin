@@ -169,6 +169,30 @@ class Utils {
   }
   
   /**
+   * Converts the [BigInteger] to a byte array in little endian.
+   */
+  static Uint8List uBigIntToBytesLE(BigInteger val, [int size = -1]) {
+    List<int> bytes = val.toByteArray();
+    if (bytes.length > size && size >= 0) {
+      throw new Exception("Input too large to encode into a uint64");
+    }
+    bytes = new List.from(bytes.reversed);
+    if (bytes.length < size) {
+      while(bytes.length < size)
+        bytes.add(0);
+    }
+    return new Uint8List.fromList(bytes);
+  }
+  
+  /**
+   * Converts the byte array to a [BigInteger] in little endian.
+   */
+  static BigInteger bytesToUBigIntLE(Uint8List bytes, [int size = -1]) {
+    if(size < 0) size = bytes.length;
+    return new BigInteger(bytes.sublist(0, size));
+  }
+  
+  /**
    * Converts the big endian byte array to an unsigned integer.
    */
   static int bytesToUintBE(Uint8List bytes, [int size]) {

@@ -17,6 +17,14 @@ class VarStr extends Object with BitcoinSerialization {
   }
   
   /**
+   * The size of the [VarStr] in bytes after serialization.
+   */
+  int get size {
+    int byteLength = new Utf8Codec().encode(content).length;
+    return VarInt.sizeOf(byteLength) + byteLength;
+  }
+  
+  /**
    * The length of the string, not the length of the output bytes.
    */
   int get length => content.length;

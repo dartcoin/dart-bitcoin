@@ -16,6 +16,9 @@ class VarInt extends Object with BitcoinSerialization {
     return _value;
   }
   
+  /**
+   * The size of the [VarInt] int bytes after serialization.
+   */
   int get size {
     _needInstance();
     return sizeOf(this._value);

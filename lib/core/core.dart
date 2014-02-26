@@ -82,8 +82,8 @@ part "../src/script/standard/multisig_output.dart";
 
 // wire
 part "../src/wire/inventory_item.dart";
-part "../src/wire/inventory_item_type.dart";
 part "../src/wire/message.dart";
+// messages
 part "../src/wire/messages/version_message.dart";
 part "../src/wire/messages/verack_message.dart";
 part "../src/wire/messages/addr_message.dart";
