@@ -7,8 +7,7 @@ abstract class RequestMessage extends Message {
   
   RequestMessage(String command, List<Sha256Hash> locators, [Sha256Hash stop, int protocolVersion = NetworkParameters.PROTOCOL_VERSION]) : super(command) {
     if(stop == null) {
-      //TODO is this correct?
-      stop = new Sha256Hash(Utils.uintToBytesLE(0, 32));
+      stop = Sha256Hash.ZERO_HASH;
     }
     _locators = locators;
     _stop = stop;

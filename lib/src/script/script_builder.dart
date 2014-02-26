@@ -9,7 +9,7 @@ class ScriptBuilder {
     if(encoded)
       _data = new List<int>();
     else
-      _data = new List<ScriptChunk>(); // TODO change to linkedlist maybe
+      _data = new List<ScriptChunk>();
   }
   
   ScriptBuilder op(int opcode) {

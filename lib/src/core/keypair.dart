@@ -305,7 +305,7 @@ class KeyPair {
     }
     int recId = header - 27;
     KeyPair key = KeyPair.recoverFromSignature(recId, sig, messageHash, compressed);
-    if (key == null) //TODO
+    if (key == null)
       throw new Exception("Could not recover public key from signature");
     return key;
   }

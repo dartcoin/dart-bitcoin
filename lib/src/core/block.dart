@@ -56,7 +56,7 @@ class Block extends Object with BitcoinSerialization {
   factory Block.deserialize(Uint8List bytes, {int length, bool lazy, NetworkParameters params}) =>  
           new BitcoinSerialization.deserialize(new Block(), bytes, length: length, lazy: lazy, params: params);
   
-  int get version { //TODO look into this, should be 1 or 2 (somehign with coinbase input)
+  int get version {
     _needInstance();
     return _version;
   }

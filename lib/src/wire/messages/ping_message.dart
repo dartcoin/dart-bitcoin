@@ -11,7 +11,7 @@ class PingMessage extends Message {
   }
   
   factory PingMessage.generate() {
-    int nonce = new Random().nextInt(1 << 8); //TODO verify, max 8 bytes nonce (64 bit)
+    int nonce = new Random().nextInt(1 << 8);
     return new PingMessage(nonce);
   }
 

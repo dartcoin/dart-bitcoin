@@ -6,7 +6,7 @@ class TransactionInput extends Object with BitcoinSerialization {
   
   TransactionOutPoint _outpoint;
   Script _scriptSig;
-  int _sequence; //TODO is long in java
+  int _sequence;
   
   Transaction _parent;
   
