@@ -16,28 +16,27 @@ class HeadersMessage extends Message {
     return new UnmodifiableListView(_headers);
   }
   
-  //TODO there's something phishy with the 80 vs 81 block header size
   int _deserializePayload(Uint8List bytes) {
     int offset = 0;
     VarInt nbHeaders = new VarInt.deserialize(bytes.sublist(offset), lazy: false);
     offset += nbHeaders.size;
-    _headers = new List<Block>(nbHeaders.value);
+    List<Block> headers = new List<Block>(nbHeaders.value);
     for(int i = 0 ; i < nbHeaders.value ; i++) {
-      _headers.add(new Block.deserialize(bytes.sublist(offset), length: Block.HEADER_SIZE + 1, lazy: false));
+      headers.add(new Block.deserialize(bytes.sublist(offset), length: Block.HEADER_SIZE + 1, lazy: false));
       offset += Block.HEADER_SIZE + 1;
     }
+    _headers = headers;
     return offset;
   }
   
   Uint8List _serialize_payload() {
     List<int> result = new List<int>()
-      ..addAll(new VarInt(headers.length).serialize());
-    for(Block header in headers) {
+      ..addAll(new VarInt(_headers.length).serialize());
+    for(Block header in _headers) {
       if(header.isHeader)
         result.addAll(header.serialize());
       else
         result.addAll(header.cloneAsHeader().serialize());
-      result.add(0);
     }
     return new Uint8List.fromList(result);
   }

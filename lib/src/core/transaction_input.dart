@@ -86,13 +86,12 @@ class TransactionInput extends Object with BitcoinSerialization {
   }
   
   Uint8List _serialize() {
-    Uint8List encodedScript = scriptSig.encode();
-    List<int> result = new List()
-      ..addAll(outpoint.serialize())
+    Uint8List encodedScript = _scriptSig.encode();
+    return new Uint8List.fromList(new List()
+      ..addAll(_outpoint.serialize())
       ..addAll(new VarInt(encodedScript.length).serialize())
-      ..addAll(scriptSig.encode())
-      ..addAll(Utils.uintToBytesBE(sequence, 4));
-    return new Uint8List.fromList(result);
+      ..addAll(encodedScript)
+      ..addAll(Utils.uintToBytesBE(_sequence, 4)));
   }
   
   int _deserialize(Uint8List bytes) {
@@ -111,7 +110,7 @@ class TransactionInput extends Object with BitcoinSerialization {
   int _lazySerializationLength(Uint8List bytes) {
     int offset = 0;
     _outpoint = new TransactionOutPoint.deserialize(bytes);
-    offset += outpoint.serializationLength;
+    offset += _outpoint.serializationLength;
     VarInt scrLn = new VarInt.deserialize(bytes.sublist(offset), lazy: false);
     return offset + scrLn.value + 4;
   }

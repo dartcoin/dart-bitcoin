@@ -23,9 +23,7 @@ class PingMessage extends Message {
     return _nonce;
   }
   
-  bool get hasNonce {
-    nonce != null;
-  }
+  bool get hasNonce => nonce != null;
   
   int _deserializePayload(Uint8List bytes) {
     int offset = 0;
@@ -36,7 +34,7 @@ class PingMessage extends Message {
   
   Uint8List _serialize_payload() {
     if(hasNonce)
-      return Utils.uintToBytesLE(nonce, 8);
+      return Utils.uintToBytesLE(_nonce, 8);
     return Utils.uintToBytesLE(0, 8);
   }
   

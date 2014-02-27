@@ -51,10 +51,9 @@ class InventoryItem extends Object with BitcoinSerialization {
   int _lazySerializationLength(Uint8List bytes) => SERIALIZATION_LENGTH;
   
   Uint8List _serialize() {
-    List<int> result = new List<int>()
-      ..addAll(Utils.uintToBytesLE(type.value, 4))
-      ..addAll(hash.bytes);
-    return new Uint8List.fromList(result);
+    return new Uint8List.fromList(new List<int>()
+      ..addAll(Utils.uintToBytesLE(_type.value, 4))
+      ..addAll(_hash.bytes));
   }
 
   @override

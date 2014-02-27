@@ -94,7 +94,7 @@ class TransactionSignature extends ECDSASignature with BitcoinSerialization {
   Uint8List _serialize() {
     return new Uint8List.fromList(new List<int>()
       ..addAll(encodeToDER())
-      ..add(sigHashFlags));
+      ..add(_sigHashFlags));
   }
   
   int _deserialize(Uint8List bytes) {

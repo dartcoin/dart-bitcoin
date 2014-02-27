@@ -148,7 +148,7 @@ class Block extends Object with BitcoinSerialization {
   
   bool get isHeader {
     _needInstance();
-    return transactions == null;
+    return _txs == null;
   }
   
   Block cloneAsHeader() {
@@ -265,6 +265,18 @@ class Block extends Object with BitcoinSerialization {
       ..addAll(Utils.uintToBytesBE(nonce, 4)));
   }
   
+  Uint8List _serialize() {
+    List<int> result = new List();
+    result.addAll(_serializeHeader());
+    if(isHeader)
+      result.add(0);
+    else {
+      result.addAll(new VarInt(_txs.length).serialize());
+      _txs.forEach((tx) => result.addAll(tx.serialize()));
+    }
+    return new Uint8List.fromList(result);
+  }
+  
   /**
    * Returns the header size
    */
@@ -276,16 +288,6 @@ class Block extends Object with BitcoinSerialization {
     _bits = Utils.bytesToUintBE(bytes.sublist(72), 4);
     _nonce = Utils.bytesToUintBE(bytes.sublist(76), 4);
     return HEADER_SIZE;
-  }
-  
-  Uint8List _serialize() {
-    List<int> result = new List();
-    result.addAll(_serializeHeader());
-    if(!isHeader) {
-      result.addAll(new VarInt(transactions.length).serialize());
-      transactions.forEach((tx) => result.addAll(tx.serialize()));
-    }
-    return new Uint8List.fromList(result);
   }
   
   int _deserialize(Uint8List bytes) {

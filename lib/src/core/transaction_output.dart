@@ -75,12 +75,11 @@ class TransactionOutput extends Object with BitcoinSerialization {
   }
   
   Uint8List _serialize() {
-    Uint8List encodedScript = scriptPubKey.encode();
-    List<int> result = new List()
-      ..addAll(Utils.uintToBytesBE(value, 8))
+    Uint8List encodedScript = _scriptPubKey.encode();
+    return new Uint8List.fromList(new List<int>()
+      ..addAll(Utils.uintToBytesBE(_value, 8))
       ..addAll(new VarInt(encodedScript.length).serialize())
-      ..addAll(scriptPubKey.encode());
-    return new Uint8List.fromList(result);
+      ..addAll(encodedScript));
   }
   
   int _deserialize(Uint8List bytes) {

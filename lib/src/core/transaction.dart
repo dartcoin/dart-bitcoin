@@ -273,12 +273,12 @@ class Transaction extends Object with BitcoinSerialization {
   
   Uint8List _serialize() {
     return new Uint8List.fromList(new List<int>()
-      ..addAll(Utils.uintToBytesBE(version, 4))
-      ..addAll(new VarInt(inputs.length).serialize())
-      ..addAll(inputs.map((input) => input.serialize()))
-      ..addAll(new VarInt(outputs.length).serialize())
-      ..addAll(outputs.map((output) => output.serialize()))
-      ..addAll(Utils.uintToBytesBE(lockTime, 4)));
+      ..addAll(Utils.uintToBytesBE(_version, 4))
+      ..addAll(new VarInt(_inputs.length).serialize())
+      ..addAll(_inputs.map((input) => input.serialize()))
+      ..addAll(new VarInt(_outputs.length).serialize())
+      ..addAll(_outputs.map((output) => output.serialize()))
+      ..addAll(Utils.uintToBytesBE(_lockTime, 4)));
   }
   
   int _deserialize(Uint8List bytes) {

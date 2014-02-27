@@ -58,11 +58,11 @@ abstract class RequestMessage extends Message {
   Uint8List _serialize_payload() {
     List<int> result = new List<int>()
       ..addAll(Utils.uintToBytesLE(protocolVersion, 4))
-      ..addAll(new VarInt(locators.length).serialize());
-    for(Sha256Hash hash in locators) {
+      ..addAll(new VarInt(_locators.length).serialize());
+    for(Sha256Hash hash in _locators) {
       result.addAll(hash.bytes);
     }
-    result.addAll(stop.bytes);
+    result.addAll(_stop.bytes);
     return new Uint8List.fromList(result);
   }
 }
