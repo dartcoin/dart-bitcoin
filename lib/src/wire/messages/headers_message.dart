@@ -16,6 +16,16 @@ class HeadersMessage extends Message {
     return new UnmodifiableListView(_headers);
   }
   
+  void addHeader(Block header) {
+    _needInstance(true);
+    _headers.add(header);
+  }
+  
+  void removeHeader(Block header) {
+    _needInstance(true);
+    _headers.remove(header);
+  }
+  
   int _deserializePayload(Uint8List bytes) {
     int offset = 0;
     VarInt nbHeaders = new VarInt.deserialize(bytes.sublist(offset), lazy: false);

@@ -16,6 +16,16 @@ abstract class InventoryItemContainerMessage extends Message {
     return new UnmodifiableListView(_items);
   }
   
+  void addItem(InventoryItem item) {
+    _needInstance(true);
+    _items.add(item);
+  }
+  
+  void removeItem(InventoryItem item) {
+    _needInstance(true);
+    _items.remove(item);
+  }
+  
   int _deserializePayload(Uint8List bytes) {
     int offset = 0;
     VarInt nbItems = new VarInt.deserialize(bytes.sublist(offset));
