@@ -23,7 +23,5 @@ class TxMessage extends Message {
     return offset; 
   }
   
-  Uint8List _serialize_payload() {
-    return _tx.serialize();
-  }
+  Uint8List _serialize_payload() => _tx.serialize();
 }

@@ -9,7 +9,7 @@ class ScriptException implements Exception {
   const ScriptException([String this.message, Script this.script, int this.opcode]);
   
   @override
-  String toString() => message;
+  String toString() => "ScriptException: $message";
   
   @override
   bool operator ==(ScriptException other) => 

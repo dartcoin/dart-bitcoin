@@ -78,12 +78,12 @@ class KeyPair {
     //TODO
   }
   
-  Uint8List get publicKey => _pub;
+  Uint8List get publicKey => new Uint8List.fromList(_pub);
   
   Uint8List get pubKeyHash {
     if(_pubKeyHash == null)
       _pubKeyHash = Utils.sha256hash160(_pub);
-    return _pubKeyHash;
+    return new Uint8List.fromList(_pubKeyHash);
   }
 
   /**
@@ -116,14 +116,9 @@ class KeyPair {
   
   bool get hasPrivKey => _priv != null;
   
-  bool get isEncrypted {
-    _encryptedPrivateKey != null && _keyCrypter != null;
-  }
+  bool get isEncrypted => _encryptedPrivateKey != null && _keyCrypter != null;
   
-  EncryptedPrivateKey get encryptedPrivateKey {
-    if(_encryptedPrivateKey == null) return null;
-    return _encryptedPrivateKey.clone();
-  }
+  EncryptedPrivateKey get encryptedPrivateKey => (_encryptedPrivateKey == null) ? null : _encryptedPrivateKey.clone();
   
   KeyCrypter get keyCrypter => _keyCrypter;
   
@@ -132,9 +127,7 @@ class KeyPair {
    * 
    * If `params` is ommited, the MAINNET params will be used.
    */
-  Address toAddress([NetworkParameters params]) {
-    return new Address(Utils.sha256hash160(publicKey), params);
-  }
+  Address toAddress([NetworkParameters params]) => new Address(Utils.sha256hash160(_pub), params);
   
   String toString() {
     StringBuffer sb = new StringBuffer()
@@ -168,11 +161,11 @@ class KeyPair {
   
   bool operator ==(KeyPair other) {
     if(!(other is KeyPair)) return false;
-    return Utils.equalLists(publicKey, other.publicKey);
+    return Utils.equalLists(_pub, other._pub);
   }
   
   int get hashCode {
-    return (publicKey[0] & 0xff) | ((publicKey[1] & 0xff) << 8) | ((publicKey[2] & 0xff) << 16) | ((publicKey[3] & 0xff) << 24);
+    return (_pub[0] & 0xff) | ((_pub[1] & 0xff) << 8) | ((_pub[2] & 0xff) << 16) | ((_pub[3] & 0xff) << 24);
   }
 
   /**
@@ -249,13 +242,13 @@ class KeyPair {
     if (_priv == null)
       throw new Exception("This ECKey does not have the private key necessary for signing.");
     Uint8List data = Utils.formatMessageForSigning(message);
-    Sha256Hash hash = Sha256Hash.doubleDigest(data);
+    Sha256Hash hash = new Sha256Hash.doubleDigest(data);
     ECDSASignature sig = sign(hash, aesKey);
     // Now we have to work backwards to figure out the recId needed to recover the signature.
     int recId = -1;
     for (int i = 0; i < 4; i++) {
       KeyPair k = recoverFromSignature(i, sig, hash, isCompressed);
-      if (k != null && Utils.equalLists(k.publicKey, publicKey)) {
+      if (k != null && Utils.equalLists(k._pub, _pub)) {
         recId = i;
         break;
       }
@@ -297,7 +290,7 @@ class KeyPair {
     Uint8List messageBytes = Utils.formatMessageForSigning(message);
     // Note that the C++ code doesn't actually seem to specify any character encoding. Presumably it's whatever
     // JSON-SPIRIT hands back. Assume UTF-8 for now.
-    Sha256Hash messageHash = Sha256Hash.doubleDigest(messageBytes);
+    Sha256Hash messageHash = new Sha256Hash.doubleDigest(messageBytes);
     bool compressed = false;
     if (header >= 31) {
       compressed = true;
@@ -315,7 +308,7 @@ class KeyPair {
    */
   bool verifyMessage(String message, String signatureBase64) {
     KeyPair key = KeyPair.signedMessageToKey(message, signatureBase64);
-    return Utils.equalLists(key.publicKey, publicKey);
+    return Utils.equalLists(key._pub, _pub);
   }
   
   static ECDSASigner _createSigner() {
@@ -416,7 +409,7 @@ class KeyPair {
    */
   KeyPair encrypt(KeyCrypter keyCrypter, KeyParameter aesKey) {
     EncryptedPrivateKey encryptedPrivateKey = keyCrypter.encrypt(privateKeyBytes, aesKey);
-    return new KeyPair.encrypted(encryptedPrivateKey, publicKey, keyCrypter);
+    return new KeyPair.encrypted(encryptedPrivateKey, _pub, keyCrypter);
   }
 
   /**
@@ -431,7 +424,7 @@ class KeyPair {
     }
     Uint8List unencryptedPrivateKey = keyCrypter.decrypt(encryptedPrivateKey, aesKey);
     KeyPair key = new KeyPair(new BigInteger(1, unencryptedPrivateKey), null, isCompressed);
-    if (!Utils.equalLists(key.publicKey, publicKey))
+    if (!Utils.equalLists(key._pub, _pub))
       throw new Exception("Provided AES key is wrong");
     return key;
   }

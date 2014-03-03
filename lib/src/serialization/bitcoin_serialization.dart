@@ -59,13 +59,13 @@ abstract class BitcoinSerialization {
     if(_isSerialized) {
       if(_serializationLength <= UNKNOWN_LENGTH)
         _serializationLength = _lazySerializationLength(_serialization);
-      return _serialization.sublist(0, _serializationLength);
+      return new Uint8List.fromList(_serialization.sublist(0, _serializationLength));
     }
     Uint8List seri = _serialize();
     _serializationLength = seri.length;
     if(retainSerialization)
       _serialization = seri;
-    return seri;
+    return new Uint8List.fromList(seri);
   }
   
   bool get retainSerialization => _retainSerialization;
@@ -117,12 +117,14 @@ abstract class BitcoinSerialization {
    */
   void _needInstance([bool clearCache = false]) {
     if(!_isSerialized) {
-      if(clearCache && retainSerialization)
+      if(clearCache) {
         _serialization = null;
+        _serializationLength = UNKNOWN_LENGTH;
+      }
       return;
     }
     _serializationLength = _deserialize(_serialization);
-    if(!retainSerialization)
+    if(!_retainSerialization)
       _serialization = null;
     _isSerialized = false;
   }

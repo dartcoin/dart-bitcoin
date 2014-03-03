@@ -63,17 +63,15 @@ abstract class Message extends Object with BitcoinSerialization {
   Uint8List get checksum {
     if(_checksum == null)
       calculateChecksum();
-    return _checksum;
+    return new Uint8List.fromList(_checksum);
   }
   
   Uint8List calculateChecksum() {
-    Sha256Hash sum = Sha256Hash.doubleDigest(payload);
+    Sha256Hash sum = new Sha256Hash.doubleDigest(payload);
     _checksum = sum.bytes.getRange(0, 4);
   }
   
-  Uint8List get payload {
-    return serialize().sublist(HEADER_LENGTH);
-  }
+  Uint8List get payload => serialize().sublist(HEADER_LENGTH);
   
   int _deserialize(Uint8List bytes) {
     int offset = 0;

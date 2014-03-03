@@ -6,4 +6,12 @@ class SerializationException implements Exception {
   
   SerializationException([String this.message]);
   
+  @override
+  String toString() => "SerializationException: $message";
+  
+  @override
+  bool operator ==(SerializationException other) => 
+      other is SerializationException && 
+      message == other.message;  
+  
 }

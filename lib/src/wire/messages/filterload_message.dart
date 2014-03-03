@@ -23,8 +23,6 @@ class FilterLoadMessage extends Message {
     return offset;
   }
   
-  Uint8List _serialize_payload() {
-    return _filter.serialize();
-  }
+  Uint8List _serialize_payload() => _filter.serialize();
   
 }

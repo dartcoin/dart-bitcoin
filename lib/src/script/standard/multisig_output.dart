@@ -27,9 +27,7 @@ class MultiSigOutputScript extends Script {
     if(!matchesType(script)) throw new ScriptException("Given script is not an instance of this script type.");
   }
   
-  int get threshold {
-    return Script.decodeFromOpN(chunks[0].data[0]);
-  }
+  int get threshold => Script.decodeFromOpN(chunks[0].data[0]);
   
   List<KeyPair> get pubKeys {
     List<KeyPair> keys = new List();

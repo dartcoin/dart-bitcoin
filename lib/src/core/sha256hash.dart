@@ -6,7 +6,7 @@ class Sha256Hash {
   
   static final Sha256Hash ZERO_HASH = new Sha256Hash(new Uint8List(32));
   
-  Uint8List bytes;
+  Uint8List _bytes;
   
   /**
    * The parameter for [hash] can be either a hexadecimal string or a [Uint8List] object.
@@ -14,38 +14,37 @@ class Sha256Hash {
   Sha256Hash(dynamic hash) {
     if(hash is String) {
       if(hash.length != 2 * LENGTH)
-        throw new Exception("SHA-256 hashes are 64 hexadecimal characters long.");
+        throw new ArgumentError("SHA-256 hashes are 64 hexadecimal characters long.");
       hash = Utils.hexToBytes(hash);
     }
     if(!(hash is Uint8List))
-      throw new Exception("Input parameter must be either a hexadecimal string or a [Uint8List] object.");
+      throw new ArgumentError("Input parameter must be either a hexadecimal string or a [Uint8List] object.");
     if(hash.length != LENGTH)
-      throw new Exception("SHA-256 hashes are 32 bytes long.");
-    bytes = hash;
+      throw new ArgumentError("SHA-256 hashes are 32 bytes long.");
+    _bytes = new Uint8List.fromList(hash);
   }
   
-  static Sha256Hash digest(Uint8List bytes) {
+  factory Sha256Hash.digest(Uint8List bytes) {
     return new Sha256Hash(Utils.singleDigest(bytes));
   }
   
-  static Sha256Hash doubleDigest(Uint8List bytes) {
+  factory Sha256Hash.doubleDigest(Uint8List bytes) {
     return new Sha256Hash(Utils.doubleDigest(bytes));
   }
+  
+  Uint8List get bytes => new Uint8List.fromList(_bytes);
 
   @override
-  String toString() {
-    return Utils.bytesToHex(bytes);
-  }
+  String toString() => Utils.bytesToHex(_bytes);
 
   @override
   int get hashCode {
-    return bytes[bytes.length-1] | (bytes[bytes.length-2] << 8) | (bytes[bytes.length-3] << 16) | (bytes[bytes.length-4] << 24); 
+    return _bytes[_bytes.length-1] | (_bytes[_bytes.length-2] << 8) | (_bytes[_bytes.length-3] << 16) | (_bytes[_bytes.length-4] << 24); 
   }
   
   @override
   bool operator ==(Sha256Hash other) {
     if(!(other is Sha256Hash)) return false;
-    if(identical(this,other)) return true;
-    return Utils.equalLists(bytes, other.bytes);
+    return Utils.equalLists(_bytes, other._bytes);
   }
 }

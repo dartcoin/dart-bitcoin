@@ -6,10 +6,10 @@ class ScriptChunk {
   int _startLocationInProgram;
   
   ScriptChunk(bool isOpCode, Uint8List data, [int startLocationInProgram]) {
-    if(isOpCode && data.length != 1) throw new Exception("OpCode data must be of length 1.");
-    if(data.length > Script.MAX_SCRIPT_ELEMENT_SIZE) throw new Exception("ScriptChunk data exceeds max data size.");
+    if(isOpCode && data.length != 1) throw new ArgumentError("OpCode data must be of length 1.");
+    if(data.length > Script.MAX_SCRIPT_ELEMENT_SIZE) throw new ArgumentError("ScriptChunk data exceeds max data size.");
     _isOpCode = isOpCode;
-    _data = data;
+    _data = new Uint8List.fromList(data);
     _startLocationInProgram = startLocationInProgram;
   }
   
@@ -18,37 +18,20 @@ class ScriptChunk {
     _data = new Uint8List.fromList([0xff & opCode]);
   }
   
-  bool get isOpCode {
-    return _isOpCode;
-  }
+  bool get isOpCode => _isOpCode;
   
-  Uint8List get data {
-    return _data;
-  }
+  Uint8List get data => new Uint8List.fromList(_data);
   
-  int get startLocationInProgram {
-    return _startLocationInProgram;
-  }
+  int get startLocationInProgram => _startLocationInProgram;
   
   String toString() {
-    if(isOpCode) {
+    if(_isOpCode)
       return ScriptOpCodes.getOpCodeName(data[0]);
-    }
-    else {
+    else
       return "[" + Utils.bytesToHex(data) + "]";
-    }
   }
   
-  bool equalsOpCode(int opCode) {
-    return isOpCode && data.length == 1 && _data[0] == opCode;
-  }
+  bool equalsOpCode(int opCode) => _isOpCode && _data.length == 1 && _data[0] == opCode;
   
-  Uint8List serialize() {
-    if(isOpCode) {
-      return data;
-    }
-    else {
-      return Script.encodeData(data);
-    }
-  }
+  Uint8List serialize() => _isOpCode ? new Uint8List.fromList(_data) : Script.encodeData(data);
 }

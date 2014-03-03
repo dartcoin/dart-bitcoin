@@ -17,7 +17,7 @@ class PayToAddressInputScript extends Script {
     if(pubKey is KeyPair)
       pubKey = pubKey.publicKey;
     if(!(signature is Uint8List && pubKey is Uint8List))
-      throw new ScriptException("Unsupported input types. Read documentation.");
+      throw new ArgumentError("Unsupported input types. Read documentation.");
     return new ScriptBuilder(encoded)
       .data(signature)
       .data(pubKey)
@@ -28,17 +28,11 @@ class PayToAddressInputScript extends Script {
     if(!matchesType(script)) throw new ScriptException("Given script is not an instance of this script type.");
   }
   
-  TransactionSignature get signature {
-    return new TransactionSignature.deserialize(chunks[0].data, false);
-  }
+  TransactionSignature get signature => new TransactionSignature.deserialize(chunks[0].data, false);
   
-  KeyPair get pubKey {
-    return new KeyPair(chunks[1].data);
-  }
+  KeyPair get pubKey => new KeyPair(chunks[1].data);
   
-  Address getAddress([NetworkParameters params]) {
-    return new KeyPair(pubKey).toAddress(params);
-  }
+  Address getAddress([NetworkParameters params]) => new KeyPair(pubKey).toAddress(params);
   
   /**
    * Script must contain two chunks, each of which are data chunks.

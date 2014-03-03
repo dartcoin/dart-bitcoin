@@ -48,27 +48,27 @@ class AlertMessage extends Message {
   }
   
   Uint8List _constructMessage() {
-    List<int> result = new List<int>();
-    result.addAll(Utils.uintToBytesLE(version, 4));
-    result.addAll(Utils.uintToBytesLE(relayUntil, 8));
-    result.addAll(Utils.uintToBytesLE(expiration, 8));
-    result.addAll(Utils.uintToBytesLE(id, 4));
-    result.addAll(Utils.uintToBytesLE(cancel, 4));
+    List<int> result = new List<int>()
+      ..addAll(Utils.uintToBytesLE(version, 4))
+      ..addAll(Utils.uintToBytesLE(relayUntil, 8))
+      ..addAll(Utils.uintToBytesLE(expiration, 8))
+      ..addAll(Utils.uintToBytesLE(id, 4))
+      ..addAll(Utils.uintToBytesLE(cancel, 4))
     //TODO how to encode the sets?
-    result.addAll(Utils.uintToBytesLE(minVer, 4));
-    result.addAll(Utils.uintToBytesLE(maxVer, 4));
+      ..addAll(Utils.uintToBytesLE(minVer, 4))
+      ..addAll(Utils.uintToBytesLE(maxVer, 4))
     //another set
-    result.addAll(Utils.uintToBytesLE(priority, 4));
-    result.addAll(new VarStr(comment).serialize());
-    result.addAll(new VarStr(statusBar).serialize());
-    result.addAll(new VarStr(reversed).serialize());
+      ..addAll(Utils.uintToBytesLE(priority, 4))
+      ..addAll(new VarStr(comment).serialize())
+      ..addAll(new VarStr(statusBar).serialize())
+      ..addAll(new VarStr(reversed).serialize());
     return new Uint8List.fromList(result);
   }
   
   Uint8List _serialize_payload() {
-    List<int> result = new List<int>();
-    result.addAll(message);
-    result.addAll(signature);
+    List<int> result = new List<int>()
+      ..addAll(message)
+      ..addAll(signature);
     return new Uint8List.fromList(result);
   }
 }

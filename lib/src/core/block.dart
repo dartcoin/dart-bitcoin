@@ -188,7 +188,7 @@ class Block extends Object with BitcoinSerialization {
   
   void _calculateHash() {
     _needInstance(true);
-    _hash = Sha256Hash.doubleDigest(_serializeHeader());
+    _hash = new Sha256Hash.doubleDigest(_serializeHeader());
   }
   
   void _calculateMerkleRoot() {
@@ -247,7 +247,7 @@ class Block extends Object with BitcoinSerialization {
         Uint8List concat = new Uint8List(leftHash.bytes.length + rightHash.bytes.length);
         concat.replaceRange(0, leftHash.bytes.length, leftHash.bytes);
         concat.replaceRange(leftHash.bytes.length, concat.length, rightHash.bytes);
-        tree.add(Sha256Hash.doubleDigest(concat));
+        tree.add(new Sha256Hash.doubleDigest(concat));
       }
       // Move to the next level.
       levelOffset += levelSize;

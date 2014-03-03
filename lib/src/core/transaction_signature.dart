@@ -36,9 +36,7 @@ class TransactionSignature extends ECDSASignature with BitcoinSerialization {
     return new TransactionSignature(sig);
   }
   
-  int get sigHashFlags {
-    return _sigHashFlags;
-  }
+  int get sigHashFlags => _sigHashFlags;
   
   void _setSigHashFlags(SigHash mode, bool anyoneCanPay) {
     _sigHashFlags = SigHash.sigHashValue(mode, anyoneCanPay);

@@ -23,6 +23,7 @@ class InventoryItem extends Object with BitcoinSerialization {
   InventoryItem(InventoryItemType type, Sha256Hash hash) {
     _type = type;
     _hash = hash;
+    _serializationLength = SERIALIZATION_LENGTH;
   }
 
   InventoryItem.fromTransaction(Transaction tx) : this(InventoryItemType.MSG_TX, tx.hash);
@@ -46,9 +47,6 @@ class InventoryItem extends Object with BitcoinSerialization {
     _hash = new Sha256Hash(bytes.sublist(4, Sha256Hash.LENGTH + 4));
     return SERIALIZATION_LENGTH;
   }
-  
-  @override
-  int _lazySerializationLength(Uint8List bytes) => SERIALIZATION_LENGTH;
   
   Uint8List _serialize() {
     return new Uint8List.fromList(new List<int>()

@@ -23,7 +23,5 @@ class BlockMessage extends Message {
     return offset;
   }
   
-  Uint8List _serialize_payload() {
-    return _block.serialize();
-  }
+  Uint8List _serialize_payload() => _block.serialize();
 }

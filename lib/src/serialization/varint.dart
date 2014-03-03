@@ -6,6 +6,7 @@ class VarInt extends Object with BitcoinSerialization {
   
   VarInt(int this._value) {
     if(_value < 0) throw new Exception("VarInt values should be at least 0!");
+    _serializationLength = sizeOf(_value);
   }
   
   factory VarInt.deserialize(Uint8List bytes, {int length, bool lazy, NetworkParameters params}) => 

@@ -11,6 +11,7 @@ class PongMessage extends Message {
     if(nonce != null && nonce < 0)
       throw new Exception("Nonce value should be at least zero");
     _nonce = nonce;
+    _serializationLength = Message.HEADER_LENGTH + 8;
   }
   
   PongMessage.fromPing(PingMessage ping) : super("pong") {

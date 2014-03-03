@@ -65,32 +65,25 @@ class VersionMessage extends Message {
       subVer += "$name:$version/";
   }
 
-  static bool isValidSubVerComponent(String component) {
-    return !(component.contains("/") || component.contains("(") || component.contains(")"));
-  }
+  static bool isValidSubVerComponent(String component) =>
+    !(component.contains("/") || component.contains("(") || component.contains(")"));
 
   /**
    * Returns true if the clientVersion field is >= Pong.MIN_PROTOCOL_VERSION. If it is then ping() is usable.
    */
-  bool get isPingPongSupported {
-    return clientVersion >= PongMessage.MIN_PROTOCOL_VERSION;
-  }
+  bool get isPingPongSupported => clientVersion >= PongMessage.MIN_PROTOCOL_VERSION;
 
   /**
    * Returns true if the clientVersion field is >= FilteredBlock.MIN_PROTOCOL_VERSION. If it is then Bloom filtering
    * is available and the memory pool of the remote peer will be queried when the downloadData property is true.
    */
-  bool get isBloomFilteringSupported {
-    return clientVersion >= FilteredBlock.MIN_PROTOCOL_VERSION;
-  }
+  bool get isBloomFilteringSupported => clientVersion >= FilteredBlock.MIN_PROTOCOL_VERSION;
 
   /**
    * Returns true if the version message indicates the sender has a full copy of the block chain,
    * or if it's running in client mode (only has the headers).
    */
-  bool get hasBlockChain {
-    return (services & SERVICE_NODE_NETWORK) == SERVICE_NODE_NETWORK;
-  }
+  bool get hasBlockChain => (services & SERVICE_NODE_NETWORK) == SERVICE_NODE_NETWORK;
   
   @override
   bool operator ==(VersionMessage other) {

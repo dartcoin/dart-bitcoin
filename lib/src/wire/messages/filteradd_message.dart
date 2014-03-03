@@ -8,17 +8,19 @@ class FilterAddMessage extends Message {
   
   FilterAddMessage(Uint8List data) : super("filteradd") {
     if(data.length > MAX_DATA_SIZE)
-      throw new Exception("Data attribute is too large.");
-    _data = data;
+      throw new ArgumentError("Data attribute is too large.");
+    _data = new Uint8List.fromList(data);
+    _serializationLength = Message.HEADER_LENGTH + VarInt.sizeOf(_data.length) + _data.length;
   }
   
   Uint8List get data {
     _needInstance();
-    return _data;
+    return new Uint8List.fromList(_data);
   }
   
   factory FilterAddMessage.deserialize(Uint8List bytes, {int length, bool lazy, NetworkParameters params, int protocolVersion}) => 
-          new BitcoinSerialization.deserialize(new FilterAddMessage(null), bytes, length: length, lazy: lazy, params: params, protocolVersion: protocolVersion);
+    new BitcoinSerialization.deserialize(
+        new FilterAddMessage(null), bytes, length: length, lazy: lazy, params: params, protocolVersion: protocolVersion);
 
   int _deserializePayload(Uint8List bytes) {
     int offset = 0;

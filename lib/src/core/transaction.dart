@@ -59,9 +59,7 @@ class Transaction extends Object with BitcoinSerialization {
     return _hash;
   }
   
-  Sha256Hash get txid {
-    return hash;
-  }
+  Sha256Hash get txid => hash;
   
   int get amount {
     _needInstance();
@@ -167,7 +165,7 @@ class Transaction extends Object with BitcoinSerialization {
   
   void _calculateHash() {
     _needInstance(true);
-    _hash = Sha256Hash.doubleDigest(serialize());
+    _hash = new Sha256Hash.doubleDigest(serialize());
   }
   
   Sha256Hash hashForSignature(int inputIndex, Uint8List connectedScript, int sigHashType) {

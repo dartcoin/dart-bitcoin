@@ -22,9 +22,7 @@ class PayToScriptHash extends Script {
     if(!matchesType(script)) throw new ScriptException("Given script is not an instance of this script type.");
   }
   
-  Uint8List get scriptHash {
-    return bytes.getRange(2, 22);
-  }
+  Uint8List get scriptHash => new Uint8List.fromList(bytes.getRange(2, 22));
 
 
   /**

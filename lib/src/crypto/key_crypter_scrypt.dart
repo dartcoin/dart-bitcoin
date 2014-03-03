@@ -31,10 +31,10 @@ class ScryptKeyCrypter implements KeyCrypter {
   
   KeyParameter deriveKey(String passphrase) {
     Uint8List passBytes = new Uint8List.fromList(new Utf8Encoder().convert(passphrase));
-    Scrypt scrypt = new Scrypt();
-    scrypt.init(_scryptParams);
     Uint8List keyBytes = new Uint8List(KEY_LENGTH);
-    scrypt.deriveKey(passBytes, 0, keyBytes, 0);
+    Scrypt scrypt = new Scrypt()
+      ..init(_scryptParams)
+      ..deriveKey(passBytes, 0, keyBytes, 0);
   }
 
   EncryptedPrivateKey encrypt(Uint8List privKey, KeyParameter aesKey) {
@@ -53,9 +53,7 @@ class ScryptKeyCrypter implements KeyCrypter {
     
   }
   
-  String toString() {
-    return "Scrypt/AES";
-  }
+  String toString() => "Scrypt/AES";
   
   /* TODO cipher does not have a ScryptParams.hashCode
    *  also, Dart lacks Uint8List.hashCode and Uint8List.==. Hard to implement

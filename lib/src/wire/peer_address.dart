@@ -25,11 +25,11 @@ class PeerAddress extends Object with BitcoinSerialization {
     _time = time;
     this.protocolVersion = protocolVersion;
     this.params = params;
+    _serializationLength = this.protocolVersion > 31402 ? SERIALIZATION_SIZE : SERIALIZATION_SIZE - 4;
   }
   
-  factory PeerAddress.localhost({NetworkParameters params: NetworkParameters.MAIN_NET, BigInteger services}) {
-    return new PeerAddress(new InternetAddress("127.0.0.1"), params: params);
-  }
+  factory PeerAddress.localhost({NetworkParameters params: NetworkParameters.MAIN_NET, BigInteger services}) =>
+    new PeerAddress(new InternetAddress("127.0.0.1"), params: params);
   
   factory PeerAddress.deserialize(Uint8List bytes, {int length, bool lazy, NetworkParameters params, int protocolVersion}) =>  
       new BitcoinSerialization.deserialize(new PeerAddress(null), bytes, length: length, lazy: lazy, params: params, protocolVersion: protocolVersion);

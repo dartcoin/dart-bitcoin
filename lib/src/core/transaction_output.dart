@@ -45,9 +45,7 @@ class TransactionOutput extends Object with BitcoinSerialization {
     return _scriptPubKey;
   }
   
-  Transaction get parentTransaction {
-    return _parent;
-  }
+  Transaction get parentTransaction => _parent;
   
   void set parentTransaction(Transaction parentTransaction) {
     _parent = parentTransaction;

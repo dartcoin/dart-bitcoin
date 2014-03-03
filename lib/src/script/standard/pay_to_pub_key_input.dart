@@ -14,7 +14,7 @@ class PayToPubKeyInput extends Script {
     if(signature is TransactionSignature)
       signature = signature.encodeToDER();
     if(!(signature is Uint8List))
-      throw new ScriptException("The value for signature can be either a TransactionSignature or a Uint8List.");
+      throw new ArgumentError("The value for signature can be either a TransactionSignature or a Uint8List.");
     return new ScriptBuilder(encoded)
       .data(signature)
       .build();
@@ -24,9 +24,7 @@ class PayToPubKeyInput extends Script {
     if(!matchesType(script)) throw new ScriptException("Given script is not an instance of this script type.");
   }
   
-  TransactionSignature get signature {
-    return new TransactionSignature.deserialize(chunks[0].data);
-  }
+  TransactionSignature get signature => new TransactionSignature.deserialize(chunks[0].data);
   
   /**
    * Script must contain only one chunk, the signature data chunk.

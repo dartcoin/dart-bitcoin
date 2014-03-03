@@ -22,34 +22,30 @@ class Address {
     if(address is String)
       address = Base58Check.decode(address);
     if(address is Uint8List && address.length == 20) {
-      _bytes = address;
+      _bytes = new Uint8List.fromList(address);
       _version = params.addressHeader;
       return;
     }
     if(address is Uint8List && _validateChecksum(address)) {
-      _bytes = address.sublist(1, address.length - 4);
+      _bytes = new Uint8List.fromList(address.sublist(1, address.length - 4));
       _version = address[0];
       return;
     }
-    throw new Exception("Format exception or failed checksum, read documentation!");
+    throw new FormatException("Format exception or failed checksum, read documentation!");
   }
   
-  int get version {
-    return _version;
-  }
+  int get version => _version;
   
-  Uint8List get hash160 {
-    return _bytes;
-  }
+  Uint8List get hash160 => new Uint8List.fromList(_bytes);
   
   /**
    * Returns the base58 string.
    */
   @override
   String toString() {
-    List<int> bytes = new List();
-    bytes.add(_version);
-    bytes.addAll(_bytes);
+    List<int> bytes = new List<int>()
+      ..add(_version)
+      ..addAll(_bytes);
     bytes.addAll(Utils.doubleDigest(new Uint8List.fromList(bytes)).sublist(0, 4));
     return Base58Check.encode(new Uint8List.fromList(bytes));
   }
@@ -57,17 +53,16 @@ class Address {
   @override
   bool operator ==(Address other) {
     if(!(other is Address)) return false;
-    if(version != other.version) return false;
-    return Utils.equalLists(hash160, other.hash160);
+    if(_version != other._version) return false;
+    return Utils.equalLists(_bytes, other._bytes);
   }
   
   @override
   int get hashCode {
-    ListEquality<int> le = new ListEquality<int>();
     List<int> allBytes = new List<int>()
-        ..add(version)
-        ..addAll(hash160);
-    return le.hash(allBytes);
+        ..add(_version)
+        ..addAll(_bytes);
+    return Utils.listHashCode(allBytes);
   }
   
   /**

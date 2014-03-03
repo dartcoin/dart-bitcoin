@@ -24,9 +24,7 @@ class PayToAddressOutputScript extends Script {
     if(!matchesType(script)) throw new ScriptException("Given script is not an instance of this script type.");
   }
   
-  Address get address {
-    return new Address(bytes.getRange(3, 23));
-  }
+  Address get address => new Address(bytes.getRange(3, 23));
   
   static bool matchesType(Script script) {
     return script.bytes.length == LENGTH &&

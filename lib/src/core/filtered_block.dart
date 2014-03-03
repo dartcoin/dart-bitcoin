@@ -43,9 +43,8 @@ class FilteredBlock extends Object with BitcoinSerialization {
     if(_header.merkleRoot == _merkle.getTxnHashAndMerkleRoot(hashes)) {
       _hashes = hashes;
       return new UnmodifiableListView(_hashes);
-    } else {
-      throw new Exception("Merkle root of block header does not match merkle root of partial merkle tree.");
     }
+    throw new Exception("Merkle root of block header does not match merkle root of partial merkle tree.");
   }
   
   // the following two methods are used to fill this block with relevant transactions

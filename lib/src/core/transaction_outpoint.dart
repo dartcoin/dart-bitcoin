@@ -38,9 +38,7 @@ class TransactionOutPoint extends Object with BitcoinSerialization {
   /**
    * Can be `null` when this object has been created by deserialization.
    */
-  Transaction get transaction {
-    return _tx;
-  }
+  Transaction get transaction => _tx;
   
   TransactionOutput get connectedOutput {
     if(_tx == null) return null;
