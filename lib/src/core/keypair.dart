@@ -231,7 +231,7 @@ class KeyPair {
    * Verifies the given ASN.1 encoded ECDSA signature against a hash using the public key.
    */
   bool verifyASN1(Uint8List data, Uint8List signature, Uint8List pub) {
-    return verify(data, new ECDSASignature.decodeFromDER(signature));
+    return verify(data, new ECDSASignature.fromDER(signature));
   }
 
   /**
@@ -581,12 +581,42 @@ class ECDSASignature {
     }
   }
   
+  //TODO whenever DER encoding is supported for Dart, change this to a less hacky method
+  
   Uint8List encodeToDER() {
-    //TODO
+    // lengths are encoded using a single byte because lengths are never longer than 127
+    List<int> rBytes = r.toByteArray();
+    List<int> sBytes = s.toByteArray();
+    return new Uint8List.fromList(new List<int>()
+      ..add(0x30) // start DER sequence
+      ..add(4 + rBytes.length + sBytes.length) // length of all that follows 
+      ..add(0x02) // start DER integer
+      ..add(rBytes.length) // length of integer r
+      ..addAll(rBytes)
+      ..add(0x02) // start DER integer
+      ..add(sBytes.length) // length of integer s
+      ..addAll(sBytes));
   }
   
-  ECDSASignature.decodeFromDER(Uint8List bytes) {
-    //TODO
+  factory ECDSASignature.fromDER(Uint8List bytes) {
+    int offset = 0;
+    if(bytes[offset++] != 0x30)
+      throw new FormatException("Invalid DER encoding");
+    if(bytes[offset++] != bytes.length - 2)
+      throw new FormatException("Invalid DER encoding");
+    if(bytes[offset++] != 0x02)
+      throw new FormatException("Invalid DER encoding");
+    int rBytesLength = bytes[offset++];
+    Uint8List rBytes = bytes.sublist(offset, offset + rBytesLength);
+    offset += rBytesLength;
+    if(bytes[offset++] != 0x02)
+      throw new FormatException("Invalid DER encoding");
+    int sBytesLength = bytes[offset++];
+    Uint8List sBytes = bytes.sublist(offset, offset + sBytesLength);
+    offset += sBytesLength;
+    if(offset != bytes.length)
+      throw new FormatException("Invalid DER encoding");
+    return new ECDSASignature(new BigInteger.fromBytes(1, rBytes), new BigInteger.fromBytes(1, sBytes));
   }
 }
 
