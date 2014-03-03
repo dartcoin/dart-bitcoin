@@ -197,7 +197,7 @@ class Transaction extends Object with BitcoinSerialization {
     // OP_CODESEPARATOR instruction having no purpose as it was only meant to be used internally, not actually
     // ever put into scripts. Deleting OP_CODESEPARATOR is a step that should never be required but if we don't
     // do it, we could split off the main chain.
-    connectedScript = _ScriptExecutor.removeAllInstancesOfOp(connectedScript, ScriptOpCodes.OP_CODESEPARATOR);
+    connectedScript = ScriptExecutor.removeAllInstancesOfOp(connectedScript, ScriptOpCodes.OP_CODESEPARATOR);
 
     // Set the input to the script of its output. Satoshi does this but the step has no obvious purpose as
     // the signature covers the hash of the prevout transaction which obviously includes the output script

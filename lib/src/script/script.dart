@@ -3,38 +3,41 @@ part of dartcoin.core;
 class Script {
   
   static final int MAX_SCRIPT_ELEMENT_SIZE = 520; //bytes
-  static final Script EMPTY_SCRIPT = new _ImmutableScript(new Uint8List(0));
+  static final Script EMPTY_SCRIPT = new Script(new Uint8List(0));
   
   List<ScriptChunk> _chunks;
   Uint8List _bytes;
   
-  Script(Uint8List bytes) {
-    _bytes = bytes;
-    _chunks = null;
-  }
-  
-  Script.fromChunks(List<ScriptChunk> chunks) {
-    _chunks = chunks;
-    _bytes = null;
+  /**
+   * Create a new script.
+   * 
+   * Either a [Uint8List] or an iterable of [ScriptChunk]s must be passed as argument.
+   */
+  Script(dynamic script) {
+    if(script is Uint8List) {
+      _bytes = script;
+      return;
+    }
+    if(script is Iterable<ScriptChunk>) {
+      _chunks = new List.from(script, growable: true);
+      return;
+    }
+    throw new ArgumentError("Either a [Uint8List] or an iterable of [ScriptChunk]s must be passed as argument.");
   }
   
   Uint8List get bytes {
     if(_bytes == null) {
       _bytes = encode();
+      _chunks = null;
     }
-    return _bytes;
-  }
-  
-  void set bytes(Uint8List bytes) {
-    _bytes = bytes;
-    _chunks = null;
+    return new Uint8List.fromList(_bytes);
   }
   
   List<ScriptChunk> get chunks {
     if(_chunks == null) {
-      parse();
+      _parse();
     }
-    return _chunks;
+    return new UnmodifiableListView(_chunks);
   }
   
   @override
@@ -53,32 +56,10 @@ class Script {
     buf.writeAll(chunks, " ");
     return buf.toString();
   }
-
-  /**
-   * <p>Whether or not this is a scriptPubKey representing a pay-to-script-hash output. In such outputs, the logic that
-   * controls reclamation is not actually in the output at all. Instead there's just a hash, and it's up to the
-   * spending input to provide a program matching that hash. This rule is "soft enforced" by the network as it does
-   * not exist in Satoshis original implementation. It means blocks containing P2SH transactions that don't match
-   * correctly are considered valid, but won't be mined upon, so they'll be rapidly re-orgd out of the chain. This
-   * logic is defined by <a href="https://en.bitcoin.it/wiki/BIP_0016">BIP 16</a>.</p>
-   *
-   * <p>bitcoinj does not support creation of P2SH transactions today. The goal of P2SH is to allow short addresses
-   * even for complex scripts (eg, multi-sig outputs) so they are convenient to work with in things like QRcodes or
-   * with copy/paste, and also to minimize the size of the unspent output set (which improves performance of the
-   * Bitcoin system).</p>
-   */
-  bool get isPayToScriptHash {
-    // We have to check against the serialized form because BIP16 defines a P2SH output using an exact byte
-    // template, not the logical program structure. Thus you can have two programs that look identical when
-    // printed out but one is a P2SH script and the other isn't! :(
-    return bytes.length == 23 &&
-        (bytes[0]  & 0xff) == ScriptOpCodes.OP_HASH160 &&
-        (bytes[1]  & 0xff) == 0x14 &&
-        (bytes[22] & 0xff) == ScriptOpCodes.OP_EQUAL;
-  }
   
-  void parse() {
-    List<ScriptChunk> chunks = new List();
+  void _parse() {
+    if(_chunks != null) return;
+    List<ScriptChunk> chunks = new List<ScriptChunk>();
     DoubleLinkedQueue<int> bytes = new DoubleLinkedQueue.from(_bytes); // because there is removeLast but not removeFirst
     int initialSize = bytes.length;
     
@@ -113,6 +94,7 @@ class Script {
       }
     }
     _chunks = chunks;
+    _bytes = null;
   }
   
   List<int> _takeFirstN(int n, DoubleLinkedQueue<int> reverseBuffer) {
@@ -125,7 +107,7 @@ class Script {
   
   Uint8List encode() {
     if(_bytes != null) return _bytes;
-    List<int> bytes = new List();
+    List<int> bytes = new List<int>();
     for(ScriptChunk chunk in chunks) {
       bytes.addAll(chunk.data);
     }
@@ -176,15 +158,65 @@ class Script {
       return value - 1 + ScriptOpCodes.OP_1;
   }
   
-}
+  /**
+   * Verifies that this script (interpreted as a scriptSig) correctly spends the given scriptPubKey.
+   * @param txContainingThis The transaction in which this input scriptSig resides.
+   *                         Accessing txContainingThis from another thread while this method runs results in undefined behavior.
+   * @param scriptSigIndex The index in txContainingThis of the scriptSig (note: NOT the index of the scriptPubKey).
+   * @param scriptPubKey The connected scriptPubKey containing the conditions needed to claim the value.
+   * @param enforceP2SH Whether "pay to script hash" rules should be enforced. If in doubt, set to true.
+   */
+  void correctlySpends(Transaction txContainingThis, int scriptSigIndex, Script scriptPubKey, bool enforceP2SH) {
+    // Clone the transaction because executing the script involves editing it, and if we die, we'll leave
+    // the tx half broken (also it's not so thread safe to work on it directly.
+    txContainingThis = new Transaction.deserialize(
+        txContainingThis.serialize(), length: txContainingThis.serializationLength, lazy: false, params: txContainingThis.params);
+    if (bytes.length > 10000 || scriptPubKey.bytes.length > 10000)
+      throw new ScriptException("Script larger than 10,000 bytes");
+    
+    DoubleLinkedQueue<Uint8List> stack = new DoubleLinkedQueue<Uint8List>();
+    DoubleLinkedQueue<Uint8List> p2shStack = null;
+    
+    ScriptExecutor.executeScript(this, stack, txContainingThis, scriptSigIndex);
+    if (enforceP2SH)
+        p2shStack = new DoubleLinkedQueue.from(stack);
+    ScriptExecutor.executeScript(scriptPubKey, stack, txContainingThis, scriptSigIndex);
+    
+    if (stack.length == 0)
+      throw new ScriptException("Stack empty at end of script execution.");
+    
+    if (!ScriptExecutor.castToBool(stack.removeLast()))
+      throw new ScriptException("Script resulted in a non-true stack: " + stack.join(" "));
 
-class _ImmutableScript extends Script {
-  
-  _ImmutableScript(Uint8List bytes) : super(bytes);
-  
-  @override
-  void set bytes(Uint8List bytes) {
-    throw new ScriptException("Operation not allowed on immutable script.", this);
+    // P2SH is pay to script hash. It means that the scriptPubKey has a special form which is a valid
+    // program but it has "useless" form that if evaluated as a normal program always returns true.
+    // Instead, miners recognize it as special based on its template - it provides a hash of the real scriptPubKey
+    // and that must be provided by the input. The goal of this bizarre arrangement is twofold:
+    //
+    // (1) You can sum up a large, complex script (like a CHECKMULTISIG script) with an address that's the same
+    //     size as a regular address. This means it doesn't overload scannable QR codes/NFC tags or become
+    //     un-wieldy to copy/paste.
+    // (2) It allows the working set to be smaller: nodes perform best when they can store as many unspent outputs
+    //     in RAM as possible, so if the outputs are made smaller and the inputs get bigger, then it's better for
+    //     overall scalability and performance.
+
+    // TODO: Check if we can take out enforceP2SH if there's a checkpoint at the enforcement block.
+    if (enforceP2SH && PayToScriptHash.matchesType(scriptPubKey)) {
+      for (ScriptChunk chunk in chunks)
+        if (chunk.isOpCode && (chunk.data[0] & 0xff) > ScriptOpCodes.OP_16)
+          throw new ScriptException("Attempted to spend a P2SH scriptPubKey with a script that contained script ops");
+      
+      Uint8List scriptPubKeyBytes = p2shStack.removeLast();
+      Script scriptPubKeyP2SH = new Script(scriptPubKeyBytes);
+      
+      ScriptExecutor.executeScript(scriptPubKeyP2SH, p2shStack, txContainingThis, scriptSigIndex);
+      
+      if (p2shStack.length == 0)
+        throw new ScriptException("P2SH stack empty at end of script execution.");
+      
+      if (!ScriptExecutor.castToBool(p2shStack.removeLast()))
+        throw new ScriptException("P2SH script execution resulted in a non-true stack");
+    }
   }
   
 }

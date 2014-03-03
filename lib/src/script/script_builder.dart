@@ -37,10 +37,7 @@ class ScriptBuilder {
   }
   
   Script build() {
-    if(encoded)
-      return new Script(_data);
-    else
-      return new Script.fromChunks(_data);
+    return new Script(_data);
   }
   
 }

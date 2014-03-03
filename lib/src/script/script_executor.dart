@@ -3,24 +3,18 @@ part of dartcoin.core;
 /**
  * Usability class with functionality for executing Bitcoin scripts.
  */
-class _ScriptExecutor {
+class ScriptExecutor {
   
   /**
    * The input will be copied to the stack, so there is no need to make a copy of the inputs beforehand.
    */
-  static void executeScript(Script script, List<Uint8List> inputStack, Transaction txContainingScript, int index) {
+  static void executeScript(Script script, DoubleLinkedQueue<Uint8List> stack, Transaction txContainingScript, int index) {
     
     int opCount = 0;
     int lastCodeSepLoc = 0;
-
-    DoubleLinkedQueue<Uint8List> stack = new DoubleLinkedQueue<Uint8List>();
+    
     ListQueue<Uint8List> altStack      = new ListQueue<Uint8List>();
     ListQueue<bool> ifStack            = new ListQueue<bool>();
-    
-    // copy stack
-    for(Uint8List item in inputStack) {
-      stack.add(item);
-    }
     
     // main loop for script execution
     for(ScriptChunk chunk in script.chunks) {
