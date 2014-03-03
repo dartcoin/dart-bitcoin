@@ -93,10 +93,9 @@ class TransactionOutput extends Object with BitcoinSerialization {
     return offset;
   }
   
+  @override
   int _lazySerializationLength(Uint8List bytes) {
-    int offset = 0;
-    _value = Utils.bytesToUintBE(bytes, 4);
-    offset += 4;
+    int offset = 4;
     VarInt scrLn = new VarInt.deserialize(bytes.sublist(offset), lazy: false);
     return offset + scrLn.value;
   }

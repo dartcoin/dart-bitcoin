@@ -11,9 +11,9 @@ class TransactionInput extends Object with BitcoinSerialization {
   Transaction _parent;
   
   /**
-   * Create a new TransactionInput.
+   * Create a new [TransactionInput].
    * 
-   * It's not possible to specify both the output parameter and the outpoint parameter. 
+   * It's not possible to specify both the [output] parameter and the [outpoint] parameter. 
    */
   TransactionInput({TransactionOutput output, 
                     Script scriptSig,
@@ -33,8 +33,14 @@ class TransactionInput extends Object with BitcoinSerialization {
     this.params = params;
   }
   
-  TransactionInput.coinbase() {
-    _outpoint = new TransactionOutPoint(txid: Sha256Hash.ZERO_HASH, index: -1); //TODO verify
+  /**
+   * Create a coinbase transaction input. 
+   * 
+   * It is specified by its [TransactionOutPoint] format, but can carry any [Script] as [scriptSig].
+   */
+  TransactionInput.coinbase([Script scriptSig]) {
+    _outpoint = new TransactionOutPoint(txid: Sha256Hash.ZERO_HASH, index: 0xFFFFFFFF); //TODO verify
+    _scriptSig = (scriptSig != null) ? scriptSig : Script.EMPTY_SCRIPT;
   }
   
   factory TransactionInput.deserialize(Uint8List bytes, {int length, bool lazy, NetworkParameters params}) =>
@@ -107,10 +113,9 @@ class TransactionInput extends Object with BitcoinSerialization {
     return offset;
   }
   
+  @override
   int _lazySerializationLength(Uint8List bytes) {
-    int offset = 0;
-    _outpoint = new TransactionOutPoint.deserialize(bytes);
-    offset += _outpoint.serializationLength;
+    int offset = TransactionOutPoint.SERIALIZATION_LENGTH;
     VarInt scrLn = new VarInt.deserialize(bytes.sublist(offset), lazy: false);
     return offset + scrLn.value + 4;
   }

@@ -14,26 +14,14 @@ abstract class BitcoinSerialization {
   static const int UNKNOWN_LENGTH = -1;
   
   Uint8List _serialization = null;
+  // this flag means that only a serialization is present, so it has not been deserialized yet
   bool _isSerialized = false;
-  bool retainSerialization = false;
+  bool _retainSerialization = false;
   int _serializationLength = UNKNOWN_LENGTH;
   
   // use getters for these attributes
   NetworkParameters _params;
   int _protocolVersion;
-  
-  /**
-   * Serialize this object according to the Bitcoin protocol.
-   */
-  Uint8List serialize() {
-    if(_isSerialized && _serializationLength != UNKNOWN_LENGTH) {
-      return _serialization.sublist(0, serializationLength);
-    }
-    Uint8List seri = _serialize();
-    _serializationLength = seri.length;
-    _serialization = seri;
-    return seri;
-  }
   
   /**
    * Use the deserialize() factory to create an instance of this class from it's serialized version.
@@ -65,6 +53,30 @@ abstract class BitcoinSerialization {
   }
   
   /**
+   * Serialize this object according to the Bitcoin protocol.
+   */
+  Uint8List serialize() {
+    if(_isSerialized) {
+      if(_serializationLength <= UNKNOWN_LENGTH)
+        _serializationLength = _lazySerializationLength(_serialization);
+      return _serialization.sublist(0, _serializationLength);
+    }
+    Uint8List seri = _serialize();
+    _serializationLength = seri.length;
+    if(retainSerialization)
+      _serialization = seri;
+    return seri;
+  }
+  
+  bool get retainSerialization => _retainSerialization;
+  
+  void set retainSerialization(bool retainSerialization) {
+    _retainSerialization = retainSerialization;
+    if(!retainSerialization && !_isSerialized)
+      _serialization = null;
+  }
+  
+  /**
    * Get the length of the serialization in bytes.
    * 
    * The calculation is done as lazy as possible.
@@ -72,12 +84,12 @@ abstract class BitcoinSerialization {
    * Do not override this getter.
    */
   int get serializationLength {
-    if(_serializationLength != UNKNOWN_LENGTH) 
+    if(_serializationLength > UNKNOWN_LENGTH) 
       return _serializationLength;
-    if(_serialization != null)
+    if(_isSerialized)
       _serializationLength = _lazySerializationLength(_serialization);
     else
-      serialize();
+      _serializationLength = _serialize().length;
     return _serializationLength;
   }
   
@@ -91,14 +103,11 @@ abstract class BitcoinSerialization {
   int _deserialize(Uint8List bytes);
   
   /**
-   * Using classes can override this method to lazily calculate the serialization length.
-   * The serialization can be found with _serialization.
+   * [BitcoinSerialization] subclasses can override this method to lazily calculate the serialization length.
    */
   int _lazySerializationLength(Uint8List bytes) {
-    if(_isSerialized)
-      return _deserialize(bytes);
-    else
-      return serialize().length;
+    _needInstance();
+    return _serializationLength;
   }
   
   /**

@@ -19,10 +19,11 @@ class TransactionOutPoint extends Object with BitcoinSerialization {
     _txid = txid;
     _tx = transaction;
     this.params = params;
+    _serializationLength = SERIALIZATION_LENGTH;
   }
   
   factory TransactionOutPoint.deserialize(Uint8List bytes, {bool lazy, NetworkParameters params}) =>
-      new BitcoinSerialization.deserialize(new TransactionOutPoint(), bytes, length: 36, lazy: lazy, params: params);
+      new BitcoinSerialization.deserialize(new TransactionOutPoint(), bytes, length: SERIALIZATION_LENGTH, lazy: lazy, params: params);
   
   Sha256Hash get txid {
     _needInstance();
@@ -73,6 +74,4 @@ class TransactionOutPoint extends Object with BitcoinSerialization {
     _index = Utils.bytesToUintBE(bytes.sublist(32), 4);
     return SERIALIZATION_LENGTH;
   }
-  
-  int _lazySerializationLength(Uint8List bytes) => SERIALIZATION_LENGTH;
 }
