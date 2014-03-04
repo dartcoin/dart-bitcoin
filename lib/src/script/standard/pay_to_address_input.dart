@@ -28,7 +28,7 @@ class PayToAddressInputScript extends Script {
     if(!matchesType(script)) throw new ScriptException("Given script is not an instance of this script type.");
   }
   
-  TransactionSignature get signature => new TransactionSignature.deserialize(chunks[0].data, false);
+  TransactionSignature get signature => new TransactionSignature.deserialize(chunks[0].data, length: chunks[0].data.length, requireCanonical: false);
   
   KeyPair get pubKey => new KeyPair(chunks[1].data);
   

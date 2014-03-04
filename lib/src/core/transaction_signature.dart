@@ -23,11 +23,13 @@ class TransactionSignature extends ECDSASignature with BitcoinSerialization {
       _setSigHashFlags(mode, anyoneCanPay);
   }
   
-  //TODO length of the signature should be calculated here
-  factory TransactionSignature.deserialize(Uint8List bytes, [bool requireCanonical, NetworkParameters params]) {
+  factory TransactionSignature.deserialize(Uint8List bytes, {int length, bool requireCanonical: false, NetworkParameters params}) {
     if(requireCanonical && !isEncodingCanonical(bytes)) throw new SerializationException("Signature is not canonical");
-    TransactionSignature ts = new TransactionSignature(new ECDSASignature.fromDER(bytes.getRange(0, bytes.length - 1)), bytes.last);
+    if(length == null)
+      length = bytes[1] + 2;
+    TransactionSignature ts = new TransactionSignature(new ECDSASignature.fromDER(bytes.getRange(0, length - 1)), bytes[length - 1]);
     ts.params = params;
+    ts._serializationLength = length;
     return ts;
   }
   

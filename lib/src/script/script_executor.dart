@@ -565,7 +565,7 @@ class ScriptExecutor {
     // TODO (from bitcoinj): Use int for indexes everywhere, we can't have that many inputs/outputs
     bool sigValid = false;
     
-    TransactionSignature sig = new TransactionSignature.deserialize(sigBytes, false);
+    TransactionSignature sig = new TransactionSignature.deserialize(sigBytes, length: sigBytes.length, requireCanonical: false);
     Sha256Hash hash = txContainingThis.hashForSignature(index, connectedScript, sig.sigHashFlags);
     sigValid = KeyPair.verifySignatureForPubkey(hash.bytes, sig, pubKey);
 
@@ -624,7 +624,7 @@ class ScriptExecutor {
       Uint8List pubKey = pubkeys.removeFirst();
       // We could reasonably move this out of the loop, but because signature verification is significantly
       // more expensive than hashing, its not a big deal.
-      TransactionSignature sig = new TransactionSignature.deserialize(sigs.first, false);
+      TransactionSignature sig = new TransactionSignature.deserialize(sigs.first, length: sigs.first.length, requireCanonical: false);
       Sha256Hash hash = txContainingThis.hashForSignature(index, connectedScript, sig.sigHashFlags);
       if (KeyPair.verifySignatureForPubkey(hash.bytes, sig, pubKey))
         sigs.removeFirst();
