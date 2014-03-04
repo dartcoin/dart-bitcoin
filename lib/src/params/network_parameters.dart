@@ -6,8 +6,9 @@ abstract class NetworkParameters {
   //      should add more on the go and add remaining (not yet used) ones at the end
   
   // USE THESE AS PARAMS
-  
+
   static const NetworkParameters MAIN_NET = const _MainNetParams();
+  static const NetworkParameters TEST_NET = const _TestNetParams();
   
   
   // GLOBAL PARAMETERS

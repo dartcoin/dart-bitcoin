@@ -55,6 +55,7 @@ part "../src/crypto/key_crypter_scrypt.dart";
 // network settings
 part "../src/params/network_parameters.dart";
 part "../src/params/main_net.dart";
+part "../src/params/test_net.dart";
 
 // transactions
 part "../src/core/transaction.dart";

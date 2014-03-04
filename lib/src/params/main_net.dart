@@ -11,8 +11,13 @@ class _MainNetParams extends NetworkParameters {
       port: 8333);
   
   Block get genesisBlock {
-    if(_genesis == null)
-      _genesis = NetworkParameters._createGenesis(this); 
+    if(_genesis == null) {
+      Block genesis = NetworkParameters._createGenesis(this);
+      genesis.timestamp = 1231006505;
+      genesis.nonce = 2083236893;
+      genesis.bits = 0x1d00ffff;
+      _genesis = genesis;
+    }
     return _genesis;
   }
 }

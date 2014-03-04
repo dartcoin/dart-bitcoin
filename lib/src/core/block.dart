@@ -117,6 +117,17 @@ class Block extends Object with BitcoinSerialization {
     _bits = bits;
   }
   
+  /**
+   * The difficulty target. 
+   * 
+   * This is the same as the [bits] attribute; 
+   */
+  int get difficultyTarget => bits;
+  
+  void set difficultyTarget(int target) {
+    this.bits = target;
+  }
+  
   int get nonce {
     _needInstance();
     return _nonce;
