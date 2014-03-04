@@ -3,8 +3,17 @@ part of dartcoin.core;
 class ScriptBuilder {
   
   final bool encoded;
+  // this parameter is either List<int> or List<ScriptChunk>
   var _data;
   
+  /**
+   * Initialize a new [ScriptBuilder].
+   * 
+   * Use [encoded] to specify if the output script should be generated from a
+   * serialization or from a list of [ScriptChunk]s.
+   * For serializing and transmitting the script, set [encoded] to true, while
+   * for executing the script, set [encoded] to false.
+   */
   ScriptBuilder([bool this.encoded = true]) {
     if(encoded)
       _data = new List<int>();
@@ -37,7 +46,10 @@ class ScriptBuilder {
   }
   
   Script build() {
-    return new Script(_data);
+    if(encoded) 
+      return new Script(new Uint8List.fromList(_data));
+    else
+      return new Script(new List.from(_data));
   }
   
 }

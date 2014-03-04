@@ -15,11 +15,11 @@ class Script {
    */
   Script(dynamic script) {
     if(script is Uint8List) {
-      _bytes = script;
+      _bytes = new Uint8List.fromList(script);
       return;
     }
     if(script is Iterable<ScriptChunk>) {
-      _chunks = new List.from(script, growable: true);
+      _chunks = new List.from(script, growable: false);
       return;
     }
     throw new ArgumentError("Either a [Uint8List] or an iterable of [ScriptChunk]s must be passed as argument.");
