@@ -6,10 +6,10 @@ part of dartcoin.core;
  * More info can be found in the Bitcoin wiki: https://en.bitcoin.it/wiki/Base58Check_encoding
  */
 class Base58Check {
-  static final String ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+  static const String ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
   
   // unused
-  //static final String _validRegex = r"/^[1-9A-HJ-NP-Za-km-z]+$/";
+  //static const String _validRegex = r"/^[1-9A-HJ-NP-Za-km-z]+$/";
   
   static String encode(Uint8List bytes) {
     if(bytes.length == 0) {

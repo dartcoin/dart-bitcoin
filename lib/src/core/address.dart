@@ -2,7 +2,7 @@ part of dartcoin.core;
 
 class Address {
   
-  static final LENGTH = 20; // bytes (= 160 bits)
+  static const int LENGTH = 20; // bytes (= 160 bits)
   
   int _version;
   Uint8List _bytes;
@@ -10,15 +10,14 @@ class Address {
   /**
    * Create a new address object.
    * 
-   * The `address` parameter can either be of type String or Uint8List.
+   * The [address] parameter can either be of type [String] or [Uint8List].
    * 
-   * If String, the checksum will be verified.
+   * If [String], the checksum will be verified.
    * 
-   * If Uint8List of size 20, bytes is used as the hash160 and the mainnet version will be used.
-   * If Uint8List of size 25, version and hash will be extracted and checksum verified.
+   * If [Uint8List] of size 20, the bytes are used as the [hash160].
+   * If [Uint8List] of size 25, [version] and [hash160] will be extracted and the checksum verified.
    */
-  Address(dynamic address, [NetworkParameters params]) {
-    if(params == null) params = NetworkParameters.MAIN_NET;
+  Address(dynamic address, [NetworkParameters params = NetworkParameters.MAIN_NET]) {
     if(address is String)
       address = Base58Check.decode(address);
     if(address is Uint8List && address.length == 20) {
@@ -39,10 +38,9 @@ class Address {
   Uint8List get hash160 => new Uint8List.fromList(_bytes);
   
   /**
-   * Returns the base58 string.
+   * Returns the base58 string representation of this address.
    */
-  @override
-  String toString() {
+  String get address {
     List<int> bytes = new List<int>()
       ..add(_version)
       ..addAll(_bytes);
@@ -51,19 +49,17 @@ class Address {
   }
   
   @override
+  String toString() => address;
+  
+  @override
   bool operator ==(Address other) {
     if(!(other is Address)) return false;
-    if(_version != other._version) return false;
-    return Utils.equalLists(_bytes, other._bytes);
+    return _version == other._version && 
+        Utils.equalLists(_bytes, other._bytes);
   }
   
   @override
-  int get hashCode {
-    List<int> allBytes = new List<int>()
-        ..add(_version)
-        ..addAll(_bytes);
-    return Utils.listHashCode(allBytes);
-  }
+  int get hashCode => _version.hashCode ^ Utils.listHashCode(_bytes);
   
   /**
    * Validates the byte string. The last four bytes have to match the first four

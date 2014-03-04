@@ -125,10 +125,11 @@ class KeyPair {
   /**
    * Generate the address that represents this keypair. 
    * 
-   * If `params` is ommited, the MAINNET params will be used.
+   * If [params] is ommited, the MAINNET params will be used.
    */
-  Address toAddress([NetworkParameters params]) => new Address(Utils.sha256hash160(_pub), params);
-  
+  Address toAddress([NetworkParameters params = NetworkParameters.MAIN_NET]) => 
+      new Address(Utils.sha256hash160(_pub), params);
+
   String toString() {
     StringBuffer sb = new StringBuffer()
       ..write("pub:")
