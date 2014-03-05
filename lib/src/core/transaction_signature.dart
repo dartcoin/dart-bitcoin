@@ -11,23 +11,23 @@ class TransactionSignature extends ECDSASignature with BitcoinSerialization {
    * specify a SigHash value and the anyoneCanPay bool.
    * When nothing is specified, the default SigHash.ALL and !anyoneCanPay settings are used.
    */
-  TransactionSignature(ECDSASignature signature, [int sigHashFlags, SigHash mode, bool anyoneCanPay]) : super(signature.r, signature.s) {
+  TransactionSignature(ECDSASignature signature, {SigHash mode, bool anyoneCanPay, int sigHashFlags}) : super(signature.r, signature.s) {
     if(sigHashFlags != null) {
       if(mode != null || anyoneCanPay != null)
-        throw new Exception("Please specify either the sigHashFlags byte or mode + anyoneCanPay, not both.");
+        throw new ArgumentError("Please specify either the sigHashFlags byte or mode + anyoneCanPay, not both.");
       _sigHashFlags = sigHashFlags;
     }
-    else if(mode == null && anyoneCanPay == null)
-      _setSigHashFlags(SigHash.ALL, false);
     else
-      _setSigHashFlags(mode, anyoneCanPay);
+      _setSigHashFlags(mode == null ? mode : SigHash.ALL, 
+          anyoneCanPay == null ? anyoneCanPay : false);
   }
   
   factory TransactionSignature.deserialize(Uint8List bytes, {int length, bool requireCanonical: false, NetworkParameters params}) {
     if(requireCanonical && !isEncodingCanonical(bytes)) throw new SerializationException("Signature is not canonical");
     if(length == null)
       length = bytes[1] + 2;
-    TransactionSignature ts = new TransactionSignature(new ECDSASignature.fromDER(bytes.getRange(0, length - 1)), bytes[length - 1]);
+    TransactionSignature ts = new TransactionSignature(new ECDSASignature.fromDER(bytes.getRange(0, length - 1)), 
+        sigHashFlags: bytes[length - 1]);
     ts.params = params;
     ts._serializationLength = length;
     return ts;
@@ -41,7 +41,7 @@ class TransactionSignature extends ECDSASignature with BitcoinSerialization {
   int get sigHashFlags => _sigHashFlags;
   
   void _setSigHashFlags(SigHash mode, bool anyoneCanPay) {
-    _sigHashFlags = SigHash.sigHashValue(mode, anyoneCanPay);
+    _sigHashFlags = SigHash.sigHashFlagsValue(mode, anyoneCanPay);
   }
 
   /**
@@ -115,7 +115,7 @@ class SigHash {
   
   const SigHash._(int this.value);
   
-  static int sigHashValue(SigHash sh, bool anyoneCanPay) {
+  static int sigHashFlagsValue(SigHash sh, bool anyoneCanPay) {
     int val = sh.value;
     if(anyoneCanPay)
       val |= ANYONE_CAN_PAY;

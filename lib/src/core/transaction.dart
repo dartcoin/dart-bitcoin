@@ -114,14 +114,39 @@ class Transaction extends Object with BitcoinSerialization {
     if(!(input is TransactionInput || input is TransactionOutput)) 
       throw new Exception("The input must be either a TransactionInput or TransactionOutput object.");
     if(input is TransactionOutput)
-      input = new TransactionInput(params: params, parentTransaction: this, output: input);
+      input = new TransactionInput.fromOutput(input, parentTransaction: this, params: params);
     _needInstance(true);
     input.parentTransaction = this;
     _inputs.add(input);
     return input;
   }
-  
-  //TODO add signedinput
+
+  /**
+   * Adds a new and fully signed input for the given parameters. Note that this method is <b>not</b> thread safe
+   * and requires external synchronization. Please refer to general documentation on Bitcoin scripting and contracts
+   * to understand the values of sigHash and anyoneCanPay: otherwise you can use the other form of this method
+   * that sets them to typical defaults.
+   *
+   * @throws [ScriptException] if the [scriptPubKey] is not a pay to address or pay to pubkey script.
+   */
+  TransactionInput addSignedInput(TransactionOutPoint prevOut, Script scriptPubKey, KeyPair sigKey,
+                                       [SigHash sigHash = SigHash.ALL, bool anyoneCanPay = false]) {
+    TransactionInput input = new TransactionInput(
+        outpoint: prevOut,  
+        params: params);
+    addInput(input); // this method calls _needInstance(true) for us
+    int sigHashFlags = SigHash.sigHashFlagsValue(sigHash, anyoneCanPay);
+    Sha256Hash hash = hashForSignature(_inputs.length - 1, scriptPubKey, sigHashFlags);
+    ECDSASignature ecSig = sigKey.sign(hash);
+    TransactionSignature txSig = new TransactionSignature(ecSig, mode: sigHash, anyoneCanPay: anyoneCanPay);
+    if (PayToPubKeyOutputScript.matchesType(scriptPubKey))
+      input.scriptSig = new PayToPubKeyInputScript(txSig);
+    else if (PayToAddressOutputScript.matchesType(scriptPubKey))
+      input.scriptSig = new PayToAddressInputScript(txSig, sigKey);
+    else
+      throw new ScriptException("Don't know how to sign for this kind of scriptPubKey: $scriptPubKey");
+    return input;
+  }
   
   void clearInputs() {
     _needInstance(true);
@@ -168,7 +193,12 @@ class Transaction extends Object with BitcoinSerialization {
     _hash = new Sha256Hash.doubleDigest(serialize());
   }
   
-  Sha256Hash hashForSignature(int inputIndex, Uint8List connectedScript, int sigHashType) {
+  /**
+   * 
+   * 
+   * The [connectedScript] parameter must be either of typr [Script] or [Uint8List].
+   */
+  Sha256Hash hashForSignature(int inputIndex, dynamic connectedScript, int sigHashFlags) {
     _needInstance();
     // The SIGHASH flags are used in the design of contracts, please see this page for a further understanding of
     // the purposes of the code in this method:
@@ -180,6 +210,11 @@ class Transaction extends Object with BitcoinSerialization {
     // EC math so we'll do it anyway.
     //
     // Also store the input sequence numbers in case we are clearing them with SigHash.NONE/SINGLE
+    if(connectedScript is Script)
+      connectedScript = connectedScript.bytes;
+    if(connectedScript is! Uint8List)
+      throw new ArgumentError("The connectedScript parameter must be either of type Script or Uint8List.");
+    
     List<Script> inputScripts = new List<Script>(_inputs.length);
     List<int> inputSequenceNumbers = new List<int>(_inputs.length);
     for (int i = 0; i < _inputs.length; i++) {
@@ -204,14 +239,14 @@ class Transaction extends Object with BitcoinSerialization {
     input._scriptSig = new Script(connectedScript);
 
     List<TransactionOutput> outputs = _outputs;
-    if ((sigHashType & 0x1f) == (SigHash.NONE.value + 1)) {
+    if ((sigHashFlags & 0x1f) == (SigHash.NONE.value + 1)) {
       // SIGHASH_NONE means no outputs are signed at all - the signature is effectively for a "blank cheque".
       _outputs = new List<TransactionOutput>(0);
       // The signature isn't broken by new versions of the transaction issued by other parties.
       for (int i = 0; i < _inputs.length; i++)
         if (i != inputIndex)
           _inputs[i]._sequence = 0;
-    } else if ((sigHashType & 0x1f) == (SigHash.SINGLE.value + 1)) {
+    } else if ((sigHashFlags & 0x1f) == (SigHash.SINGLE.value + 1)) {
       // SIGHASH_SINGLE means only sign the output at the same index as the input (ie, my output).
       if (inputIndex >= _outputs.length) {
         // The input index is beyond the number of outputs, it's a buggy signature made by a broken
@@ -243,7 +278,7 @@ class Transaction extends Object with BitcoinSerialization {
     }
 
     List<TransactionInput> inputs = this.inputs;
-    if ((sigHashType & SigHash.ANYONE_CAN_PAY) == SigHash.ANYONE_CAN_PAY) {
+    if ((sigHashFlags & SigHash.ANYONE_CAN_PAY) == SigHash.ANYONE_CAN_PAY) {
       // SIGHASH_ANYONECANPAY means the signature in the input is not broken by changes/additions/removals
       // of other inputs. For example, this is useful for building assurance contracts.
       _inputs = new List<TransactionInput>();
@@ -253,7 +288,7 @@ class Transaction extends Object with BitcoinSerialization {
     List<int> toHash = new List<int>()
       ..addAll(this.serialize())
     // We also have to write a hash type (sigHashType is actually an unsigned char)
-      ..add(0x000000ff & sigHashType);
+      ..add(0x000000ff & sigHashFlags);
     // Note that this is NOT reversed to ensure it will be signed correctly. If it were to be printed out
     // however then we would expect that it is IS reversed.
     Sha256Hash hash = new Sha256Hash(Utils.doubleDigest(toHash));

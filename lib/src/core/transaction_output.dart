@@ -32,7 +32,7 @@ class TransactionOutput extends Object with BitcoinSerialization {
   
   factory TransactionOutput.payToScriptHash(Uint8List scriptHash, int amount,
       [Transaction parent, NetworkParameters params = NetworkParameters.MAIN_NET]) {
-    return new TransactionOutput(value: amount, scriptPubKey: new PayToScriptHash(scriptHash), parent: parent, params: params);
+    return new TransactionOutput(value: amount, scriptPubKey: new PayToScriptHashOutputScript(scriptHash), parent: parent, params: params);
   }
 
   int get value {
@@ -40,9 +40,19 @@ class TransactionOutput extends Object with BitcoinSerialization {
     return _value;
   }
   
+  void set value(int value) {
+    _needInstance(true);
+    _value = value;
+  }
+  
   Script get scriptPubKey {
     _needInstance();
     return _scriptPubKey;
+  }
+  
+  void set scriptPubKey(Script scriptPubKey) {
+    _needInstance(true);
+    _scriptPubKey = scriptPubKey;
   }
   
   Transaction get parentTransaction => _parent;

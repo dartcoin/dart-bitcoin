@@ -15,22 +15,23 @@ class TransactionInput extends Object with BitcoinSerialization {
    * 
    * It's not possible to specify both the [output] parameter and the [outpoint] parameter. 
    */
-  TransactionInput({TransactionOutput output, 
+  TransactionInput({TransactionOutPoint outpoint,
                     Script scriptSig,
-                    TransactionOutPoint outpoint,
-                    int sequence: NO_SEQUENCE,
                     Transaction parentTransaction, 
+                    int sequence: NO_SEQUENCE,
                     NetworkParameters params: NetworkParameters.MAIN_NET}) {
-    if(output != null) {
-      if(outpoint != null)
-        throw new Exception("It's not possible to specify both the output parameter and the outpoint + sequence parameter.");
-      outpoint = new TransactionOutPoint(transaction: output.parentTransaction, index: output.index, params: params);
-    }
     _outpoint = outpoint;
-    _scriptSig = scriptSig;
+    _scriptSig = scriptSig != null ? scriptSig : Script.EMPTY_SCRIPT;
     _sequence = sequence;
     _parent = parentTransaction;
     this.params = params;
+  }
+  
+  factory TransactionInput.fromOutput(TransactionOutput output, 
+      {Transaction parentTransaction, NetworkParameters params: NetworkParameters.MAIN_NET}) {
+    TransactionOutPoint outpoint = new TransactionOutPoint(transaction: output.parentTransaction, 
+              index: output.index, params: params);
+    return new TransactionInput(outpoint: outpoint, parentTransaction: parentTransaction, params: params);
   }
   
   /**
@@ -51,14 +52,29 @@ class TransactionInput extends Object with BitcoinSerialization {
     return _outpoint;
   }
   
+  void set outpoint(TransactionOutPoint outpoint) {
+    _needInstance(true);
+    _outpoint = outpoint;
+  }
+  
   Script get scriptSig {
     _needInstance();
     return _scriptSig;
   }
   
+  void set scriptSig(Script scripSig) {
+    _needInstance(true);
+    _scriptSig = scripSig;
+  }
+  
   int get sequence {
     _needInstance();
     return _sequence;
+  }
+  
+  void set sequence(int sequence) {
+    _needInstance(true);
+    _sequence = sequence;
   }
   
   Transaction get parentTransaction => _parent;

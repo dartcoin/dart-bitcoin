@@ -82,7 +82,7 @@ part "../src/script/standard/pay_to_address_output.dart";
 part "../src/script/standard/pay_to_address_input.dart";
 part "../src/script/standard/pay_to_pub_key_output.dart";
 part "../src/script/standard/pay_to_pub_key_input.dart";
-part "../src/script/standard/pay_to_script_hash.dart";
+part "../src/script/standard/pay_to_script_hash_output.dart";
 part "../src/script/standard/multisig_output.dart";
 
 // wire

@@ -201,7 +201,7 @@ class Script {
     //     overall scalability and performance.
 
     // TODO: Check if we can take out enforceP2SH if there's a checkpoint at the enforcement block.
-    if (enforceP2SH && PayToScriptHash.matchesType(scriptPubKey)) {
+    if (enforceP2SH && PayToScriptHashOutputScript.matchesType(scriptPubKey)) {
       for (ScriptChunk chunk in chunks)
         if (chunk.isOpCode && (chunk.data[0] & 0xff) > ScriptOpCodes.OP_16)
           throw new ScriptException("Attempted to spend a P2SH scriptPubKey with a script that contained script ops");

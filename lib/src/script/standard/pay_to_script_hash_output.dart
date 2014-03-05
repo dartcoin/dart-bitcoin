@@ -1,6 +1,6 @@
 part of dartcoin.core;
 
-class PayToScriptHash extends Script {
+class PayToScriptHashOutputScript extends Script {
   
   /**
    * Create a new P2SH output script.
@@ -8,7 +8,7 @@ class PayToScriptHash extends Script {
    * If [encoded] is set to false, the script will be built using chunks. This improves
    * performance when the script is intended for execution.
    */
-  factory PayToScriptHash(Uint8List scriptHash, [bool encoded = true]) {
+  factory PayToScriptHashOutputScript(Uint8List scriptHash, [bool encoded = true]) {
     if(scriptHash == null || scriptHash.length != 20)
       throw new ScriptException("The script hash must be of size 20!");
     return new ScriptBuilder(encoded)
@@ -18,7 +18,7 @@ class PayToScriptHash extends Script {
       .build();
   }
   
-  PayToScriptHash.convert(Script script) : super(script.bytes) {
+  PayToScriptHashOutputScript.convert(Script script) : super(script.bytes) {
     if(!matchesType(script)) throw new ScriptException("Given script is not an instance of this script type.");
   }
   
