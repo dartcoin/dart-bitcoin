@@ -20,8 +20,8 @@ class PayToPubKeyInputScript extends Script {
       .build();
   }
 
-  PayToPubKeyInputScript.convert(Script script): super(script.bytes) {
-    if (!matchesType(script)) 
+  PayToPubKeyInputScript.convert(Script script, [bool skipCheck = false]): super(script.bytes) {
+    if(!skipCheck && !matchesType(script)) 
       throw new ScriptException("Given script is not an instance of this script type.");
   }
 

@@ -24,8 +24,9 @@ class PayToAddressInputScript extends Script {
       .build();
   }
   
-  PayToAddressInputScript.convert(Script script) : super(script.bytes) {
-    if(!matchesType(script)) throw new ScriptException("Given script is not an instance of this script type.");
+  PayToAddressInputScript.convert(Script script, [bool skipCheck = false]) : super(script.bytes) {
+    if(!skipCheck && !matchesType(script)) 
+      throw new ScriptException("Given script is not an instance of this script type.");
   }
   
   TransactionSignature get signature => new TransactionSignature.deserialize(chunks[0].data, length: chunks[0].data.length, requireCanonical: false);

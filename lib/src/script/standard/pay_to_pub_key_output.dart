@@ -19,8 +19,9 @@ class PayToPubKeyOutputScript extends Script {
       .build();
   }
   
-  PayToPubKeyOutputScript.convert(Script script) : super(script.bytes) {
-    if(!matchesType(script)) throw new ScriptException("Given script is not an instance of this script type.");
+  PayToPubKeyOutputScript.convert(Script script, [bool skipCheck = false]) : super(script.bytes) {
+    if(!skipCheck && !matchesType(script)) 
+      throw new ScriptException("Given script is not an instance of this script type.");
   }
   
   KeyPair get pubKey => new KeyPair(chunks[0].data);

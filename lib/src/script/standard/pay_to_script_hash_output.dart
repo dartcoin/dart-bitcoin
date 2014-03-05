@@ -18,8 +18,9 @@ class PayToScriptHashOutputScript extends Script {
       .build();
   }
   
-  PayToScriptHashOutputScript.convert(Script script) : super(script.bytes) {
-    if(!matchesType(script)) throw new ScriptException("Given script is not an instance of this script type.");
+  PayToScriptHashOutputScript.convert(Script script, [bool skipCheck = false]) : super(script.bytes) {
+    if(!skipCheck && !matchesType(script)) 
+      throw new ScriptException("Given script is not an instance of this script type.");
   }
   
   Uint8List get scriptHash => new Uint8List.fromList(bytes.getRange(2, 22));

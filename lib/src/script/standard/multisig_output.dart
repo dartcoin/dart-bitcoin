@@ -23,8 +23,9 @@ class MultiSigOutputScript extends Script {
     return builder.build();
   }
   
-  MultiSigOutputScript.convert(Script script) : super(script.bytes) {
-    if(!matchesType(script)) throw new ScriptException("Given script is not an instance of this script type.");
+  MultiSigOutputScript.convert(Script script, [bool skipCheck = false]) : super(script.bytes) {
+    if(!skipCheck && !matchesType(script)) 
+      throw new ScriptException("Given script is not an instance of this script type.");
   }
   
   int get threshold => Script.decodeFromOpN(chunks[0].data[0]);
