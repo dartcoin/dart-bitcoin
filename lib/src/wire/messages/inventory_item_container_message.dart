@@ -16,14 +16,36 @@ abstract class InventoryItemContainerMessage extends Message {
     return new UnmodifiableListView(_items);
   }
   
-  void addItem(InventoryItem item) {
+  /**
+   * Add a new item to this container message.
+   * 
+   * [item] can be either of type [InventoryItem], [Block] or [Transaction].
+   */
+  void addItem(dynamic item) {
+    item = _castItem(item);
     _needInstance(true);
     _items.add(item);
   }
   
-  void removeItem(InventoryItem item) {
+  /**
+   * Remove an item from this container message.
+   * 
+   * [item] can be either of type [InventoryItem], [Block] or [Transaction].
+   */
+  void removeItem(dynamic item) {
+    item = _castItem(item);
     _needInstance(true);
     _items.remove(item);
+  }
+  
+  InventoryItem _castItem(dynamic item) {
+    if(item is Block)
+      item = new InventoryItem.fromBlock(item);
+    else if(item is Transaction)
+      item = new InventoryItem.fromTransaction(item);
+    if(item is! InventoryItem)
+      throw new ArgumentError("Invalid parameter type. Read documentation.");
+    return item;
   }
   
   int _deserializePayload(Uint8List bytes) {
