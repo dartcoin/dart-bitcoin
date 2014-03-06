@@ -35,22 +35,26 @@ class ScryptKeyCrypter implements KeyCrypter {
     Scrypt scrypt = new Scrypt()
       ..init(_scryptParams)
       ..deriveKey(passBytes, 0, keyBytes, 0);
+    return new KeyParameter(keyBytes);
   }
 
   EncryptedPrivateKey encrypt(Uint8List privKey, KeyParameter aesKey) {
-    if(privKey == null || aesKey == null) throw new Exception();
+    if(privKey == null || aesKey == null) throw new ArgumentError();
     Uint8List iv = new Uint8List(BLOCK_LENGTH);
     // TODO fill iv with random bytes from securerandom
     ParametersWithIV keyWithIv = new ParametersWithIV(aesKey, iv);
     PaddedBlockCipher cipher = new PaddedBlockCipherImpl(new PKCS7Padding(), new CBCBlockCipher(new AESFastEngine()));
     cipher.init(true, keyWithIv);
-    Uint8List encryptedBytes = new Uint8List(32); //TODO is this correct? java uses byte[] encryptedBytes = new byte[cipher.getOutputSize(plainBytes.length)];
-    //TODO finish after bufferedblockcipher is ready
-    
+    Uint8List encryptedKey = cipher.process(privKey);
+    return new EncryptedPrivateKey(encryptedKey, iv);
   }
   
   Uint8List decrypt(EncryptedPrivateKey encryptedPrivKey, KeyParameter aesKey) {
-    
+    if(encryptedPrivKey == null || aesKey == null) throw new ArgumentError();
+    ParametersWithIV keyWithIv = new ParametersWithIV(aesKey, encryptedPrivKey.iv);
+    PaddedBlockCipher cipher = new PaddedBlockCipherImpl(new PKCS7Padding(), new CBCBlockCipher(new AESFastEngine()));
+    cipher.init(false, keyWithIv);
+    return cipher.process(encryptedPrivKey.encryptedKey);
   }
   
   String toString() => "Scrypt/AES";
