@@ -7,6 +7,8 @@ abstract class NetworkParameters {
   static const NetworkParameters MAIN_NET = const _MainNetParams();
   static const NetworkParameters TEST_NET = const _TestNetParams();
   
+  static const List<NetworkParameters> SUPPORTED_PARAMS = const [MAIN_NET, TEST_NET];
+  
   
   // GLOBAL PARAMETERS
   
@@ -17,19 +19,23 @@ abstract class NetworkParameters {
   // NETWORK-SPECIFIC PARAMETERS
   
   final int addressHeader;
+  final int p2shHeader;
   final int magicValue;
   final String id;
   
   final int port;
   
   const NetworkParameters._({
-    int this.addressHeader, 
+    int this.addressHeader,
+    int this.p2shHeader,
     int this.magicValue, 
     String this.id,
     int this.port
   });
   
   Block get genesisBlock;
+  
+  List<int> get acceptableAddressHeaders => [addressHeader, p2shHeader];
   
 
 

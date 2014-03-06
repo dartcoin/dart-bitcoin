@@ -1,6 +1,6 @@
 part of dartcoin.core;
 
-class PayToAddressInputScript extends Script {
+class PayToPubKeyHashInputScript extends Script {
   
   /**
    * 
@@ -11,7 +11,7 @@ class PayToAddressInputScript extends Script {
    * If [encoded] is set to false, the script will be built using chunks. This improves
    * performance when the script is intended for execution.
    */
-  factory PayToAddressInputScript(dynamic signature, dynamic pubKey, [bool encoded = true]) {
+  factory PayToPubKeyHashInputScript(dynamic signature, dynamic pubKey, [bool encoded = true]) {
     if(signature is TransactionSignature) 
       signature = signature.encodeToDER();
     if(pubKey is KeyPair)
@@ -24,7 +24,7 @@ class PayToAddressInputScript extends Script {
       .build();
   }
   
-  PayToAddressInputScript.convert(Script script, [bool skipCheck = false]) : super(script.bytes) {
+  PayToPubKeyHashInputScript.convert(Script script, [bool skipCheck = false]) : super(script.bytes) {
     if(!skipCheck && !matchesType(script)) 
       throw new ScriptException("Given script is not an instance of this script type.");
   }

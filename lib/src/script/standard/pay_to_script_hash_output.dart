@@ -1,6 +1,6 @@
 part of dartcoin.core;
 
-class PayToScriptHashOutputScript extends Script {
+class PayToScriptHashOutputScript extends PayToAddressOutputScript {
   
   /**
    * Create a new P2SH output script.
@@ -18,13 +18,15 @@ class PayToScriptHashOutputScript extends Script {
       .build();
   }
   
-  PayToScriptHashOutputScript.convert(Script script, [bool skipCheck = false]) : super(script.bytes) {
+  PayToScriptHashOutputScript.convert(Script script, [bool skipCheck = false]) : super._super(script.bytes) {
     if(!skipCheck && !matchesType(script)) 
       throw new ScriptException("Given script is not an instance of this script type.");
   }
   
   Uint8List get scriptHash => new Uint8List.fromList(bytes.getRange(2, 22));
-
+  
+  Address getAddress([NetworkParameters params = NetworkParameters.MAIN_NET]) =>
+      new Address(bytes.getRange(3,  23), params, params.p2shHeader);
 
   /**
    * <p>Whether or not this is a scriptPubKey representing a pay-to-script-hash output. In such outputs, the logic that

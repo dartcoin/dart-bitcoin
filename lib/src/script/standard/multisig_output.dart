@@ -39,21 +39,22 @@ class MultiSigOutputScript extends Script {
   }
   
   static bool matchesType(Script script) {
+    List<ScriptChunk> chunks = script.chunks;
     // script length must be 3 + #pubkeys with max 16 pubkeys
-    if(script.chunks.length < 4 || script.chunks.length > 19)
+    if(chunks.length < 4 || chunks.length > 19)
       return false;
     // second chunks must be OP_N code with threshold, value from 0 to 16
-    if(Script.decodeFromOpN(script.chunks[0].data[0]) < 0 || Script.decodeFromOpN(script.chunks[0].data[0]) > 16)
+    if(Script.decodeFromOpN(chunks[0].data[0]) < 0 || Script.decodeFromOpN(chunks[0].data[0]) > 16)
       return false;
     // intermediate chunks must be data chunks. these are the pubkeys
-    for(int i = 0 ; i < (script.chunks.length - 3) ; i++) {
-      if(script.chunks[i+1].data.length <= 1)
+    for(int i = 0 ; i < (chunks.length - 3) ; i++) {
+      if(chunks[i+1].data.length <= 1)
         return false;
     }
     // one but last chunk must be OP_N code with #pubkeys, must be #chunks - 1
-    if(Script.decodeFromOpN(script.chunks[script.chunks.length-2].data[0]) != script.chunks.length - 3)
+    if(Script.decodeFromOpN(chunks[chunks.length-2].data[0]) != chunks.length - 3)
       return false;
     // last chunk must be OP_MULTISIG opcode
-    return script.chunks[script.chunks.length-1].equalsOpCode(ScriptOpCodes.OP_CHECKMULTISIG);
+    return chunks[chunks.length-1].equalsOpCode(ScriptOpCodes.OP_CHECKMULTISIG);
   }
 }

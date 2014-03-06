@@ -5,7 +5,8 @@ class _TestNetParams extends NetworkParameters {
   static Block _genesis;
   
   const _TestNetParams() : super._(
-      addressHeader: 111, 
+      addressHeader: 111,
+      p2shHeader: 196,
       magicValue: 0x0B110907,
       id: "org.bitcoin.test",
       port: 18333);

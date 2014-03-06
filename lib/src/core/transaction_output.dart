@@ -22,7 +22,7 @@ class TransactionOutput extends Object with BitcoinSerialization {
   
   factory TransactionOutput.payToAddress(Address to, int amount, 
       [Transaction parent, NetworkParameters params = NetworkParameters.MAIN_NET]) {
-    return new TransactionOutput(value: amount, scriptPubKey: new PayToAddressOutputScript(to), parent: parent, params: params);
+    return new TransactionOutput(value: amount, scriptPubKey: new PayToPubKeyHashOutputScript.withAddress(to), parent: parent, params: params);
   }
   
   factory TransactionOutput.payToPubKey(KeyPair key, int amount,

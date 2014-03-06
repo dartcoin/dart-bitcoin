@@ -141,8 +141,8 @@ class Transaction extends Object with BitcoinSerialization {
     TransactionSignature txSig = new TransactionSignature(ecSig, mode: sigHash, anyoneCanPay: anyoneCanPay);
     if (PayToPubKeyOutputScript.matchesType(scriptPubKey))
       input.scriptSig = new PayToPubKeyInputScript(txSig);
-    else if (PayToAddressOutputScript.matchesType(scriptPubKey))
-      input.scriptSig = new PayToAddressInputScript(txSig, sigKey);
+    else if (PayToPubKeyHashOutputScript.matchesType(scriptPubKey))
+      input.scriptSig = new PayToPubKeyHashInputScript(txSig, sigKey);
     else
       throw new ScriptException("Don't know how to sign for this kind of scriptPubKey: $scriptPubKey");
     return input;
