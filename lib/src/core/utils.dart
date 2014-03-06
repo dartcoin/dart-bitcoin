@@ -240,6 +240,7 @@ class Utils {
     if(bytes[0] >= 0x40) { // number is negative
       result = result - pow(2, 8 * size);
     }
+    return result;
   }
   
   /**
@@ -343,25 +344,24 @@ class Utils {
   }
   
   /**
-   * Compute 32-bit logical shift right of a value. This emulates the JavaScript >>> operator.
+   * Compute 32-bit logical shift right of a value. This emulates the Java >>> operator.
    */
   static int lsr(int n, int shift) {
     int shift5 = shift & 0x1f;
     int n32 = 0xffffffff & n;
-    if (shift5 == 0) {
+    if (shift5 == 0)
       return n32;
-    } else {
+    else
       return (n32 >> shift5) & ((0x7fffffff >> (shift5-1)));
-    }
   }
   
-  static final List<int> _bitMask = [0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80];
   /**
    * Checks if the given bit is set in data
    */
   static bool checkBitLE(Uint8List data, int index) {
     return (data[Utils.lsr(index, 3)] & _bitMask[7 & index]) != 0;
   }
+  static final Uint8List _bitMask = new Uint8List.fromList([0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80]);
   
   /**
    * Sets the given bit in data to one

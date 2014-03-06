@@ -1,6 +1,6 @@
 library dartcoin.test.core.block;
 
-//TODO
+//TODO test
 
 void main() {
   

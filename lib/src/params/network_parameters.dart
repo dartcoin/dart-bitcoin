@@ -2,9 +2,6 @@ part of dartcoin.core;
 
 abstract class NetworkParameters {
   
-  //TODO this are only the ones already used
-  //      should add more on the go and add remaining (not yet used) ones at the end
-  
   // USE THESE AS PARAMS
 
   static const NetworkParameters MAIN_NET = const _MainNetParams();

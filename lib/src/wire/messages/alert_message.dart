@@ -1,7 +1,7 @@
 part of dartcoin.core;
 
 class AlertMessage extends Message {
-  //TODO implement
+  //TODO implement AlertMessage
   
   static const int ALERT_VERSION = 1;
   
@@ -39,12 +39,12 @@ class AlertMessage extends Message {
   
   Uint8List get signature {
     _needInstance();
-    //TODO implement signing. (only necessary if we suppose holders of the alert key are going to use dartcoin)
+    //COMPLETE implement signing. (only necessary if we suppose holders of the alert key are going to use dartcoin)
     return _signature;
   }
   
   int _deserializePayload(Uint8List bytes) {
-    //TODO
+    //COMPLETE
   }
   
   Uint8List _constructMessage() {
@@ -54,7 +54,7 @@ class AlertMessage extends Message {
       ..addAll(Utils.uintToBytesLE(expiration, 8))
       ..addAll(Utils.uintToBytesLE(id, 4))
       ..addAll(Utils.uintToBytesLE(cancel, 4))
-    //TODO how to encode the sets?
+    //COMPLETE how to encode the sets?
       ..addAll(Utils.uintToBytesLE(minVer, 4))
       ..addAll(Utils.uintToBytesLE(maxVer, 4))
     //another set

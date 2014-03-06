@@ -22,7 +22,7 @@ void _testEqualsAndHashcode(Uint8List hash) {
   var hash3 = new Sha256Hash(hash);
   expect(hash2 == hash3, isTrue);
   expect(hash2.hashCode == hash3.hashCode, isTrue);
-  var hash4 = Sha256Hash.digest(new Uint8List(2));
+  var hash4 = new Sha256Hash.digest(new Uint8List(2));
   expect(hash4 == hash2, isFalse);
 }
 
@@ -30,7 +30,7 @@ void _testSingle(var input, var output) {
   if(input is String) {
     input = new Uint8List.fromList(new Utf8Encoder().convert(input));
   }
-  var hash = Sha256Hash.digest(input);
+  var hash = new Sha256Hash.digest(input);
   var hashString = Utils.bytesToHex(hash.bytes);
   expect(hashString, equalsIgnoringCase(output));
 }
@@ -39,7 +39,7 @@ void _testDouble(var input, var output) {
   if(input is String) {
     input = new Uint8List.fromList(new Utf8Encoder().convert(input));
   }
-  var hash = Sha256Hash.doubleDigest(input);
+  var hash = new Sha256Hash.doubleDigest(input);
   var hashString = Utils.bytesToHex(hash.bytes);
   expect(hashString, equalsIgnoringCase(output));
 }

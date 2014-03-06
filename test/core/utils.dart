@@ -27,7 +27,9 @@ void _ripemd160() {
 }
 
 void _sha1digest() {
-  //TODO
+  var message = new Uint8List.fromList(new Utf8Encoder().convert("test-dartcoin"));
+  var hash = Utils.hexToBytes("7db8dc1e20c72e5f7db948bcacec8c1503fbbe1c");
+  expect(Utils.sha1Digest(message), equals(hash));
 }
 
 void _sha256hash160() {

@@ -151,6 +151,7 @@ class BloomFilter extends Object with BitcoinSerialization {
   int _hash(int hashNum, Uint8List object) {
     _needInstance();
     // The following is MurmurHash3 (x86_32), see http://code.google.com/p/smhasher/source/browse/trunk/MurmurHash3.cpp
+    // implementation copied from BitcoinJ
     int h1 = hashNum * 0xFBA4C795 + _nTweak;
     final int c1 = 0xcc9e2d51;
     final int c2 = 0x1b873593;
