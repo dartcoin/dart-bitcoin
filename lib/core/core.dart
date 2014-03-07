@@ -8,6 +8,7 @@ import "dart:math";
 import "package:crypto/crypto.dart";
 import "package:bignum/bignum.dart";
 import "package:collection/equality.dart";
+import "package:collection/algorithms.dart" show binarySearch;
 import 'package:collection/wrappers.dart';
 
 // cherry picking cipher dependencies
@@ -29,6 +30,10 @@ import "package:cipher/paddings/padded_block_cipher.dart";
 import "package:cipher/paddings/pkcs7.dart";
 import "package:cipher/modes/cbc.dart";
 import "package:cipher/params/padded_block_cipher_parameters.dart";
+// mnemoniccode
+import "package:cipher/key_derivators/pbkdf2.dart";
+import "package:cipher/digests/sha512.dart";
+import "package:cipher/params/key_derivators/pbkdf2_parameters.dart";
 
 
 // utils
@@ -52,6 +57,9 @@ part "../src/core/transaction_signature.dart";
 part "../src/crypto/key_crypter.dart";
 part "../src/crypto/key_crypter_scrypt.dart";
 part "../src/crypto/encrypted_private_key.dart";
+
+part "../src/crypto/mnemonic_code.dart";
+part "../src/crypto/mnemonic_exception.dart";
 
 // network settings
 part "../src/params/network_parameters.dart";
