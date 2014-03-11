@@ -40,6 +40,14 @@ abstract class BitcoinSerialization {
         bool lazy: true, 
         NetworkParameters params: NetworkParameters.MAIN_NET, 
         int protocolVersion }) {
+    // fix defaults from subconstructors that default to null
+    if(lazy == null)
+      lazy = true;
+    if(length == null)
+      length = UNKNOWN_LENGTH;
+    if(params == null)
+      params = NetworkParameters.MAIN_NET;
+    //
     instance._serialization = bytes;
     if(length != UNKNOWN_LENGTH)
       instance._serializationLength = length;

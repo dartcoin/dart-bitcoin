@@ -17,24 +17,40 @@ class Address {
    * If [Uint8List] of size 20, the bytes are used as the [hash160].
    * If [Uint8List] of size 25, [version] and [hash160] will be extracted and the checksum verified.
    */
-  Address(dynamic address, [NetworkParameters params = NetworkParameters.MAIN_NET, int version]) {
-    if(version == null) version = params.addressHeader;
+  Address(dynamic address, [NetworkParameters params, int version]) {
+    bool wasString = address is String;
     if(address is String)
       address = Base58Check.decode(address);
     if(address is Uint8List && address.length == 25 && version == null) {
       if(!_validateChecksum(address))
         throw new FormatException("Checksum validation failed");
-      _bytes = new Uint8List.fromList(address.sublist(1, address.length - 4));
+      _bytes = new Uint8List.fromList(address.sublist(1, 21));
       _version = address[0];
+      if(params != null && !_isAcceptableVersion(params, _version))
+        throw  new WrongNetworkException(_version, params.acceptableAddressHeaders);
+      return;
     }
     else if(address is Uint8List && address.length == 20) {
+      if(params == null && version == null)
+        params = NetworkParameters.MAIN_NET;
       _bytes = new Uint8List.fromList(address);
       _version = (version != null) ? version : params.addressHeader;
+      if(!_isAcceptableVersion(params, _version))
+        throw new WrongNetworkException(_version, params.acceptableAddressHeaders);
+      return;
     }
-    if(!_isAcceptableVersion(params, _version))
-      throw new FormatException("Unrecognized Address version");
+    if(wasString)
+      throw new FormatException("Incorrect address formatting");
     throw new ArgumentError("Invalid arguments, please read documentation.");
   }
+  
+  /**
+   * Create an address from a pay-to-script-hash (P2SH) hash.
+   * 
+   * To create an address from a P2SH script, use the [PayToScriptHashOutputScript] class.
+   */
+  factory Address.fromP2SHHash(Uint8List hash160, [NetworkParameters params = NetworkParameters.MAIN_NET]) =>
+    new Address(hash160, params, params.p2shHeader);
   
   int get version => _version;
   
@@ -99,6 +115,16 @@ class Address {
   
   static bool _isAcceptableVersion(NetworkParameters params, int version) => 
       params.acceptableAddressHeaders.contains(version);
+}
+
+class WrongNetworkException implements Exception {
+  final int version;
+  final List<int> acceptableVersions;
+  WrongNetworkException(int this.version, List<int> this.acceptableVersions);
+  String get message => 
+      "Version code of address did not match acceptable versions for network: $version not in $acceptableVersions";
+  @override
+  String toString() => message;
 }
 
 

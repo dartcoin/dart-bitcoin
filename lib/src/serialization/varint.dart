@@ -4,9 +4,11 @@ class VarInt extends Object with BitcoinSerialization {
   
   int _value;
   
-  VarInt(int this._value) {
-    if(_value < 0) throw new Exception("VarInt values should be at least 0!");
-    _serializationLength = sizeOf(_value);
+  VarInt(int value) {
+    if(value < 0) 
+      throw new ArgumentError("VarInt values should be at least 0!");
+    _value = value;
+    _serializationLength = sizeOf(value);
   }
   
   factory VarInt.deserialize(Uint8List bytes, {int length, bool lazy, NetworkParameters params}) => 
@@ -22,7 +24,7 @@ class VarInt extends Object with BitcoinSerialization {
    */
   int get size {
     _needInstance();
-    return sizeOf(this._value);
+    return sizeOf(_value);
   }
   
   @override
@@ -44,10 +46,14 @@ class VarInt extends Object with BitcoinSerialization {
   
   Uint8List _serialize() {
     List<int> result;
-    if(_value < 0xfd)        result =  [_value];
-    if(_value <= 0xffff)     result = [253, 0, 0];
-    if(_value <= 0xffffffff) result = [254, 0, 0, 0, 0];
-    if(result == null)       result = [255, 0, 0, 0, 0, 0, 0, 0, 0];
+    if(_value < 0xfd)
+      result =  [_value];
+    else if(_value <= 0xffff)
+      result = [0xfd, 0, 0];
+    else if(_value <= 0xffffffff)
+      result = [0xfe, 0, 0, 0, 0];
+    else
+      result = [0xff, 0, 0, 0, 0, 0, 0, 0, 0];
     
     result.replaceRange(1, result.length, Utils.uintToBytesLE(_value, result.length + 1));
     // sublist is necessary due to doubtful implementation of replaceRange
@@ -55,21 +61,26 @@ class VarInt extends Object with BitcoinSerialization {
   }
   
   int _deserialize(Uint8List bytes) {
-    if(bytes[0] == 253)
+    if(bytes[0] == 0xfd) {
       _value = Utils.bytesToUintLE(bytes.sublist(1, 3));
-    else if(bytes[0] == 254)
+      return 3;
+    }
+    else if(bytes[0] == 0xfe) {
       _value = Utils.bytesToUintLE(bytes.sublist(1, 5));
-    else if(bytes[0] == 255)
+      return 5;
+    }
+    else if(bytes[0] == 0xff) {
       _value = Utils.bytesToUintLE(bytes.sublist(1, 9));
-    else 
-      _value = bytes[0];
-    return sizeOf(_value);
+      return 9;
+    }
+    _value = bytes[0];
+    return 1;
   }
   
   int _lazySerializationLength(Uint8List bytes) {
-    if(bytes[0] == 253) return 3;
-    if(bytes[0] == 254) return 5;
-    if(bytes[0] == 255) return 9;
+    if(bytes[0] == 0xfd) return 3;
+    if(bytes[0] == 0xfe) return 5;
+    if(bytes[0] == 0xff) return 9;
     return 1;
   }
   

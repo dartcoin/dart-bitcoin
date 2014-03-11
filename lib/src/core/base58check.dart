@@ -26,10 +26,10 @@ class Base58Check {
     int startAt = leadingZeroes;
     while(startAt < bytes.length) {
       int mod = _divmod58(bytes, startAt);
-      output = ALPHABET[mod] + output;
       if(bytes[startAt] == 0) {
         startAt++;
       }
+      output = ALPHABET[mod] + output;
     }
     
     while(output[0] == ALPHABET[0]) {
@@ -38,16 +38,13 @@ class Base58Check {
     while(leadingZeroes-- > 0) {
       output = ALPHABET[0] + output;
     }
-    if(output[0] != ALPHABET[0]) {
-      output = ALPHABET[0] + output;
-    }
     
     return output;
   }
   
   static Uint8List decode(String input) {
     if(input.length == 0) {
-      return [0];
+      return new Uint8List(1);
     }
     
     // generate base 58 index list from input string
@@ -55,7 +52,7 @@ class Base58Check {
     for(int i = 0 ; i < input.length ; i++) {
       int charint = ALPHABET.indexOf(input[i]);
       if(charint < 0) {
-        throw new Exception("Invalid input formatting for Base58 decoding.");
+        throw new FormatException("Invalid input formatting for Base58 decoding.");
       }
       input58[i] = charint;
     }
