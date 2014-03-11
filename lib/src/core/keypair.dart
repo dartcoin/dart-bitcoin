@@ -24,7 +24,7 @@ class KeyPair {
   // chache
   Uint8List _pubKeyHash;
 
-  // encrypted private keys
+  // encrypted private keys according to BIP0038
   EncryptedPrivateKey _encryptedPrivateKey;
   KeyCrypter _keyCrypter;
 
@@ -58,8 +58,10 @@ class KeyPair {
     throw new Exception("The parameters were not of a usable type.");
   }
 
-  factory KeyPair.encrypted(EncryptedPrivateKey encryptedPrivateKey, Uint8List
-      publicKey, keyCrypter) {
+  /**
+   * Create a new BIP0038 encrypted provate key
+   */
+  factory KeyPair.encrypted(EncryptedPrivateKey encryptedPrivateKey, Uint8List publicKey, KeyCrypter keyCrypter) {
     if(keyCrypter == null) 
       throw new Exception("KeyCrypter should not be null!");
     KeyPair newKey = new KeyPair._internal(null, publicKey)
@@ -562,36 +564,6 @@ class KeyPair {
     } catch (IOException e) {
       throw new RuntimeException(e);  // Cannot happen, reading from memory stream.
     }*/
-  }
-}
-
-
-class EncryptedPrivateKey {
-  
-  // the actual key
-  Uint8List encryptedKey;
-  // the initialisation vector
-  Uint8List iv;
-
-  EncryptedPrivateKey(this.encryptedKey, this.iv);
-
-  EncryptedPrivateKey.copy(EncryptedPrivateKey key): this(key.iv, key.encryptedKey);
-
-  EncryptedPrivateKey clone() => new EncryptedPrivateKey.copy(this);
-
-  operator ==(EncryptedPrivateKey other) {
-    if(!(other is EncryptedPrivateKey)) 
-      return false;
-    return iv == other.iv && encryptedKey == other.encryptedKey;
-  }
-  
-  int get hashCode => Utils.listHashCode(encryptedKey) ^ Utils.listHashCode(iv);
-
-  String toString() => "EncryptedPrivateKey [initialisationVector=$iv, encryptedPrivateBytes=$encryptedKey]";
-
-  void clear() {
-    iv = null;
-    encryptedKey = null;
   }
 }
 

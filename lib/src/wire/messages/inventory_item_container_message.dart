@@ -43,9 +43,9 @@ abstract class InventoryItemContainerMessage extends Message {
       item = new InventoryItem.fromBlock(item);
     else if(item is Transaction)
       item = new InventoryItem.fromTransaction(item);
-    if(item is! InventoryItem)
-      throw new ArgumentError("Invalid parameter type. Read documentation.");
-    return item;
+    else if(item is InventoryItem)
+      return item;
+    throw new ArgumentError("Invalid parameter type. Read documentation.");
   }
   
   int _deserializePayload(Uint8List bytes) {

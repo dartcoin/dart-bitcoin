@@ -36,6 +36,11 @@ class FilteredBlock extends Object with BitcoinSerialization {
     return _merkle;
   }
   
+  /**
+   * Number of transactions in this block, before it was filtered.
+   */
+  int get transactionCount => merkleTree.transactionCount;
+  
   List<Sha256Hash> get transactionHashes {
     if(_hashes != null) return _hashes;
     _needInstance();

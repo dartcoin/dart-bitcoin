@@ -51,6 +51,7 @@ part "../src/core/transaction_signature.dart";
 // private key security
 part "../src/crypto/key_crypter.dart";
 part "../src/crypto/key_crypter_scrypt.dart";
+part "../src/crypto/encrypted_private_key.dart";
 
 // network settings
 part "../src/params/network_parameters.dart";
