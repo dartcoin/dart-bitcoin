@@ -11,31 +11,56 @@ class VersionMessage extends Message {
   PeerAddress theirAddress;
   int nonce;
   String subVer;
-  int startHeight;
-  bool relay;
+  int lastHeight;
+  bool relayBeforeFilter;
 
   /** The version of this library release, as a string. */
   static final String DARTCOIN_VERSION = "0.0.0-alpha";
   /** The value that is prepended to the subVer field of this application. */
   static final String LIBRARY_SUBVER = "/Dartcoin:" + DARTCOIN_VERSION + "/";
   
-  VersionMessage({ int this.clientVersion: NetworkParameters.PROTOCOL_VERSION,
+  /**
+   * Create a new VersionMessage.
+   * 
+   * Most parameters can be left blank, the most important ones are
+   * [lastHeight] and [relayBeforeFilter], all others most probably have the default value.
+   */
+  VersionMessage({ int this.lastHeight: 0,
+                   bool this.relayBeforeFilter: false,
+                   int this.clientVersion: NetworkParameters.PROTOCOL_VERSION,
                    BigInteger this.services,
                    int this.time: 0,
-                   PeerAddress this.myAddress,
-                   PeerAddress this.theirAddress,
-                   int this.nonce: 0,
+                   PeerAddress myAddress,
+                   PeerAddress theirAddress,
+                   int this.nonce,
                    String this.subVer,
-                   int this.startHeight: 0,
-                   bool this.relay: false,
-                   NetworkParameters params: NetworkParameters.MAIN_NET }) : super("version") {
+                   NetworkParameters params: NetworkParameters.MAIN_NET }) : super("version", params) {
     if(services == null) services = BigInteger.ZERO;
+    if(nonce == null) nonce = new Random().nextInt(0xffffffff);
+    if(subVer == null) subVer = LIBRARY_SUBVER;
+    // make sure a PeerAddress instance with protocolVersion = 0 is used
+    if(myAddress != null) this.myAddress = myAddress._forVersionMessage;
+    else this.myAddress = new PeerAddress.localhost(params: params, services: services, protocolVersion: 0);
+    if(theirAddress != null) this.theirAddress = theirAddress._forVersionMessage; 
+    else this.theirAddress = new PeerAddress.localhost(params: params, services: services, protocolVersion: 0);
+    
     this.params = params;
-  } 
+    // we don't need to set PeerAddress's parent to this because no lazy serialization is supported
+  }
   
-  factory VersionMessage.deserialize(Uint8List bytes, {int length, NetworkParameters params, int protocolVersion}) => 
-          new BitcoinSerialization.deserialize(new VersionMessage(), bytes, length: length, lazy: false, params: params, protocolVersion: protocolVersion);
-
+  // required for serialization
+  VersionMessage._newInstance() : super("version", null);
+  
+  /**
+   * 
+   * 
+   * No lazy deserialization is supported for this kind of message. 
+   */
+  factory VersionMessage.deserialize(Uint8List bytes, {int length, bool retain, NetworkParameters params, int protocolVersion}) => 
+          new BitcoinSerialization.deserialize(new VersionMessage._newInstance(), bytes, length: length, lazy: false, retain: retain, params: params, protocolVersion: protocolVersion);
+  
+  Uint8List get checksum => Message._calculateChecksum(payload);
+  
   /**
    * Appends the given user-agent information to the subVer field. The subVer is composed of a series of
    * name:version pairs separated by slashes in the form of a path. For example a typical subVer field for BitCoinJ
@@ -88,20 +113,20 @@ class VersionMessage extends Message {
   @override
   bool operator ==(VersionMessage other) {
     return other is VersionMessage &&
-        other.startHeight == startHeight &&
+        other.lastHeight == lastHeight &&
         other.clientVersion == clientVersion &&
         other.services == services &&
         other.time == time &&
         other.subVer == subVer &&
         other.myAddress == myAddress &&
         other.theirAddress == theirAddress &&
-        other.relay == relay;
+        other.relayBeforeFilter == relayBeforeFilter;
   }
   
   @override
   int get hashCode {
-    return startHeight ^ clientVersion ^ services.hashCode ^ time ^ subVer.hashCode ^ myAddress.hashCode
-        ^ theirAddress.hashCode * (relay ? 1 : 2);
+    return lastHeight ^ clientVersion ^ services.hashCode ^ time ^ subVer.hashCode ^ myAddress.hashCode
+        ^ theirAddress.hashCode * (relayBeforeFilter ? 1 : 2);
   }
   
   
@@ -115,11 +140,11 @@ class VersionMessage extends Message {
       ..addAll(theirAddress.serialize())
       ..addAll(Utils.uintToBytesLE(nonce, 8))
       ..addAll(new VarStr(subVer).serialize())
-      ..addAll(Utils.uintToBytesLE(startHeight, 4))
-      ..add(relay ? 1 : 0));
+      ..addAll(Utils.uintToBytesLE(lastHeight, 4))
+      ..add(relayBeforeFilter ? 1 : 0));
   }
   
-  int _deserializePayload(Uint8List bytes) {
+  int _deserializePayload(Uint8List bytes, bool lazy, bool retain) {
     int offset = 0;
     clientVersion = Utils.bytesToUintLE(bytes, 4);
     offset += 4;
@@ -127,20 +152,28 @@ class VersionMessage extends Message {
     offset += 8;
     time = Utils.bytesToUintLE(bytes.sublist(offset), 8);
     offset += 8;
-    myAddress = new PeerAddress.deserialize(bytes.sublist(offset), lazy: false, protocolVersion: clientVersion, params: this.params);
+    // for PeerAddresses in the version message, the protocolVersion must be hard coded to 0
+    myAddress = new PeerAddress.deserialize(bytes.sublist(offset), lazy: lazy, retain: retain, protocolVersion: 0, params: this.params);
     offset += myAddress.serializationLength;
     if(clientVersion < 106) return offset;
     // only when protocolVersion >= 106
-    theirAddress = new PeerAddress.deserialize(bytes.sublist(offset), lazy: false, protocolVersion: clientVersion, params: this.params);
+    theirAddress = new PeerAddress.deserialize(bytes.sublist(offset), lazy: lazy, retain: retain, protocolVersion: 0, params: this.params);
     offset += theirAddress.serializationLength;
     nonce = Utils.bytesToUintLE(bytes.sublist(offset), 8);
     offset += 8;
-    VarStr sv = new VarStr.deserialize(bytes.sublist(offset), lazy: false, params: this.params);
+    // initialize default values for flags that may be missing from old nodes
+    subVer = "";
+    lastHeight = 0;
+    relayBeforeFilter = true;
+    if(offset >= bytes.length) return offset;
+    VarStr sv = new VarStr.deserialize(bytes.sublist(offset), lazy: lazy, params: this.params);
     offset += sv.serializationLength;
     subVer = sv.content;
-    startHeight = Utils.bytesToUintLE(bytes.sublist(offset), 4);
+    if(offset >= bytes.length) return offset;
+    lastHeight = Utils.bytesToUintLE(bytes.sublist(offset), 4);
     offset += 4;
-    relay = bytes[offset] != 0;
+    if(offset >= bytes.length) return offset;
+    relayBeforeFilter = bytes[offset] != 0;
     offset += 1;
     return offset;
   }

@@ -45,8 +45,10 @@ void _testDouble(var input, var output) {
 }
 
 void main() {
-  test("sha256hash_bytes",   () => _testEqualsAndHashcode(Utils.hexToBytes(_testDoubleHash3)));
-  test("sha256hash_single1", () => _testSingle(_testString1, _testHash1));
-  test("sha256hash_single2", () => _testSingle(_testString2, _testHash2));
-  test("sha256hash_double1", () => _testDouble(Utils.hexToBytes(_testBytes3), _testDoubleHash3));
+  group("core.Sha256Hash", () {
+    test("sha256hash_bytes",   () => _testEqualsAndHashcode(Utils.hexToBytes(_testDoubleHash3)));
+    test("sha256hash_single1", () => _testSingle(_testString1, _testHash1));
+    test("sha256hash_single2", () => _testSingle(_testString2, _testHash2));
+    test("sha256hash_double1", () => _testDouble(Utils.hexToBytes(_testBytes3), _testDoubleHash3));
+  });
 }

@@ -8,8 +8,6 @@ class TransactionInput extends Object with BitcoinSerialization {
   Script _scriptSig;
   int _sequence;
   
-  Transaction _parent;
-  
   /**
    * Create a new [TransactionInput].
    * 
@@ -17,21 +15,21 @@ class TransactionInput extends Object with BitcoinSerialization {
    */
   TransactionInput({TransactionOutPoint outpoint,
                     Script scriptSig,
-                    Transaction parentTransaction, 
+                    Transaction parent, 
                     int sequence: NO_SEQUENCE,
                     NetworkParameters params: NetworkParameters.MAIN_NET}) {
-    _outpoint = outpoint;
+    _outpoint = outpoint != null ? outpoint : new TransactionOutPoint(index: NO_SEQUENCE, params: params);
     _scriptSig = scriptSig != null ? scriptSig : Script.EMPTY_SCRIPT;
     _sequence = sequence;
-    _parent = parentTransaction;
+    _parent = parent;
     this.params = params;
   }
   
   factory TransactionInput.fromOutput(TransactionOutput output, 
-      {Transaction parentTransaction, NetworkParameters params: NetworkParameters.MAIN_NET}) {
+      {Transaction parentTransaction, NetworkParameters params}) {
     TransactionOutPoint outpoint = new TransactionOutPoint(transaction: output.parentTransaction, 
-              index: output.index, params: params);
-    return new TransactionInput(outpoint: outpoint, parentTransaction: parentTransaction, params: params);
+              index: output.index, params: output.params);
+    return new TransactionInput(outpoint: outpoint, parent: parentTransaction, params: output.params);
   }
   
   /**
@@ -44,8 +42,11 @@ class TransactionInput extends Object with BitcoinSerialization {
     _scriptSig = (scriptSig != null) ? scriptSig : Script.EMPTY_SCRIPT;
   }
   
-  factory TransactionInput.deserialize(Uint8List bytes, {int length, bool lazy, NetworkParameters params}) =>
-      new BitcoinSerialization.deserialize(new TransactionInput(), bytes, length: length, lazy: lazy, params: params);
+  // required for serialization
+  TransactionInput._newInstance();
+  
+  factory TransactionInput.deserialize(Uint8List bytes, {int length, bool lazy, bool retain, NetworkParameters params, BitcoinSerialization parent}) =>
+      new BitcoinSerialization.deserialize(new TransactionInput._newInstance(), bytes, length: length, lazy: lazy, retain: retain, params: params, parent: parent);
   
   TransactionOutPoint get outpoint {
     _needInstance();
@@ -85,13 +86,14 @@ class TransactionInput extends Object with BitcoinSerialization {
   
   bool get isCoinbase {
     _needInstance();
-    return outpoint.txid == Sha256Hash.ZERO_HASH &&
-        (outpoint.index & 0xFFFFFFFF) == 0xFFFFFFFF;
+    return _outpoint.txid == Sha256Hash.ZERO_HASH &&
+        (_outpoint.index & 0xFFFFFFFF) == 0xFFFFFFFF;
   }
   
   @override
   operator ==(TransactionInput other) {
-    if(!(other is TransactionInput)) return false;
+    if(other is! TransactionInput) return false;
+    if(identical(this, other)) return true;
     _needInstance();
     other._needInstance();
     return _outpoint == other._outpoint &&
@@ -111,26 +113,29 @@ class TransactionInput extends Object with BitcoinSerialization {
       ..addAll(_outpoint.serialize())
       ..addAll(new VarInt(encodedScript.length).serialize())
       ..addAll(encodedScript)
-      ..addAll(Utils.uintToBytesBE(_sequence, 4)));
+      ..addAll(Utils.uintToBytesLE(_sequence, 4)));
   }
   
-  int _deserialize(Uint8List bytes) {
+  int _deserialize(Uint8List bytes, bool lazy, bool retain) {
     int offset = 0;
-    _outpoint = new TransactionOutPoint.deserialize(bytes);
-    offset += outpoint.serializationLength;
+    _outpoint = new TransactionOutPoint.deserialize(bytes, lazy: lazy, retain: retain);
+    offset += _outpoint.serializationLength;
     VarInt scrLn = new VarInt.deserialize(bytes.sublist(offset), lazy: false);
     offset += scrLn.size;
     _scriptSig = new Script(bytes.sublist(offset, offset + scrLn.value));
     offset += scrLn.value;
-    _sequence = Utils.bytesToUintBE(bytes.sublist(offset), 4);
+    _sequence = Utils.bytesToUintLE(bytes.sublist(offset), 4);
     offset += 4;
     return offset;
   }
   
   @override
-  int _lazySerializationLength(Uint8List bytes) {
+  int _lazySerializationLength(Uint8List bytes) => _calculateSerializationLength(bytes);
+  
+  static int _calculateSerializationLength(Uint8List bytes) {
     int offset = TransactionOutPoint.SERIALIZATION_LENGTH;
     VarInt scrLn = new VarInt.deserialize(bytes.sublist(offset), lazy: false);
-    return offset + scrLn.value + 4;
+    return offset + scrLn.serializationLength + scrLn.value + 4;
   }
 }
+

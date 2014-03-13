@@ -93,18 +93,43 @@ void _ipv6EncodingTest_helper(var val, var exp) {
   expect(Utils.encodeInternetAddressAsIPv6(val), equals(new List.from(exp.map((e) => e % 256))));
 }
 
+// *******************
+// ** from bitcoinj **
+// *******************
+
+
+void _testToSatoshi() {
+  // String version
+  expect(Units.toSatoshi(0.01), equals(Units.CENT));
+  expect(Units.toSatoshi(1E-2), equals(Units.CENT));
+  expect(Units.toSatoshi(1.01), equals(Units.COIN + Units.CENT));
+}
+
+
+
+void _testReverseBytes() {
+  expect(Utils.reverseBytes(new Uint8List.fromList([5,4,3,2,1])), equals(new Uint8List.fromList([1,2,3,4,5])));
+}
+
+
+
 void main() {
-  test("utils_singledigest", () => _testSingleDigest());
-  test("utils_doubledigest", () => _testDoubleDigest());
-  test("utils_ripemd160", () => _ripemd160());
-  test("utils_sha1", () => _sha1digest());
-  test("utils_sha256hash160", () => _sha256hash160());
-  test("utils_hexToBytes", () => _hexToBytes());
-  test("utils_formatMessageForSigning", () => _formatMessageForSigning());
-  test("utils_equallists", () => _equalList());
-  test("utils_bigintToBytes", () => _bigIntToBytes());
-  test("utils_uintToBytes", () => _uintsToBytes());
-  test("utils_ipv6encoding", () => _ipv6EncodingTest());
+  group("core.Utils", () {
+    test("utils_singledigest", () => _testSingleDigest());
+    test("utils_doubledigest", () => _testDoubleDigest());
+    test("utils_ripemd160", () => _ripemd160());
+    test("utils_sha1", () => _sha1digest());
+    test("utils_sha256hash160", () => _sha256hash160());
+    test("utils_hexToBytes", () => _hexToBytes());
+    test("utils_formatMessageForSigning", () => _formatMessageForSigning());
+    test("utils_equallists", () => _equalList());
+    test("utils_bigintToBytes", () => _bigIntToBytes());
+    test("utils_uintToBytes", () => _uintsToBytes());
+    test("utils_ipv6encoding", () => _ipv6EncodingTest());
+    // bitcoinj
+    test("toSatoshi", () => _testToSatoshi());
+    test("reverseBytes", () => _testReverseBytes());
+  });
 }
 
 

@@ -62,6 +62,14 @@ class Utils {
     return ripemd160Digest(singleDigest(input));
   }
   
+  static Uint8List stringToUTF8(String string) {
+    return new Uint8List.fromList(new Utf8Encoder().convert(string));
+  }
+  
+  static String UTF8ToString(Uint8List bytes) {
+    return new Utf8Decoder().convert(bytes);
+  }
+  
   /**
    * Converts a list of bytes to a hex string.
    * 
@@ -76,6 +84,7 @@ class Utils {
    */
   static String _BYTE_ALPHABET = "0123456789ABCDEF";
   static Uint8List hexToBytes(String hex) {
+    hex = hex.replaceAll(" ", "");
     hex = hex.toUpperCase();
     if(hex.length % 2 != 0) {
       hex = "0" + hex;
@@ -91,7 +100,15 @@ class Utils {
     }
     return new Uint8List.fromList(result);
   }
-
+  
+  static Uint8List reverseBytes(Uint8List bytes) {
+    int length = bytes.length;
+    Uint8List result = new Uint8List(length);
+    for(int i = 0 ; i < length ; i++)
+      result[i] = bytes[length - 1 - i];
+    return result;
+  }
+  
 
   /** The string that prefixes all text messages signed using Bitcoin keys. */
   static final String BITCOIN_SIGNED_MESSAGE_HEADER = "Bitcoin Signed Message:\n";
@@ -111,6 +128,19 @@ class Utils {
     result.addAll(size.serialize());
     result.addAll(messageBytes);
     return new Uint8List.fromList(result);
+  }
+  
+  /**
+   * Mimics Java's System.arraycopy() method.
+   * 
+   * Uint8List.replaceRange doesn't work.
+   */
+  static void arrayCopy(Uint8List src, int srcPos, Uint8List dest, int destPos, [int length]) {
+    length = length != null ? length : src.length;
+    if(srcPos + length > src.length || destPos + length > dest.length)
+      throw new ArgumentError("Invalid arguments: will cause overflow");
+    for(int i = 0 ; i < length ; i++)
+      dest[destPos + i] = src[srcPos + i];
   }
   
   /**
@@ -161,7 +191,7 @@ class Utils {
    * Converts the integer to a byte array in big endian. Ony positive integers allowed.
    */
   static Uint8List uintToBytesBE(int val, [int size = -1]) {
-    if(val < 0) throw new Exception("Only positive values allowed.");
+    if(val < 0) throw new ArgumentError("Only positive values allowed.");
     List<int> result = new List();
     while(val > 0) {
       int mod = val & 0xff;
@@ -194,7 +224,7 @@ class Utils {
    */
   static BigInteger bytesToUBigIntLE(Uint8List bytes, [int size = -1]) {
     if(size < 0) size = bytes.length;
-    return new BigInteger(bytes.sublist(0, size));
+    return new BigInteger(Utils.reverseBytes(bytes.sublist(0, size)));
   }
   
   /**
@@ -297,7 +327,7 @@ class Utils {
     if (isNegative)
       buf[0] &= 0x7f;
     BigInteger result = new BigInteger(buf);
-    return isNegative ? -1 * result.negate_op() : result;
+    return isNegative ? result.negate_op() : result;
   }
   
   /**
@@ -313,7 +343,7 @@ class Utils {
       else
         return new Uint8List(4);
     }
-    bool isNegative = value.compareTo(BigInteger.ZERO) < 0;
+    bool isNegative = value < BigInteger.ZERO;
     if (isNegative)
       value = value.negate_op();
     Uint8List array = value.toByteArray();
@@ -341,6 +371,18 @@ class Utils {
         result[0] |= 0x80;
       return result;
     }
+  }
+
+  // The representation of nBits uses another home-brew encoding, as a way to represent a large
+  // hash value in only 32 bits.
+  static BigInteger decodeCompactBits(int compact) {
+    int size = (compact >> 24) & 0xFF;
+    Uint8List bytes = new Uint8List(4 + size);
+    bytes[3] = size;
+    if (size >= 1) bytes[4] = (compact >> 16) & 0xFF;
+    if (size >= 2) bytes[5] = (compact >> 8)  & 0xFF;
+    if (size >= 3) bytes[6] = (compact >> 0)  & 0xFF;
+    return decodeMPI(bytes, true);
   }
   
   /**

@@ -28,7 +28,6 @@ class Script {
   Uint8List get bytes {
     if(_bytes == null) {
       _bytes = encode();
-      _chunks = null;
     }
     return new Uint8List.fromList(_bytes);
   }
@@ -42,7 +41,8 @@ class Script {
   
   @override
   operator ==(Script other) {
-    if(!(other is Script)) return false;
+    if(other is! Script) return false;
+    if(identical(this, other)) return true;
     return Utils.equalLists(bytes, other.bytes);
   }
   
@@ -94,12 +94,11 @@ class Script {
       }
     }
     _chunks = chunks;
-    _bytes = null;
   }
   
   List<int> _takeFirstN(int n, DoubleLinkedQueue<int> reverseBuffer) {
     List<int> result = new List<int>();
-    for(int i ; i < n ; i++) {
+    for(int i = 0 ; i < n ; i++) {
       result.add(reverseBuffer.removeFirst());
     }
     return result;
@@ -156,6 +155,33 @@ class Script {
       return ScriptOpCodes.OP_1NEGATE;
     else
       return value - 1 + ScriptOpCodes.OP_1;
+  }
+  
+  int get sigOpCount {
+    int sigOps = 0;
+    int lastOpCode = ScriptOpCodes.OP_INVALIDOPCODE;
+    for(ScriptChunk chunk in chunks) {
+      if(chunk.isOpCode) {
+        int opcode = 0xFF & chunk.data[0];
+        switch (opcode) {
+        case ScriptOpCodes.OP_CHECKSIG:
+        case ScriptOpCodes.OP_CHECKSIGVERIFY:
+          sigOps++;
+          break;
+        case ScriptOpCodes.OP_CHECKMULTISIG:
+        case ScriptOpCodes.OP_CHECKMULTISIGVERIFY:
+          if (lastOpCode >= ScriptOpCodes.OP_1 && lastOpCode <= ScriptOpCodes.OP_16)
+            sigOps += decodeFromOpN(lastOpCode);
+          else
+            sigOps += 20;
+          break;
+        default:
+          break;
+        }
+        lastOpCode = opcode;
+      }
+    }
+    return sigOps;
   }
   
   /**

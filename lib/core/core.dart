@@ -25,11 +25,11 @@ import "package:cipher/api/ecc.dart";
 import "package:cipher/signers/ecdsa_signer.dart";
 import "package:cipher/digests/sha256.dart";
 import "package:cipher/macs/hmac.dart";
-import "package:cipher/random/auto_seed_block_ctr_random.dart";
 import "package:cipher/block/aes_fast.dart";
 import "package:cipher/paddings/padded_block_cipher.dart";
 import "package:cipher/paddings/pkcs7.dart";
 import "package:cipher/modes/cbc.dart";
+import "package:cipher/params/padded_block_cipher_parameters.dart";
 
 
 // utils
@@ -40,6 +40,7 @@ part "../src/core/sha256hash.dart";
 // serialization
 part "../src/serialization/varint.dart";
 part "../src/serialization/varstr.dart";
+part "../src/serialization/bitcoin_serializable.dart";
 part "../src/serialization/bitcoin_serialization.dart";
 part "../src/serialization/serialization_exception.dart";
 
@@ -57,6 +58,7 @@ part "../src/crypto/encrypted_private_key.dart";
 part "../src/params/network_parameters.dart";
 part "../src/params/main_net.dart";
 part "../src/params/test_net.dart";
+part "../src/params/unit_test.dart";
 
 // transactions
 part "../src/core/transaction.dart";
@@ -66,6 +68,7 @@ part "../src/core/transaction_output.dart";
 
 // blocks
 part "../src/core/block.dart";
+part "../src/core/verification_exception.dart";
 
 // bloom filters
 part "../src/core/bloom_filter.dart";
@@ -95,18 +98,18 @@ part "../src/wire/peer_address.dart";
 // messages
 part "../src/wire/messages/version_message.dart";
 part "../src/wire/messages/verack_message.dart";
-part "../src/wire/messages/addr_message.dart";
+part "../src/wire/messages/address_message.dart";
 part "../src/wire/messages/inventory_item_container_message.dart";
-part "../src/wire/messages/inv_message.dart";
+part "../src/wire/messages/inventory_message.dart";
 part "../src/wire/messages/getdata_message.dart";
 part "../src/wire/messages/notfound_message.dart";
 part "../src/wire/messages/request_message.dart";
 part "../src/wire/messages/getblocks_message.dart";
 part "../src/wire/messages/getheaders_message.dart";
-part "../src/wire/messages/tx_message.dart";
+part "../src/wire/messages/transaction_message.dart";
 part "../src/wire/messages/block_message.dart";
 part "../src/wire/messages/headers_message.dart";
-part "../src/wire/messages/getaddr_message.dart";
+part "../src/wire/messages/getaddress_message.dart";
 part "../src/wire/messages/mempool_message.dart";
 part "../src/wire/messages/ping_message.dart";
 part "../src/wire/messages/pong_message.dart";

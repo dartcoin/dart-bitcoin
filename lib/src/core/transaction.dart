@@ -11,30 +11,31 @@ class Transaction extends Object with BitcoinSerialization {
   List<TransactionOutput> _outputs;
   int _lockTime;
   
-  Block _parent;
-  
   Transaction({ Sha256Hash txid,
                 List<TransactionInput> inputs, 
                 List<TransactionOutput> outputs,
-                int lockTime,
-                Block parentBlock,
+                int lockTime: 0,
+                BitcoinSerialization parent,
                 int version: TRANSACTION_VERSION,
                 NetworkParameters params: NetworkParameters.MAIN_NET}) {
     _hash = txid;
-    _inputs = inputs;
-    _outputs = outputs;
+    _inputs = inputs != null ? inputs : new List<TransactionInput>();
+    _outputs = outputs != null ? outputs : new List<TransactionOutput>();
     _lockTime = lockTime;
-    _parent = parentBlock;
+    _parent = parent;
     _version = version;
     this.params = params;
   }
   
-  factory Transaction.deserialize(Uint8List bytes, {int length, bool lazy, NetworkParameters params}) => 
-        new BitcoinSerialization.deserialize(new Transaction(), bytes, length: length, lazy: lazy, params: params);
+  // required for serialization
+  Transaction._newInstance();
+  
+  factory Transaction.deserialize(Uint8List bytes, {int length, bool lazy, bool retain, NetworkParameters params, BitcoinSerialization parent}) => 
+        new BitcoinSerialization.deserialize(new Transaction._newInstance(), bytes, length: length, lazy: lazy, retain: retain, params: params, parent: parent);
   
   int get version {
     _needInstance();
-    _version;
+    return _version;
   }
   
   List<TransactionInput> get inputs {
@@ -42,9 +43,23 @@ class Transaction extends Object with BitcoinSerialization {
     return new UnmodifiableListView(_inputs);
   }
   
+  void set inputs(List<TransactionInput> inputs) {
+    _needInstance(true);
+    for(TransactionInput input in inputs)
+      input._parent = this;
+    _inputs = inputs;
+  }
+  
   List<TransactionOutput> get outputs {
     _needInstance();
     return new UnmodifiableListView(_outputs);
+  }
+  
+  void set outputs(List<TransactionOutput> outputs) {
+    _needInstance(true);
+    for(TransactionOutput output in outputs)
+      output._parent = this;
+    _outputs = outputs;
   }
   
   int get lockTime {
@@ -52,11 +67,20 @@ class Transaction extends Object with BitcoinSerialization {
     return _lockTime;
   }
   
+  void set lockTime(int lockTime) {
+    _needInstance(true);
+    _lockTime = lockTime;
+  }
+  
   Sha256Hash get hash {
     if(_hash == null) {
-      _calculateHash();
+      _hash = _calculateHash();
     }
     return _hash;
+  }
+  
+  Sha256Hash _calculateHash() {
+    return new Sha256Hash(Utils.reverseBytes(Utils.doubleDigest(serialize())));
   }
   
   Sha256Hash get txid => hash;
@@ -70,8 +94,8 @@ class Transaction extends Object with BitcoinSerialization {
         TransactionOutput output = from.outputs[input.outpoint.index];
         totalAmount += output.value;
       }
-    }
-    on NoSuchMethodError catch(e) {
+      return totalAmount;
+    } on NoSuchMethodError {
       throw new Exception("Not all inputs fully known. Unable to calculate total amount.");
     }
   }
@@ -95,10 +119,21 @@ class Transaction extends Object with BitcoinSerialization {
     _needInstance();
     return inputs.length == 1 && inputs[0].isCoinbase;
   }
-  
-  Block get parentBlock {
-    return _parent;
+
+  /**
+   * Gets the count of regular SigOps in this transactions
+   */
+  int get sigOpCount {
+    _needInstance();
+    int sigOps = 0;
+    for (TransactionInput input in _inputs)
+      sigOps += input.scriptSig.sigOpCount;
+    for (TransactionOutput output in _outputs)
+      sigOps += output.scriptPubKey.sigOpCount;
+    return sigOps;
   }
+  
+  Block get parentBlock => _parent;
   
   void set parentBlock(Block parentBlock) {
     _parent = parentBlock;
@@ -111,12 +146,12 @@ class Transaction extends Object with BitcoinSerialization {
    * from a TransactionOutput object.
    */
   TransactionInput addInput(dynamic input) {
-    if(!(input is TransactionInput || input is TransactionOutput)) 
-      throw new Exception("The input must be either a TransactionInput or TransactionOutput object.");
+    if(input is! TransactionInput && input is! TransactionOutput) 
+      throw new ArgumentError("The input must be either a TransactionInput or TransactionOutput object.");
     if(input is TransactionOutput)
       input = new TransactionInput.fromOutput(input, parentTransaction: this, params: params);
     _needInstance(true);
-    input.parentTransaction = this;
+    input._parent = this;
     _inputs.add(input);
     return input;
   }
@@ -150,7 +185,7 @@ class Transaction extends Object with BitcoinSerialization {
   
   void clearInputs() {
     _needInstance(true);
-    _inputs.forEach((i) => i.parentTransaction = null);
+    _inputs.forEach((i) => i._parent = null);
     _inputs.clear();
   }
   
@@ -159,39 +194,58 @@ class Transaction extends Object with BitcoinSerialization {
    */
   TransactionOutput addOutput(TransactionOutput output) {
     _needInstance(true);
-    output.parentTransaction = this;
+    output._parent = this;
     _outputs.add(output);
     return output;
   }
   
   void clearOutputs() {
     _needInstance(true);
-    _outputs.forEach((o) => o.parentTransaction = null);
+    _outputs.forEach((o) => o._parent = null);
     _outputs.clear();
+  }
+
+  /**
+   * Checks the transaction contents for sanity, in ways that can be done in a standalone manner.
+   * Does <b>not</b> perform all checks on a transaction such as whether the inputs are already spent.
+   *
+   * @throws VerificationException
+   */
+  void verify() {
+    _needInstance();
+    if(_inputs.length == 0 || _outputs.length == 0)
+      throw new VerificationException("Transaction had no inputs or no outputs.");
+    if(this.serializationLength > Block.MAX_BLOCK_SIZE)
+      throw new VerificationException("Transaction larger than MAX_BLOCK_SIZE");
+
+    int valueOut = 0;
+    for(TransactionOutput output in _outputs) {
+      if(output.value < 0)
+        throw new VerificationException("Transaction output negative");
+      valueOut += output.value;
+    }
+    if(valueOut > params.MAX_MONEY)
+      throw new VerificationException("Total transaction output value greater than possible");
+
+    if(isCoinbase) {
+      if(_inputs[0].scriptSig.bytes.length < 2 || _inputs[0].scriptSig.bytes.length > 100)
+        throw new VerificationException("Coinbase script size out of range");
+    } else {
+      for(TransactionInput input in _inputs)
+        if(input.isCoinbase)
+          throw new VerificationException("Coinbase input as input in non-coinbase transaction");
+    }
   }
   
   @override
   operator ==(Transaction other) {
-    if(!(other is Transaction)) return false;
-    _needInstance();
-    other._needInstance();
-    return _version == other._version && 
-        Utils.equalLists(_inputs, other._inputs) && 
-        Utils.equalLists(_outputs, other._outputs) &&
-        _lockTime == other._lockTime;
+    if(other is! Transaction) return false;
+    if(identical(this, other)) return true;
+    return hash == other.hash;
   }
   
   @override
-  int get hashCode {
-    _needInstance();
-    // first 32 bits of txid hash
-    return _hash.bytes[0] << 24 + _hash.bytes[1] << 16 + _hash.bytes[2] << 8 + _hash.bytes[3];
-  }
-  
-  void _calculateHash() {
-    _needInstance(true);
-    _hash = new Sha256Hash.doubleDigest(serialize());
-  }
+  int get hashCode => hash.hashCode;
   
   /**
    * 
@@ -305,44 +359,68 @@ class Transaction extends Object with BitcoinSerialization {
   }
   
   Uint8List _serialize() {
-    return new Uint8List.fromList(new List<int>()
-      ..addAll(Utils.uintToBytesBE(_version, 4))
-      ..addAll(new VarInt(_inputs.length).serialize())
-      ..addAll(_inputs.map((input) => input.serialize()))
-      ..addAll(new VarInt(_outputs.length).serialize())
-      ..addAll(_outputs.map((output) => output.serialize()))
-      ..addAll(Utils.uintToBytesBE(_lockTime, 4)));
+    List<int> result = new List<int>()
+      ..addAll(Utils.uintToBytesLE(_version, 4))
+      ..addAll(new VarInt(_inputs.length).serialize());
+    _inputs.forEach((input) => result.addAll(input.serialize()));
+    result.addAll(new VarInt(_outputs.length).serialize());
+    _outputs.forEach((output) => result.addAll(output.serialize()));
+    result.addAll(Utils.uintToBytesLE(_lockTime, 4));
+    return new Uint8List.fromList(result);
   }
   
-  int _deserialize(Uint8List bytes) {
+  int _deserialize(Uint8List bytes, bool lazy, bool retain) {
     int offset = 0;
-    _version = Utils.bytesToUintBE(bytes, 4);
+    _version = Utils.bytesToUintLE(bytes, 4);
     offset += 4;
-    _inputs = new List<TransactionInput>();
     VarInt nbInputs = new VarInt.deserialize(bytes.sublist(offset), lazy: false);
     offset += nbInputs.serializationLength;
+    _inputs = new List<TransactionInput>();
     for(int i = 0 ; i < nbInputs.value ; i++) {
-      TransactionInput input = new TransactionInput.deserialize(bytes.sublist(offset));
+      TransactionInput input = new TransactionInput.deserialize(bytes.sublist(offset), lazy: lazy, retain: retain, parent: this);
       offset += input.serializationLength;
       _inputs.add(input);
     }
-    _outputs = new List<TransactionOutput>();
     VarInt nbOutputs = new VarInt.deserialize(bytes.sublist(offset), lazy: false);
     offset += nbOutputs.serializationLength;
+    _outputs = new List<TransactionOutput>();
     for(int i = 0 ; i < nbOutputs.value ; i++) {
-      TransactionOutput output = new TransactionOutput.deserialize(bytes.sublist(offset));
+      TransactionOutput output = new TransactionOutput.deserialize(bytes.sublist(offset), lazy: lazy, retain: retain, parent: this);
       offset += output.serializationLength;
       _outputs.add(output);
     }
-    _lockTime = Utils.bytesToUintBE(bytes.sublist(offset), 4);
+    _lockTime = Utils.bytesToUintLE(bytes.sublist(offset), 4);
     offset += 4;
     return offset;
   }
   
   @override
-  void _needInstance([bool clearCache]) {
+  int _lazySerializationLength(Uint8List bytes) => _calculateSerializationLength(bytes);
+  
+  static int _calculateSerializationLength(Uint8List bytes) {
+    int offset = 0;
+    // version
+    offset += 4;
+    // inputs
+    VarInt nbInputs = new VarInt.deserialize(bytes.sublist(offset), lazy: false);
+    offset += nbInputs.serializationLength;
+    for(int i = 0 ; i < nbInputs.value ; i++)
+      offset += TransactionInput._calculateSerializationLength(bytes.sublist(offset));
+    // outputs
+    VarInt nbOutputs = new VarInt.deserialize(bytes.sublist(offset), lazy: false);
+    offset += nbOutputs.serializationLength;
+    for(int i = 0 ; i < nbOutputs.value ; i++)
+      offset += TransactionOutput._calculateSerializationLength(bytes.sublist(offset));
+    // locktime
+    offset += 4;
+    return offset;
+  }
+  
+  @override
+  void _needInstance([bool clearCache = false]) {
     super._needInstance(clearCache);
-    _hash = null;
+    if(clearCache)
+      _hash = null;
   }
 }
 

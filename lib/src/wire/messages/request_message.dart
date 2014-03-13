@@ -5,7 +5,8 @@ abstract class RequestMessage extends Message {
   List<Sha256Hash> _locators;
   Sha256Hash _stop;
   
-  RequestMessage(String command, List<Sha256Hash> locators, [Sha256Hash stop, int protocolVersion = NetworkParameters.PROTOCOL_VERSION]) : super(command) {
+  RequestMessage(String command, List<Sha256Hash> locators, 
+      [Sha256Hash stop, NetworkParameters params, int protocolVersion = NetworkParameters.PROTOCOL_VERSION]) : super(command, params) {
     if(stop == null) {
       stop = Sha256Hash.ZERO_HASH;
     }
@@ -39,18 +40,21 @@ abstract class RequestMessage extends Message {
     _locators.remove(locator);
   }
   
-  int _deserializePayload(Uint8List bytes) {
+  // required for serialization
+  RequestMessage._newInstance(String command) : super(command, null);
+  
+  int _deserializePayload(Uint8List bytes, bool lazy, bool retain) {
     int offset = 0;
     protocolVersion = Utils.bytesToUintLE(bytes.sublist(offset), 4);
     offset += 4;
-    VarInt nbLocators = new VarInt.deserialize(bytes.sublist(offset));
+    VarInt nbLocators = new VarInt.deserialize(bytes.sublist(offset), lazy: false);
     offset += nbLocators.size;
     _locators = new List<Sha256Hash>(nbLocators.value);
     for(int i = 0 ; i < nbLocators.value ; i++) {
-      _locators.add(new Sha256Hash(bytes.sublist(offset, offset + Sha256Hash.LENGTH)));
+      _locators.add(new Sha256Hash.deserialize(bytes.sublist(offset)));
       offset += Sha256Hash.LENGTH;
     }
-    _stop = new Sha256Hash(bytes.sublist(offset, offset + Sha256Hash.LENGTH));
+    _stop = new Sha256Hash.deserialize(bytes.sublist(offset));
     offset += Sha256Hash.LENGTH;
     return offset;
   }

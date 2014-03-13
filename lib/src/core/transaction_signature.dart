@@ -22,6 +22,7 @@ class TransactionSignature extends ECDSASignature with BitcoinSerialization {
           anyoneCanPay == null ? anyoneCanPay : false);
   }
   
+  // no lazy deserialization
   factory TransactionSignature.deserialize(Uint8List bytes, {int length, bool requireCanonical: false, NetworkParameters params}) {
     if(requireCanonical && !isEncodingCanonical(bytes)) throw new SerializationException("Signature is not canonical");
     if(length == null)
@@ -98,7 +99,7 @@ class TransactionSignature extends ECDSASignature with BitcoinSerialization {
       ..add(_sigHashFlags));
   }
   
-  int _deserialize(Uint8List bytes) {
+  int _deserialize(Uint8List bytes, bool lazy, bool retain) {
     // no lazy deserialization implemented
   }
   

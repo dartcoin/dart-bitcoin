@@ -4,7 +4,7 @@ abstract class InventoryItemContainerMessage extends Message {
   
   List<InventoryItem> _items;
   
-  InventoryItemContainerMessage(String command, List<InventoryItem> items) : super(command) {
+  InventoryItemContainerMessage(String command, List<InventoryItem> items, [NetworkParameters params]) : super(command, params) {
     if(items.length > 50000) {
       throw new Exception("Maximum 50000 inventory items");
     }
@@ -48,14 +48,16 @@ abstract class InventoryItemContainerMessage extends Message {
     throw new ArgumentError("Invalid parameter type. Read documentation.");
   }
   
-  int _deserializePayload(Uint8List bytes) {
+  // required for serialization
+  InventoryItemContainerMessage._newInstance(String command) : super(command, null);
+  
+  int _deserializePayload(Uint8List bytes, bool lazy, bool retain) {
     int offset = 0;
-    VarInt nbItems = new VarInt.deserialize(bytes.sublist(offset));
+    VarInt nbItems = new VarInt.deserialize(bytes.sublist(offset), lazy: false);
     offset += nbItems.size;
     _items = new List<InventoryItem>();
     for(int i = 0 ; i < nbItems.value ; i++) {
-      _items.add(new InventoryItem.deserialize(
-          bytes.sublist(offset, offset + InventoryItem.SERIALIZATION_LENGTH), lazy: false));
+      _items.add(new InventoryItem.deserialize(bytes.sublist(offset), lazy: lazy, retain: retain));
       offset += InventoryItem.SERIALIZATION_LENGTH;
     }
     return offset;

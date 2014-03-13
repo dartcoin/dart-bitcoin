@@ -11,8 +11,11 @@ class VarInt extends Object with BitcoinSerialization {
     _serializationLength = sizeOf(value);
   }
   
-  factory VarInt.deserialize(Uint8List bytes, {int length, bool lazy, NetworkParameters params}) => 
-      new BitcoinSerialization.deserialize(new VarInt(0), bytes, length: length, lazy: lazy, params: params);
+  // required for serialization
+  VarInt._newInstance();
+  
+  factory VarInt.deserialize(Uint8List bytes, {int length, bool lazy, bool retain, NetworkParameters params}) => 
+      new BitcoinSerialization.deserialize(new VarInt._newInstance(), bytes, length: length, lazy: lazy, retain: retain, params: params);
   
   int get value {
     _needInstance();
@@ -32,7 +35,8 @@ class VarInt extends Object with BitcoinSerialization {
   
   @override
   bool operator ==(VarInt other) {
-    if(!(other is VarInt)) return false;
+    if(other is! VarInt) return false;
+    if(identical (this, other)) return true;
     _needInstance();
     other._needInstance();
     return _value == other._value;
@@ -60,7 +64,7 @@ class VarInt extends Object with BitcoinSerialization {
     return new Uint8List.fromList(result.sublist(0, size));
   }
   
-  int _deserialize(Uint8List bytes) {
+  int _deserialize(Uint8List bytes, bool lazy, bool retain) {
     if(bytes[0] == 0xfd) {
       _value = Utils.bytesToUintLE(bytes.sublist(1, 3));
       return 3;

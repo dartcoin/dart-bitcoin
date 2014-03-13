@@ -10,20 +10,23 @@ class TransactionOutPoint extends Object with BitcoinSerialization {
   Transaction _tx;
   
   TransactionOutPoint({ Transaction transaction, 
-                        int index,
+                        int index: 0,
                         Sha256Hash txid,
                         NetworkParameters params: NetworkParameters.MAIN_NET}) {
     if(transaction != null)
       txid = transaction.hash;
     _index = index;
-    _txid = txid;
+    _txid = txid != null ? txid : Sha256Hash.ZERO_HASH;
     _tx = transaction;
     this.params = params;
     _serializationLength = SERIALIZATION_LENGTH;
   }
   
-  factory TransactionOutPoint.deserialize(Uint8List bytes, {bool lazy, NetworkParameters params}) =>
-      new BitcoinSerialization.deserialize(new TransactionOutPoint(), bytes, length: SERIALIZATION_LENGTH, lazy: lazy, params: params);
+  // required for serialization
+  TransactionOutPoint._newInstance();
+  
+  factory TransactionOutPoint.deserialize(Uint8List bytes, {bool lazy, bool retain, NetworkParameters params}) =>
+      new BitcoinSerialization.deserialize(new TransactionOutPoint._newInstance(), bytes, length: SERIALIZATION_LENGTH, lazy: lazy, retain: retain, params: params);
   
   Sha256Hash get txid {
     _needInstance();
@@ -47,7 +50,8 @@ class TransactionOutPoint extends Object with BitcoinSerialization {
   
   @override
   operator ==(TransactionOutPoint other) {
-    if(!(other is TransactionOutPoint)) return false;
+    if(other is! TransactionOutPoint) return false;
+    if(identical(this, other)) return true;
     _needInstance();
     other._needInstance();
     return _txid == other._txid &&
@@ -63,13 +67,13 @@ class TransactionOutPoint extends Object with BitcoinSerialization {
   
   Uint8List _serialize() {
     return new Uint8List.fromList(new List<int>()
-      ..addAll(_txid.bytes)
-      ..addAll(Utils.uintToBytesBE(_index, 4)));
+      ..addAll(_txid.serialize())
+      ..addAll(Utils.uintToBytesLE(_index, 4)));
   }
   
-  int _deserialize(Uint8List bytes) {
-    _txid = new Sha256Hash(bytes.sublist(0, 32));
-    _index = Utils.bytesToUintBE(bytes.sublist(32), 4);
+  int _deserialize(Uint8List bytes, bool lazy, bool retain) {
+    _txid = new Sha256Hash.deserialize(bytes.sublist(0, 32));
+    _index = Utils.bytesToUintLE(bytes.sublist(32), 4);
     return SERIALIZATION_LENGTH;
   }
 }

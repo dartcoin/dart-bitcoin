@@ -8,8 +8,10 @@ class VarStr extends Object with BitcoinSerialization {
     _content = content;
   }
   
-  factory VarStr.deserialize(Uint8List bytes, {int length, bool lazy, NetworkParameters params}) =>
-      new BitcoinSerialization.deserialize(new VarStr(""), bytes, length: length, lazy: lazy, params: params);
+  VarStr._newInstance();
+  
+  factory VarStr.deserialize(Uint8List bytes, {int length, bool lazy, bool retain, NetworkParameters params}) =>
+      new BitcoinSerialization.deserialize(new VarStr._newInstance(), bytes, length: length, lazy: lazy, retain: retain, params: params);
   
   String get content {
     _needInstance();
@@ -34,7 +36,8 @@ class VarStr extends Object with BitcoinSerialization {
   
   @override
   bool operator ==(VarStr other) {
-    if(!(other is VarStr)) return false;
+    if(other is! VarStr) return false;
+    if(identical(this, other)) return true;
     _needInstance();
     other._needInstance();
     return _content == other._content;
@@ -47,17 +50,17 @@ class VarStr extends Object with BitcoinSerialization {
   }
   
   Uint8List _serialize() {
-    List<int> contentBytes = new Utf8Codec().encode(_content);
+    List<int> contentBytes = new Utf8Encoder().convert(_content);
     return new Uint8List.fromList(new List<int>()
       ..addAll(new VarInt(contentBytes.length).serialize())
       ..addAll(contentBytes));
   }
   
-  int _deserialize(Uint8List bytes) {
+  int _deserialize(Uint8List bytes, bool lazy, bool retain) {
     int offset = 0;
     VarInt size = new VarInt.deserialize(bytes, lazy: false);
     offset += size.serializationLength;
-    _content = new Utf8Codec().decode(bytes.sublist(offset, offset + size.value));
+    _content = new Utf8Decoder().convert(bytes.sublist(offset, offset + size.value));
     offset += size.value;
     return offset;
   }

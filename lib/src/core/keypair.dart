@@ -178,7 +178,7 @@ class KeyPair {
   }
 
   bool operator ==(KeyPair other) {
-    if(!(other is KeyPair)) return false;
+    if(other is! KeyPair) return false;
     return Utils.equalLists(_pub, other._pub);
   }
 

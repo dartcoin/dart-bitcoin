@@ -5,8 +5,6 @@ class TransactionOutput extends Object with BitcoinSerialization {
   int _value;
   Script _scriptPubKey;
   
-  Transaction _parent;
-  
   TransactionOutput({ int value, 
                       Script scriptPubKey,
                       Transaction parent,
@@ -17,8 +15,11 @@ class TransactionOutput extends Object with BitcoinSerialization {
     this.params = params;
   }
   
-  factory TransactionOutput.deserialize(Uint8List bytes, {int length, bool lazy, NetworkParameters params}) =>
-      new BitcoinSerialization.deserialize(new TransactionOutput(), bytes, length: length, lazy: lazy, params: params);
+  // required for serialization
+  TransactionOutput._newInstance();
+  
+  factory TransactionOutput.deserialize(Uint8List bytes, {int length, bool lazy, bool retain, NetworkParameters params, BitcoinSerialization parent}) =>
+      new BitcoinSerialization.deserialize(new TransactionOutput._newInstance(), bytes, length: length, lazy: lazy, retain: retain, params: params, parent: parent);
   
   factory TransactionOutput.payToAddress(Address to, int amount, 
       [Transaction parent, NetworkParameters params = NetworkParameters.MAIN_NET]) {
@@ -62,18 +63,18 @@ class TransactionOutput extends Object with BitcoinSerialization {
   }
   
   int get index {
-    if(_parent == null) throw new Exception("Parent tx not specified.");
-    _parent.outputs.indexOf(_parent.outputs.singleWhere((output) => output == this));
+    if(_parent == null || _parent is! Transaction) throw new Exception("Parent tx not specified.");
+    return parentTransaction.outputs.indexOf(parentTransaction.outputs.singleWhere((output) => output == this));
   }
   
   @override
   operator ==(TransactionOutput other) {
-    if(!(other is TransactionOutput)) return false;
+    if(other is! TransactionOutput) return false;
+    if(identical(this, other)) return true;
     _needInstance();
     other._needInstance();
     return _value == other._value &&
-        _scriptPubKey == other._scriptPubKey &&
-        (_parent == null || other._parent == null || _parent == other._parent);
+        _scriptPubKey == other._scriptPubKey;
   }
   
   @override
@@ -85,26 +86,28 @@ class TransactionOutput extends Object with BitcoinSerialization {
   Uint8List _serialize() {
     Uint8List encodedScript = _scriptPubKey.encode();
     return new Uint8List.fromList(new List<int>()
-      ..addAll(Utils.uintToBytesBE(_value, 8))
+      ..addAll(Utils.uintToBytesLE(_value, 8))
       ..addAll(new VarInt(encodedScript.length).serialize())
       ..addAll(encodedScript));
   }
   
-  int _deserialize(Uint8List bytes) {
+  int _deserialize(Uint8List bytes, bool lazy, bool retain) {
     int offset = 0;
-    _value = Utils.bytesToUintBE(bytes, 4);
-    offset += 4;
+    _value = Utils.bytesToUintLE(bytes, 8);
+    offset += 8;
     VarInt scrLn = new VarInt.deserialize(bytes.sublist(offset), lazy: false);
-    offset += scrLn.size;
-    _scriptPubKey = null;//new Script.deserialize(bytes.sublist(offset), scrLn.value);
+    offset += scrLn.serializationLength;
+    _scriptPubKey = new Script(bytes.sublist(offset, offset + scrLn.value));
     offset += scrLn.value;
     return offset;
   }
   
   @override
-  int _lazySerializationLength(Uint8List bytes) {
-    int offset = 4;
-    VarInt scrLn = new VarInt.deserialize(bytes.sublist(offset), lazy: false);
-    return offset + scrLn.value;
+  int _lazySerializationLength(Uint8List bytes) => _calculateSerializationLength(bytes);
+  
+  static int _calculateSerializationLength(Uint8List bytes) {
+    VarInt scrLn = new VarInt.deserialize(bytes.sublist(8), lazy: false);
+    return 8 + scrLn.serializationLength + scrLn.value;
+    
   }
 }

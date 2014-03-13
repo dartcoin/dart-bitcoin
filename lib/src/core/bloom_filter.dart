@@ -23,13 +23,6 @@ class BloomFilter extends Object with BitcoinSerialization {
   static const int MAX_FILTER_SIZE = 36000;
   // There is little reason to ever have more hash functions than 50 given a limit of 36,000 bytes
   static const int MAX_HASH_FUNCS = 50;
-
-  /**
-   * Construct a BloomFilter by deserializing payloadBytes
-   */
-  factory BloomFilter.deserialize(Uint8List bytes, {int length, bool lazy, NetworkParameters params}) => 
-          new BitcoinSerialization.deserialize(new BloomFilter(0, 0.0, 0, null), bytes, length: length, lazy: lazy, params: params);
-  
   
   /**
    * <p>Constructs a new Bloom Filter which will provide approximately the given false positive
@@ -62,17 +55,28 @@ class BloomFilter extends Object with BitcoinSerialization {
    * 
    * <p>updateFlag is used to control filter behavior</p>
    */
-  BloomFilter(int elements, double falsePositiveRate, int randomNonce, BloomUpdate updateFlag) {
-      // The following formulas were stolen from Wikipedia's page on Bloom Filters (with the addition of min(..., MAX_...))
-      //                        Size required for a given number of elements and false-positive rate
-      int size = min((-1  / (pow(log(2), 2)) * elements * log(falsePositiveRate)).floor(),
-                          (MAX_FILTER_SIZE * 8) / 8).floor();
-      _data = new Uint8List(size <= 0 ? 1 : size);
-      // Optimal number of hash functions for a given filter size and element count.
-      _hashFuncs = min(_data.length * 8 / elements * log(2), MAX_HASH_FUNCS);
-      _nTweak = randomNonce;
-      _nFlags = (0xff & updateFlag.val);
+  BloomFilter(int elements, double falsePositiveRate, int randomNonce, [BloomUpdate updateFlag = BloomUpdate.UPDATE_P2PUBKEY_ONLY]) {
+    if(elements == null || falsePositiveRate == null || randomNonce == null)
+      throw new ArgumentError("The required arguments should not be null");
+    // The following formulas were stolen from Wikipedia's page on Bloom Filters (with the addition of min(..., MAX_...))
+    //                        Size required for a given number of elements and false-positive rate
+    int size = min(( -1  / (pow(log(2), 2)) * elements * log(falsePositiveRate)).floor(),
+                        MAX_FILTER_SIZE * 8) ~/ 8;
+    _data = new Uint8List(size <= 0 ? 1 : size);
+    // Optimal number of hash functions for a given filter size and element count.
+    _hashFuncs = min((_data.length * 8 / elements * log(2)).floor(), MAX_HASH_FUNCS);
+    _nTweak = randomNonce;
+    _nFlags = (0xff & updateFlag.index);
   }
+  
+  // required for serialization
+  BloomFilter._newInstance();
+
+  /**
+   * Construct a BloomFilter by deserializing payloadBytes
+   */
+  factory BloomFilter.deserialize(Uint8List bytes, {int length, bool lazy, bool retain, NetworkParameters params, BitcoinSerialization parent}) => 
+          new BitcoinSerialization.deserialize(new BloomFilter._newInstance(), bytes, length: length, lazy: lazy, retain: retain, params: params, parent: parent);
   
   Uint8List get data {
     _needInstance();
@@ -106,7 +110,7 @@ class BloomFilter extends Object with BitcoinSerialization {
   String toString() => "Bloom Filter of size ${data.length} with $hashFuncs hash functions.";
 
   @override
-  int _deserialize(Uint8List bytes) {
+  int _deserialize(Uint8List bytes, bool lazy, bool retain) {
     int offset = 0;
     VarInt size = new VarInt.deserialize(bytes, lazy: false);
     offset += size.size;
@@ -129,13 +133,12 @@ class BloomFilter extends Object with BitcoinSerialization {
    * Serializes this message to the provided stream. If you just want the raw bytes use bitcoinSerialize().
    */
   Uint8List _serialize() {
-    List<int> result = new List<int>()
+    return new Uint8List.fromList(new List<int>()
       ..addAll(new VarInt(_data.length).serialize())
       ..addAll(_data)
       ..addAll(Utils.uintToBytesLE(_hashFuncs, 4))
       ..addAll(Utils.uintToBytesLE(_nTweak, 4))
-      ..add(_nFlags);
-    return new Uint8List.fromList(result);
+      ..add(_nFlags));
   }
   
   @override
@@ -144,7 +147,7 @@ class BloomFilter extends Object with BitcoinSerialization {
     return dataSize.size + dataSize.value + 4 + 4 + 1;
   }
 
-  static int _ROTL32 (int x, int r) {
+  static int _rotateLeft32 (int x, int r) {
     return (x << r) | Utils.lsr(x, 32 - r);
   }
   
@@ -165,12 +168,12 @@ class BloomFilter extends Object with BitcoinSerialization {
             ((object[i+3] & 0xFF) << 24);
       
       k1 *= c1;
-      k1 = _ROTL32(k1,15);
+      k1 = _rotateLeft32(k1, 15);
       k1 *= c2;
 
       h1 ^= k1;
-      h1 = _ROTL32(h1,13); 
-      h1 = h1*5+0xe6546b64;
+      h1 = _rotateLeft32(h1, 13); 
+      h1 = h1 * 5 + 0xe6546b64;
     }
     
     int k1 = 0;
@@ -180,7 +183,7 @@ class BloomFilter extends Object with BitcoinSerialization {
       k1 ^= (object[numBlocks + 1] & 0xff) << 8;
     if((object.length & 3) >= 1) {
       k1 ^= (object[numBlocks] & 0xff);
-      k1 *= c1; k1 = _ROTL32(k1,15); k1 *= c2; h1 ^= k1;
+      k1 *= c1; k1 = _rotateLeft32(k1, 15); k1 *= c2; h1 ^= k1;
     }
 
     // finalization
@@ -191,7 +194,7 @@ class BloomFilter extends Object with BitcoinSerialization {
     h1 *= 0xc2b2ae35;
     h1 ^= Utils.lsr(h1, 16);
     
-    return ((h1&0xFFFFFFFF) % (_data.length * 8));
+    return ((h1 & 0xFFFFFFFF) % (_data.length * 8));
   }
   
   /**
@@ -212,7 +215,7 @@ class BloomFilter extends Object with BitcoinSerialization {
    */
   void insert(Uint8List object) {
     _needInstance(true);
-    for (int i = 0; i < _hashFuncs; i++)
+    for(int i = 0; i < _hashFuncs; i++)
       Utils.setBitLE(_data, _hash(i, object));
   }
 
@@ -238,8 +241,9 @@ class BloomFilter extends Object with BitcoinSerialization {
     if (!this.matchesAll() && !filter.matchesAll()) {
       if(!(filter._data.length == _data.length &&
           filter._hashFuncs == _hashFuncs &&
-          filter._nTweak == _nTweak))
+          filter._nTweak == _nTweak)) {
         throw new Exception("Invalid filter passed as parameter; read the docs.");
+      }
       for (int i = 0; i < _data.length; i++)
         _data[i] |= filter._data[i];
     } else {
@@ -253,15 +257,16 @@ class BloomFilter extends Object with BitcoinSerialization {
    */
   bool matchesAll() {
     _needInstance();
-    for (int b in _data)
-      if (b != 0xff)
-          return false;
+    for(int b in _data)
+      if(b != 0xff)
+        return false;
     return true;
   }
   
   @override
   bool operator ==(BloomFilter other) {
-    if(!(other is BloomFilter)) return false;
+    if(other is! BloomFilter) return false;
+    if(identical(this, other)) return true;
     _needInstance();
     other._needInstance();
     return other._hashFuncs == this._hashFuncs &&
@@ -271,7 +276,8 @@ class BloomFilter extends Object with BitcoinSerialization {
 
   @override
   int get hashCode {
-    return hashFuncs ^ nTweak ^ Utils.listHashCode(_data);
+    _needInstance();
+    return _hashFuncs ^ _nTweak ^ Utils.listHashCode(_data);
   }
 }
 
@@ -283,6 +289,6 @@ class BloomUpdate {
   /** Only adds outpoints to the filter if the output is a pay-to-pubkey/pay-to-multisig script */
   static const BloomUpdate UPDATE_P2PUBKEY_ONLY = const BloomUpdate._(2);
   
-  final int val;
-  const BloomUpdate._(int this.val);
+  final int index;
+  const BloomUpdate._(int this.index);
 }

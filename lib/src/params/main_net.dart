@@ -13,12 +13,14 @@ class _MainNetParams extends NetworkParameters {
   
   Block get genesisBlock {
     if(_genesis == null) {
-      Block genesis = NetworkParameters._createGenesis(this);
-      genesis.timestamp = 1231006505;
-      genesis.nonce = 2083236893;
-      genesis.bits = 0x1d00ffff;
+      Block genesis = NetworkParameters._createGenesis(this)
+        .._timestamp = 1231006505
+        .._nonce = 2083236893
+        .._difficultyTarget = 0x1d00ffff;
       _genesis = genesis;
     }
     return _genesis;
   }
+  
+  BigInteger get proofOfWorkLimit => Utils.decodeCompactBits(0x1d00ffff);
 }

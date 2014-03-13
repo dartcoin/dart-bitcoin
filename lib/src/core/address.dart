@@ -18,29 +18,29 @@ class Address {
    * If [Uint8List] of size 25, [version] and [hash160] will be extracted and the checksum verified.
    */
   Address(dynamic address, [NetworkParameters params, int version]) {
-    bool wasString = address is String;
-    if(address is String)
-      address = Base58Check.decode(address);
-    if(address is Uint8List && address.length == 25 && version == null) {
-      if(!_validateChecksum(address))
-        throw new FormatException("Checksum validation failed");
-      _bytes = new Uint8List.fromList(address.sublist(1, 21));
+    if(address is String) {
+      if(version != null)
+        throw new ArgumentError("Version should not be passed when address is a String");
+      address = Base58Check.decodeChecked(address);
+      if(address.length != 21)
+        throw new FormatException("The Base58 address should be exactly 25 bytes long. (21-byte payload)");
       _version = address[0];
+      _bytes = address.sublist(1, 21);
       if(params != null && !_isAcceptableVersion(params, _version))
-        throw  new WrongNetworkException(_version, params.acceptableAddressHeaders);
-      return;
-    }
-    else if(address is Uint8List && address.length == 20) {
-      if(params == null && version == null)
-        params = NetworkParameters.MAIN_NET;
-      _bytes = new Uint8List.fromList(address);
-      _version = (version != null) ? version : params.addressHeader;
-      if(!_isAcceptableVersion(params, _version))
         throw new WrongNetworkException(_version, params.acceptableAddressHeaders);
       return;
     }
-    if(wasString)
-      throw new FormatException("Incorrect address formatting");
+    if(address is Uint8List) {
+      if(address.length != 20)
+        throw new ArgumentError("To create an address from a hash160 payload, input needs to be exactly 20 bytes.");
+      if(params == null && version == null)
+        params = NetworkParameters.MAIN_NET;
+      _bytes = address;
+      _version = (version != null) ? version : params.addressHeader;
+      if(params != null && !_isAcceptableVersion(params, _version))
+        throw new WrongNetworkException(_version, params.acceptableAddressHeaders);
+      return;
+    }
     throw new ArgumentError("Invalid arguments, please read documentation.");
   }
   
@@ -95,7 +95,7 @@ class Address {
   
   @override
   bool operator ==(Address other) {
-    if(!(other is Address)) return false;
+    if(other is! Address) return false;
     return _version == other._version && 
         Utils.equalLists(_bytes, other._bytes);
   }

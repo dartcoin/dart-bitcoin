@@ -2,9 +2,12 @@ part of dartcoin.core;
 
 class GetBlocksMessage extends RequestMessage {
   
-  GetBlocksMessage(List<Sha256Hash> locators, [Sha256Hash stop]) : super("getblocks", locators, stop);
+  GetBlocksMessage(List<Sha256Hash> locators, [Sha256Hash stop, NetworkParameters params]) : super("getblocks", locators, stop, params);
   
-  factory GetBlocksMessage.deserialize(Uint8List bytes, {int length, bool lazy, NetworkParameters params, int protocolVersion}) => 
-      new BitcoinSerialization.deserialize(new GetBlocksMessage(null, null), bytes, length: length, lazy: lazy, params: params, protocolVersion: protocolVersion);
+  // required for serialization
+  GetBlocksMessage._newInstance() : super._newInstance("getblocks");
+  
+  factory GetBlocksMessage.deserialize(Uint8List bytes, {int length, bool lazy, bool retain, NetworkParameters params, int protocolVersion}) => 
+      new BitcoinSerialization.deserialize(new GetBlocksMessage._newInstance(), bytes, length: length, lazy: lazy, retain: retain, params: params, protocolVersion: protocolVersion);
   
 }

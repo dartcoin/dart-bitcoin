@@ -24,6 +24,7 @@ class ScriptChunk {
   
   int get startLocationInProgram => _startLocationInProgram;
   
+  @override
   String toString() {
     if(_isOpCode)
       return ScriptOpCodes.getOpCodeName(data[0]);
@@ -34,4 +35,13 @@ class ScriptChunk {
   bool equalsOpCode(int opCode) => _isOpCode && _data.length == 1 && _data[0] == opCode;
   
   Uint8List serialize() => _isOpCode ? new Uint8List.fromList(_data) : Script.encodeData(data);
+  
+  @override
+  bool operator ==(ScriptChunk other) {
+    if(other is! ScriptChunk) return false;
+    return Utils.equalLists(_data, other._data);
+  }
+  
+  @override
+  int get hashCode => Utils.listHashCode(_data);
 }

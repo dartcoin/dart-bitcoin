@@ -7,7 +7,7 @@ part of dartcoin.core;
  * 
  * More info in BIP0038: https://github.com/bitcoin/bips/blob/master/bip-0038.mediawiki
  */
-class ScryptKeyCrypter implements KeyCrypter {
+class KeyCrypterScrypt implements KeyCrypter {
   
   static const int SALT_LENGTH = 8;
   
@@ -23,10 +23,22 @@ class ScryptKeyCrypter implements KeyCrypter {
   
   ScryptParameters _scryptParams; 
   
-  ScryptKeyCrypter() {
-    Uint8List salt = new Uint8List(SALT_LENGTH);
-    //TODO random bytes in salt
-    _scryptParams = new ScryptParameters(SCRYPT_N, SCRYPT_r, SCRYPT_p, KEY_LENGTH, salt);
+  KeyCrypterScrypt([ScryptParameters scryptParameters]) {
+    if(scryptParameters == null) {
+      Uint8List salt = new Uint8List(SALT_LENGTH);
+      //TODO random bytes in salt
+      scryptParameters = scryptParamsWithSalt(salt);
+    }
+    _scryptParams = scryptParameters;
+  }
+  
+  /**
+   * The salt must be of length [SALT_LENGTH];
+   */
+  static ScryptParameters scryptParamsWithSalt(Uint8List salt) {
+    if(salt.length != SALT_LENGTH)
+      throw new ArgumentError("Incorrect salt length: ${salt.length} instead of $SALT_LENGTH");
+    return new ScryptParameters(SCRYPT_N, SCRYPT_r, SCRYPT_p, KEY_LENGTH, salt);
   }
   
   KeyParameter deriveKey(String passphrase) {
@@ -44,7 +56,7 @@ class ScryptKeyCrypter implements KeyCrypter {
     // TODO fill iv with random bytes from securerandom
     ParametersWithIV keyWithIv = new ParametersWithIV(aesKey, iv);
     PaddedBlockCipher cipher = new PaddedBlockCipherImpl(new PKCS7Padding(), new CBCBlockCipher(new AESFastEngine()));
-    cipher.init(true, keyWithIv);
+    cipher.init(true, new PaddedBlockCipherParameters(keyWithIv, null));
     Uint8List encryptedKey = cipher.process(privKey);
     return new EncryptedPrivateKey(encryptedKey, iv);
   }
@@ -64,8 +76,8 @@ class ScryptKeyCrypter implements KeyCrypter {
    *  https://code.google.com/p/dart/issues/detail?id=16335&thanks=16335&ts=1390849795
    *  ==> dart?collections/equality
    */
-  operator ==(ScryptKeyCrypter other) {
-    if(!(other is ScryptKeyCrypter)) return false;
+  operator ==(KeyCrypterScrypt other) {
+    if(other is! KeyCrypterScrypt) return false;
     if(identical(this, other)) return true;
     // return _scryptParams == other._scryptParams;
   }

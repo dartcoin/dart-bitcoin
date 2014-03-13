@@ -4,8 +4,17 @@ abstract class NetworkParameters {
   
   // USE THESE AS PARAMS
 
-  static const NetworkParameters MAIN_NET = const _MainNetParams();
-  static const NetworkParameters TEST_NET = const _TestNetParams();
+  static const NetworkParameters MAIN_NET  = const _MainNetParams();
+  static const NetworkParameters TEST_NET  = const _TestNetParams();
+  
+  static const NetworkParameters UNIT_TEST = const _UnitTestParams();
+  
+  static final Map<int,NetworkParameters> PARAMS_BY_MAGIC = {
+      MAIN_NET.magicValue  : MAIN_NET,
+      TEST_NET.magicValue  : TEST_NET,
+      UNIT_TEST.magicValue : UNIT_TEST,
+  };
+  
   
   static const List<NetworkParameters> SUPPORTED_PARAMS = const [MAIN_NET, TEST_NET];
   
@@ -34,9 +43,14 @@ abstract class NetworkParameters {
   });
   
   Block get genesisBlock;
+  BigInteger get proofOfWorkLimit;
   
   List<int> get acceptableAddressHeaders => [addressHeader, p2shHeader];
-  
+
+  /**
+   * The maximum money to be generated
+   */
+  int get MAX_MONEY => 21000000 * Units.COIN;
 
 
   static Block _createGenesis(NetworkParameters params) {

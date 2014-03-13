@@ -9,24 +9,6 @@ import "dart:typed_data";
 final NetworkParameters _testParams = NetworkParameters.TEST_NET;
 final NetworkParameters _mainParams = NetworkParameters.MAIN_NET;
 
-void _testAddress(String hexBytes, String address, [int version]) {
-  if(version == null)
-    version = _mainParams.addressHeader;
-  var bytes = Utils.hexToBytes(hexBytes);
-  var addy = new Address(bytes);
-  expect(addy.toString(), equals(address));
-  expect(addy.version, equals(version));
-}
-
-void _testAddressReverse(String address, String hexBytes, [int version]) {
-  if(version == null)
-    version = _mainParams.addressHeader;
-  var addy = new Address(address);
-  var bytes = Utils.hexToBytes(hexBytes);
-  expect(addy.hash160, orderedEquals(bytes));
-  expect(addy.version, equals(version));
-}
-
 // from bitcoinj
 
 void _stringification() {
@@ -116,15 +98,13 @@ void _p2shAddress() {
 }
 
 void main() {
-  test("address_encode1", () { _testAddress("010966776006953D5567439E5E39F86A0D273BEE", "16UwLL9Risc3QfPqBUvKofHmBQ7wMtjvM"); });
-  test("address_encode2", () { _testAddress("00010966776006953D5567439E5E39F86A0D273BEED61967F6", "16UwLL9Risc3QfPqBUvKofHmBQ7wMtjvM"); });
-  test("address_decode1", () { _testAddressReverse("16UwLL9Risc3QfPqBUvKofHmBQ7wMtjvM", "010966776006953D5567439E5E39F86A0D273BEE"); });
-  // from bitcoinj
-  test("address_stringification", () => _stringification());
-  test("address_decoding", () => _decoding());
-  test("address_errorPaths", () => _errorPaths());
-  test("address_getNetwork", () => _getNetwork());
-  test("address_p2shAddress", () => _p2shAddress());
-  
-  //TODO tests for other network parameters
+  group("core.Address", () {
+    test("stringification", () => _stringification());
+    test("decoding", () => _decoding());
+    test("errorPaths", () => _errorPaths());
+    test("getNetwork", () => _getNetwork());
+    test("p2shAddress", () => _p2shAddress());
+  });
 }
+
+

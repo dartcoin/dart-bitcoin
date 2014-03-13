@@ -18,21 +18,24 @@ class PeerAddress extends Object with BitcoinSerialization {
        BigInteger services, 
        int time
       }) {
-    if(address == null) throw new Exception("The address argument should not be null");
+    if(address == null) throw new ArgumentError("The address argument should not be null");
     _addr = address;
     _port = (port != null) ? port : params.port;
     _services = (services != null) ? services : BigInteger.ZERO;
     _time = time;
-    this.protocolVersion = protocolVersion;
+    this.protocolVersion = protocolVersion != null ? protocolVersion : NetworkParameters.PROTOCOL_VERSION;
     this.params = params;
     _serializationLength = this.protocolVersion > 31402 ? SERIALIZATION_SIZE : SERIALIZATION_SIZE - 4;
   }
   
-  factory PeerAddress.localhost({NetworkParameters params: NetworkParameters.MAIN_NET, BigInteger services}) =>
-    new PeerAddress(new InternetAddress("127.0.0.1"), params: params);
+  factory PeerAddress.localhost({NetworkParameters params: NetworkParameters.MAIN_NET, BigInteger services, int protocolVersion}) =>
+    new PeerAddress(new InternetAddress("127.0.0.1"), params: params, protocolVersion: protocolVersion);
+
+  // required for serialization
+  PeerAddress._newInstance();
   
-  factory PeerAddress.deserialize(Uint8List bytes, {int length, bool lazy, NetworkParameters params, int protocolVersion}) =>  
-      new BitcoinSerialization.deserialize(new PeerAddress(null), bytes, length: length, lazy: lazy, params: params, protocolVersion: protocolVersion);
+  factory PeerAddress.deserialize(Uint8List bytes, {int length, bool lazy, bool retain, NetworkParameters params, int protocolVersion, BitcoinSerialization parent}) =>  
+      new BitcoinSerialization.deserialize(new PeerAddress._newInstance(), bytes, length: length, lazy: lazy, retain: retain, params: params, protocolVersion: protocolVersion, parent: parent);
   
   InternetAddress get address {
     _needInstance();
@@ -74,6 +77,20 @@ class PeerAddress extends Object with BitcoinSerialization {
     _time = time;
   }
   
+  /**
+   * Version messages need [PeerAddress]es with [protocolVerion] = 0.
+   * (Timestamp should nog be encoded in it (length 26 bytes).
+   * 
+   * We use this method on the [VersionMessage] constructor instead of checking it
+   * when serializing, because the constructor will be used significantly less frequently
+   * than the serialize method.
+   */
+  PeerAddress get _forVersionMessage {
+    if(protocolVersion == 0) return this;
+    _needInstance();
+    return new PeerAddress(_addr, port: _port, protocolVersion: 0, params: params, services: _services, time: _time);
+  }
+  
   @override
   String toString() {
     _needInstance();
@@ -97,7 +114,7 @@ class PeerAddress extends Object with BitcoinSerialization {
     return _addr.hashCode ^ port.hashCode ^ time.hashCode ^ _services.hashCode;
   }
   
-  int _deserialize(Uint8List bytes) {
+  int _deserialize(Uint8List bytes, bool lazy, bool retain) {
     int offset = 0;
     if(protocolVersion >= 31402) {
       _time = Utils.bytesToUintLE(bytes, 4);
@@ -107,7 +124,7 @@ class PeerAddress extends Object with BitcoinSerialization {
     offset += 8;
     _addr = Utils.decodeInternetAddressAsIPv6(bytes.sublist(offset, offset + 16));
     offset += 16;
-    _port = bytes[offset] << 8 + bytes[offset + 1];
+    _port = (0xff & bytes[offset]) << 8 | (0xff & bytes[offset + 1]);
     offset += 2;
     return offset;
   }

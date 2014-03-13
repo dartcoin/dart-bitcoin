@@ -22,13 +22,18 @@ class AlertMessage extends Message {
   String statusBar;
   String reversed;
   
-  AlertMessage(Uint8List message, Uint8List signature) : super("alert") {
+  AlertMessage(Uint8List message, Uint8List signature, [NetworkParameters params]) : super("alert", params) {
+    if(message == null || signature == null)
+      throw new ArgumentError();
     this._message = message;
     this._signature = signature;
   }
+  
+  // required for serialization
+  AlertMessage._newInstance() : super("alert", null);
 
-  factory AlertMessage.deserialize(Uint8List bytes, {int length, bool lazy, NetworkParameters params, int protocolVersion}) => 
-          new BitcoinSerialization.deserialize(new AlertMessage(null, null), bytes, length: length, lazy: lazy, params: params, protocolVersion: protocolVersion);
+  factory AlertMessage.deserialize(Uint8List bytes, {int length, bool lazy, bool retain, NetworkParameters params, int protocolVersion}) => 
+          new BitcoinSerialization.deserialize(new AlertMessage._newInstance(), bytes, length: length, lazy: lazy, retain: retain, params: params, protocolVersion: protocolVersion);
   
   Uint8List get message {
     _needInstance();
@@ -43,7 +48,7 @@ class AlertMessage extends Message {
     return _signature;
   }
   
-  int _deserializePayload(Uint8List bytes) {
+  int _deserializePayload(Uint8List bytes, bool lazy, bool retain) {
     //COMPLETE
   }
   

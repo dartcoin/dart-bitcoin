@@ -15,8 +15,8 @@ class EncryptedPrivateKey {
   EncryptedPrivateKey clone() => new EncryptedPrivateKey.copy(this);
 
   operator ==(EncryptedPrivateKey other) {
-    if(!(other is EncryptedPrivateKey)) 
-      return false;
+    if(other is! EncryptedPrivateKey) return false;
+    if(identical(this, other)) return true;
     return iv == other.iv && encryptedKey == other.encryptedKey;
   }
   

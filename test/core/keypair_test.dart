@@ -43,10 +43,12 @@ void _testEqualsAndHashCode(String private, String public) {
 }
 
 void main() {
-  test("keypair_address1", () => _testAddress(testPubKey, testAddress));
-  test("keypair_privpub1", () => _testPrivToPub(testPubKey, testPrivKey));
-  test("keypair_clear", () => _testClear(testPrivKey));
-  test("keypair_equals_hashcode", () => _testEqualsAndHashCode(testPrivKey, testPubKey));
+  group("core.KeyPair", () {
+    test("keypair_address1", () => _testAddress(testPubKey, testAddress));
+    test("keypair_privpub1", () => _testPrivToPub(testPubKey, testPrivKey));
+    test("keypair_clear", () => _testClear(testPrivKey));
+    test("keypair_equals_hashcode", () => _testEqualsAndHashCode(testPrivKey, testPubKey));
+  });
 }
 
 

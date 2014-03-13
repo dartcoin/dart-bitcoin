@@ -13,17 +13,25 @@ class FilteredBlock extends Object with BitcoinSerialization {
   Map<Sha256Hash, Transaction> _txs;
   
   FilteredBlock(Block header, PartialMerkleTree merkleTree, [List<Sha256Hash> hashes]) {
+    if(header == null || merkleTree == null)
+      throw new ArgumentError("header or merkleTree is null");
     _header = header;
     _merkle = merkleTree;
     _hashes = hashes;
+    this.params = header.params;
   }
   
-  factory FilteredBlock.deserialize(Uint8List bytes, {int length, bool lazy, NetworkParameters params}) => 
-          new BitcoinSerialization.deserialize(new FilteredBlock(null, null), bytes, length: length, lazy: lazy, params: params);
+  // required for serialization
+  FilteredBlock._newInstance();
+  
+  factory FilteredBlock.deserialize(Uint8List bytes, {int length, bool lazy, bool retain, NetworkParameters params, BitcoinSerialization parent}) => 
+          new BitcoinSerialization.deserialize(new FilteredBlock._newInstance(), bytes, length: length, lazy: lazy, retain: retain, params: params, parent: parent);
   
   Block get header {
     _needInstance();
-    return _header.cloneAsHeader();
+    if(!_header.isHeader)
+      _header.cloneAsHeader();
+    return _header;
   }
   
   Sha256Hash get hash {
@@ -42,14 +50,16 @@ class FilteredBlock extends Object with BitcoinSerialization {
   int get transactionCount => merkleTree.transactionCount;
   
   List<Sha256Hash> get transactionHashes {
-    if(_hashes != null) return _hashes;
-    _needInstance();
-    List<Sha256Hash> hashes = new List<Sha256Hash>();
-    if(_header.merkleRoot == _merkle.getTxnHashAndMerkleRoot(hashes)) {
-      _hashes = hashes;
-      return new UnmodifiableListView(_hashes);
+    if(_hashes == null) {
+      _needInstance();
+      List<Sha256Hash> hashes = new List<Sha256Hash>();
+      if(_header.merkleRoot == _merkle.getTxnHashAndMerkleRoot(hashes)) {
+        _hashes = hashes;
+      } else {
+        throw new Exception("Merkle root of block header does not match merkle root of partial merkle tree.");
+      }
     }
-    throw new Exception("Merkle root of block header does not match merkle root of partial merkle tree.");
+    return new UnmodifiableListView(_hashes);
   }
   
   // the following two methods are used to fill this block with relevant transactions
@@ -60,9 +70,10 @@ class FilteredBlock extends Object with BitcoinSerialization {
    */
   bool provideTransaction(Transaction tx) {
     _needInstance();
-    if(_txs == null) _txs = new Map<Sha256Hash, Transaction>();
+    if(_txs == null) 
+      _txs = new Map<Sha256Hash, Transaction>();
     Sha256Hash hash = tx.hash;
-    if (_hashes.contains(hash)) {
+    if(_hashes.contains(hash)) {
       _txs[hash] = tx;
       return true;
     } else
@@ -87,11 +98,11 @@ class FilteredBlock extends Object with BitcoinSerialization {
     return new Uint8List.fromList(result);
   }
   
-  int _deserialize(Uint8List bytes) {
+  int _deserialize(Uint8List bytes, bool lazy, bool retain) {
     int offset = 0;
-    _header = new Block.deserialize(bytes, lazy: false);
-    offset += _header.serializationLength;
-    _merkle = new PartialMerkleTree.deserialize(bytes.sublist(offset), lazy: false);
+    _header = new Block.deserializeHeader(bytes, lazy: lazy, retain: retain, parent: this);
+    offset += Block.HEADER_SIZE;
+    _merkle = new PartialMerkleTree.deserialize(bytes.sublist(offset), lazy: lazy, retain: retain);
     offset += _merkle.serializationLength;
     return offset;
   }
