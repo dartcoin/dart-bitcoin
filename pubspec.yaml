@@ -11,4 +11,6 @@ dependencies:
   json: any
   json_rpc: any
 dev_dependencies:
+  browser: any
   unittest: any
+  uuid: any

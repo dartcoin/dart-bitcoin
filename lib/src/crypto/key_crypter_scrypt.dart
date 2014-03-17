@@ -65,7 +65,7 @@ class KeyCrypterScrypt implements KeyCrypter {
     if(encryptedPrivKey == null || aesKey == null) throw new ArgumentError();
     ParametersWithIV keyWithIv = new ParametersWithIV(aesKey, encryptedPrivKey.iv);
     PaddedBlockCipher cipher = new PaddedBlockCipherImpl(new PKCS7Padding(), new CBCBlockCipher(new AESFastEngine()));
-    cipher.init(false, keyWithIv);
+    cipher.init(false, new PaddedBlockCipherParameters(keyWithIv, null));
     return cipher.process(encryptedPrivKey.encryptedKey);
   }
   
