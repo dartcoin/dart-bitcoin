@@ -44,7 +44,7 @@ void _testAddr() {
   expect(a.addresses.length, equals(1));
   PeerAddress pa = a.addresses[0];
   expect(pa.port, equals(8333));
-  expect(pa.address.rawAddress.sublist(12, 16), equals(new InternetAddress("10.0.0.1").rawAddress));
+  expect(pa.address.sublist(12, 16), equals(Uri.parseIPv4Address("10.0.0.1")));
 }
 
 

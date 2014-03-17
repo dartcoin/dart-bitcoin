@@ -273,37 +273,37 @@ class Utils {
     return result;
   }
   
-  /**
-   * Encodes the [InternetAddress] to bytes.
-   * 
-   * [address] can be a IPv4 or IPv6 address.
-   */
-  // TODO change as soon as InternetAddress has it's own encoding method
-  static Uint8List encodeInternetAddressAsIPv6(InternetAddress address) {
-    if(address.type == InternetAddressType.IP_V6)
-      return new Uint8List.fromList(Uri.parseIPv6Address(address.address));
-    return new Uint8List(16)
-      ..setRange(12, 16, Uri.parseIPv4Address(address.address))
-      ..[10] = 0xFF
-      ..[11] = 0xFF;
-  }
-  
-  static String _zeroPad(String toPad, int size) {
-    return new List.filled(size - toPad.length, "0").join() + toPad;
-  }
-  
-  /**
-   * Decode the bytes to an [InternetAddress].
-   */
-  static InternetAddress decodeInternetAddressAsIPv6(Uint8List bytes) {
-    if(bytes.length != 16) throw new FormatException("illegal format");
-    String address = "";
-    for(int i = 0 ; i < 8 ; i++) {
-      if(i != 0) address += ":";
-      address += Utils.bytesToHex(bytes.sublist(i * 2, i * 2 + 2));
-    }
-    return new InternetAddress(address);
-  }
+//  /**
+//   * Encodes the [InternetAddress] to bytes.
+//   * 
+//   * [address] can be a IPv4 or IPv6 address.
+//   */
+//  // TODO change as soon as InternetAddress has it's own encoding method
+//  static Uint8List encodeInternetAddressAsIPv6(    address) {
+//    if(address.type == InternetAddressType.IP_V6)
+//      return new Uint8List.fromList(Uri.parseIPv6Address(address.address));
+//    return new Uint8List(16)
+//      ..setRange(12, 16, Uri.parseIPv4Address(address.address))
+//      ..[10] = 0xFF
+//      ..[11] = 0xFF;
+//  }
+//  
+//  static String _zeroPad(String toPad, int size) {
+//    return new List.filled(size - toPad.length, "0").join() + toPad;
+//  }
+//  
+//  /**
+//   * Decode the bytes to an [InternetAddress].
+//   */
+//  static InternetAddress decodeInternetAddressAsIPv6(Uint8List bytes) {
+//    if(bytes.length != 16) throw new FormatException("illegal format");
+//    String address = "";
+//    for(int i = 0 ; i < 8 ; i++) {
+//      if(i != 0) address += ":";
+//      address += Utils.bytesToHex(bytes.sublist(i * 2, i * 2 + 2));
+//    }
+//    return new InternetAddress(address);
+//  }
 
 
   /**

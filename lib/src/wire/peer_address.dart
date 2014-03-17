@@ -4,13 +4,18 @@ class PeerAddress extends Object with BitcoinSerialization {
   
   static const int SERIALIZATION_SIZE = 30;
   
-  InternetAddress _addr;
+  Uint8List _addr;
   int _port;
   BigInteger _services;
   int _time;
   
+  /**
+   * 
+   * 
+   * The [address] parameter should either by a [String] or [Uint8List].
+   */
   PeerAddress(
-      InternetAddress address, 
+      dynamic address, 
       {
        int port,
        int protocolVersion: NetworkParameters.PROTOCOL_VERSION,
@@ -18,8 +23,7 @@ class PeerAddress extends Object with BitcoinSerialization {
        BigInteger services, 
        int time
       }) {
-    if(address == null) throw new ArgumentError("The address argument should not be null");
-    _addr = address;
+    _addr = _formatAddress(address);
     _port = (port != null) ? port : params.port;
     _services = (services != null) ? services : BigInteger.ZERO;
     _time = time;
@@ -29,7 +33,7 @@ class PeerAddress extends Object with BitcoinSerialization {
   }
   
   factory PeerAddress.localhost({NetworkParameters params: NetworkParameters.MAIN_NET, BigInteger services, int protocolVersion}) =>
-    new PeerAddress(new InternetAddress("127.0.0.1"), params: params, protocolVersion: protocolVersion);
+    new PeerAddress("127.0.0.1", params: params, protocolVersion: protocolVersion);
 
   // required for serialization
   PeerAddress._newInstance();
@@ -37,12 +41,38 @@ class PeerAddress extends Object with BitcoinSerialization {
   factory PeerAddress.deserialize(Uint8List bytes, {int length, bool lazy, bool retain, NetworkParameters params, int protocolVersion, BitcoinSerialization parent}) =>  
       new BitcoinSerialization.deserialize(new PeerAddress._newInstance(), bytes, length: length, lazy: lazy, retain: retain, params: params, protocolVersion: protocolVersion, parent: parent);
   
-  InternetAddress get address {
+  static Uint8List _formatAddress(dynamic address) {
+    if(address == null)
+      throw new ArgumentError("The address argument should not be null");
+    if(address is String) {
+      Exception fe;
+      try {
+        address = new Uint8List.fromList(Uri.parseIPv6Address(address));
+      } on FormatException catch (e) { fe = e; }
+      try {
+        address = new Uint8List.fromList(Uri.parseIPv4Address(address));
+      } on FormatException catch (e) { fe = e; }
+      if(fe != null)
+        throw new FormatException("Bad IP address format!");
+    }
+    if(address != Uint8List)
+      throw new ArgumentError("Invalid address parameter type");
+    if(address.length == 4) {
+      address = new Uint8List.fromList(new List.filled(16, 0)..setRange(12, 16, address));
+      address[10] = 0xff;
+      address[11] = 0xff;
+    }
+    if(address.length != 16)
+      throw new ArgumentError("Invalid address length. Must be either 4 or 16 bytes long.");
+    return address;
+  }
+  
+  Uint8List get address {
     _needInstance();
     return _addr;
   }
   
-  void set address(InternetAddress address) {
+  void set address(Uint8List address) {
     _needInstance(true);
     _addr = address;
   }
@@ -94,7 +124,7 @@ class PeerAddress extends Object with BitcoinSerialization {
   @override
   String toString() {
     _needInstance();
-    return "[${_addr.address}]:$_port";
+    return "[${_addr}]:$_port";
   }
   
   @override
@@ -122,7 +152,7 @@ class PeerAddress extends Object with BitcoinSerialization {
     }
     _services = Utils.bytesToUBigIntLE(bytes.sublist(offset), 8);
     offset += 8;
-    _addr = Utils.decodeInternetAddressAsIPv6(bytes.sublist(offset, offset + 16));
+    _addr = bytes.sublist(offset, offset + 16);
     offset += 16;
     _port = (0xff & bytes[offset]) << 8 | (0xff & bytes[offset + 1]);
     offset += 2;
@@ -139,7 +169,7 @@ class PeerAddress extends Object with BitcoinSerialization {
       result.addAll(Utils.uintToBytesLE(secs, 4));
     }
     result..addAll(Utils.uBigIntToBytesLE(_services, 8))
-      ..addAll(Utils.encodeInternetAddressAsIPv6(_addr))
+      ..addAll(_addr)
       ..add(0xFF & _port >> 8)
       ..add(0xFF & _port);
     return new Uint8List.fromList(result);
