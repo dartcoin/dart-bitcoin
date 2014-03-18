@@ -45,17 +45,16 @@ class PeerAddress extends Object with BitcoinSerialization {
     if(address == null)
       throw new ArgumentError("The address argument should not be null");
     if(address is String) {
-      Exception fe;
       try {
         address = new Uint8List.fromList(Uri.parseIPv6Address(address));
-      } on FormatException catch (e) { fe = e; }
+      } on FormatException {}
       try {
         address = new Uint8List.fromList(Uri.parseIPv4Address(address));
-      } on FormatException catch (e) { fe = e; }
-      if(fe != null)
+      } on FormatException {}
+      if(address is String)
         throw new FormatException("Bad IP address format!");
     }
-    if(address != Uint8List)
+    if(address is! Uint8List)
       throw new ArgumentError("Invalid address parameter type");
     if(address.length == 4) {
       address = new Uint8List.fromList(new List.filled(16, 0)..setRange(12, 16, address));

@@ -7,7 +7,6 @@ import "package:dartcoin/core/core.dart";
 
 import "package:bignum/bignum.dart";
 
-import "dart:io";
 import "dart:typed_data";
 
 
@@ -59,7 +58,7 @@ void _testBothWays() {
   var services = BigInteger.ONE;
   var time = new DateTime.now().millisecondsSinceEpoch ~/ 1000;
   var myAddress = new PeerAddress.localhost(params: params, services: services);
-  var theirAddress = new PeerAddress(new InternetAddress("192.168.3.3"), port: 8333, protocolVersion: clientVersion, params: params, services: services, time: time);
+  var theirAddress = new PeerAddress("192.168.3.3", port: 8333, protocolVersion: clientVersion, params: params, services: services, time: time);
   var nonce = 12321;
   var subVer = VersionMessage.LIBRARY_SUBVER;
   var lastHeight = 12345;
@@ -81,8 +80,8 @@ void _testBothWays() {
   expect(newVer.clientVersion, equals(clientVersion));
   expect(newVer.services, equals(services));
   expect(newVer.time, equals(time));
-  expect(newVer.myAddress.address.rawAddress.sublist(12, 16), equals(myAddress.address.rawAddress));
-  expect(newVer.theirAddress.address.rawAddress.sublist(12, 16), equals(theirAddress.address.rawAddress));
+  expect(newVer.myAddress.address, equals(myAddress.address));
+  expect(newVer.theirAddress.address, equals(theirAddress.address));
   expect(newVer.nonce, equals(nonce));
   expect(newVer.subVer, equals(subVer));
   expect(newVer.lastHeight, equals(lastHeight));
