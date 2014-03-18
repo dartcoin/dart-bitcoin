@@ -1,6 +1,6 @@
 part of dartcoin.core;
 
-class FilteredBlock extends Object with BitcoinSerialization {
+class FilteredBlock extends Object with HashRepresentable, BitcoinSerialization {
   /** The protocol version at which Bloom filtering started to be supported. */
   static const int MIN_PROTOCOL_VERSION = 70000;
   

@@ -1,6 +1,6 @@
 part of dartcoin.core;
 
-class Block extends Object with BitcoinSerialization {
+class Block extends Object with HashRepresentable, BitcoinSerialization {
   
   static const int BLOCK_VERSION = 1;
   
@@ -434,16 +434,6 @@ class Block extends Object with BitcoinSerialization {
       _nonce++;
     }
   }
-  
-  @override
-  bool operator ==(Block other) {
-    if(other is! Block) return false;
-    if(identical(this, other)) return true;
-    return hash == other.hash;
-  }
-  
-  @override
-  int get hashCode => hash.hashCode;
   
   Uint8List _serializeHeader() {
     return new Uint8List.fromList(new List<int>()

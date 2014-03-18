@@ -43,6 +43,10 @@ part "../src/serialization/bitcoin_serializable.dart";
 part "../src/serialization/bitcoin_serialization.dart";
 part "../src/serialization/serialization_exception.dart";
 
+// hash representation
+part "../src/hash/hash_representable.dart";
+part "../src/hash/hash_representation.dart";
+
 // addresses and private keys
 part "../src/core/address.dart";
 part "../src/core/base58check.dart";
