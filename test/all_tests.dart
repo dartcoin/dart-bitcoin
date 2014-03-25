@@ -20,6 +20,9 @@ import "wire/bloom_filter_test.dart" as bloom_filter;
 import "wire/message_serialization_test.dart" as message_serialization;
 import "wire/peer_address_test.dart" as peer_address;
 
+import "wire/messages/alert_message_test.dart" as alert_message;
+import "wire/messages/version_message_test.dart" as version_message;
+
 
 void main() {
   // core
@@ -39,5 +42,8 @@ void main() {
   bloom_filter.main();
   message_serialization.main();
   peer_address.main();
+  // messages
+  alert_message.main();
+  version_message.main();
 }
 
