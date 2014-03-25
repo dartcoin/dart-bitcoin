@@ -44,6 +44,7 @@ abstract class NetworkParameters {
   
   Block get genesisBlock;
   BigInteger get proofOfWorkLimit;
+  Uint8List get alertSigningKey => SATOSHI_KEY;
   
   List<int> get acceptableAddressHeaders => [addressHeader, p2shHeader];
 

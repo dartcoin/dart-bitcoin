@@ -7,7 +7,7 @@ abstract class Message extends Object with BitcoinSerialization {
   // closurizing constructors is not (yet) possible
   static final Map<String, _MessageDeserializer> _MESSAGE_DESERIALIZERS = {
         "addr"         : (Uint8List bts, int len, bool laz, bool ret, NetworkParameters par, int prv) => new AddressMessage.deserialize(bts, length: len, lazy: laz, retain: ret, params: par, protocolVersion: prv),
-        "alert"        : (Uint8List bts, int len, bool laz, bool ret, NetworkParameters par, int prv) => new AlertMessage.deserialize(bts, length: len, lazy: laz, retain: ret, params: par, protocolVersion: prv),
+        "alert"        : (Uint8List bts, int len, bool laz, bool ret, NetworkParameters par, int prv) => new AlertMessage.deserialize(bts, length: len, retain: ret, params: par, protocolVersion: prv),
         "block"        : (Uint8List bts, int len, bool laz, bool ret, NetworkParameters par, int prv) => new BlockMessage.deserialize(bts, length: len, lazy: laz, retain: ret, params: par, protocolVersion: prv),
         "filteradd"    : (Uint8List bts, int len, bool laz, bool ret, NetworkParameters par, int prv) => new FilterAddMessage.deserialize(bts, length: len, lazy: laz, retain: ret, params: par, protocolVersion: prv),
         "filterclear"  : (Uint8List bts, int len, bool laz, bool ret, NetworkParameters par, int prv) => new FilterClearMessage.deserialize(bts, length: len, lazy: laz, retain: ret, params: par, protocolVersion: prv),
@@ -40,7 +40,8 @@ abstract class Message extends Object with BitcoinSerialization {
     this.params = params;
   }
   
-  factory Message.deserialize(Uint8List bytes, {int length, bool lazy, bool retain, NetworkParameters params, int protocolVersion}) {
+  factory Message.deserialize(Uint8List bytes, 
+      {int length, bool lazy, bool retain, NetworkParameters params, int protocolVersion}) {
     if(bytes.length < HEADER_LENGTH)
       throw new SerializationException("Too few bytes to be a Message");
     String command = _parseCommand(bytes.sublist(4, 4 + COMMAND_LENGTH));
@@ -49,7 +50,13 @@ abstract class Message extends Object with BitcoinSerialization {
     return _MESSAGE_DESERIALIZERS[command](bytes, length, lazy, retain, params, protocolVersion); 
   }
   
-  factory Message.fromPayload(String command, Uint8List payloadBytes, {bool lazy, bool retain, NetworkParameters params, int protocolVersion}) {
+  /**
+   * This is a very ineficient method for deserializing a message from its payload.
+   * 
+   * This method is mostly used for testing purposes.
+   */
+  factory Message.fromPayload(String command, Uint8List payloadBytes, 
+      {bool lazy, bool retain, NetworkParameters params, int protocolVersion}) {
     if(params == null) params = NetworkParameters.MAIN_NET;
     if(command.length > 12)
       throw new ArgumentError("Command length should not be greater than 12.");
@@ -65,7 +72,8 @@ abstract class Message extends Object with BitcoinSerialization {
     result.addAll(checksum);
     // the payload
     result.addAll(payloadBytes);
-    return new Message.deserialize(new Uint8List.fromList(result), length: result.length, lazy: lazy, retain: retain, params: params, protocolVersion: protocolVersion);
+    return new Message.deserialize(new Uint8List.fromList(result), 
+        length: result.length, lazy: lazy, retain: retain, params: params, protocolVersion: protocolVersion);
   }
   
   /**
