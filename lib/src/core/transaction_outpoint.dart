@@ -15,6 +15,8 @@ class TransactionOutPoint extends Object with BitcoinSerialization {
                         NetworkParameters params: NetworkParameters.MAIN_NET}) {
     if(transaction != null)
       txid = transaction.hash;
+    if(index == -1)
+      index = 0xFFFFFFFF;
     _index = index;
     _txid = txid != null ? txid : Sha256Hash.ZERO_HASH;
     _tx = transaction;

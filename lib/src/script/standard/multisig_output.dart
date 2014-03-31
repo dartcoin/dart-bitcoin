@@ -33,7 +33,7 @@ class MultiSigOutputScript extends Script {
   List<KeyPair> get pubKeys {
     List<KeyPair> keys = new List();
     for(int i = 0 ; i < (chunks.length - 3) ; i++) {
-      keys.add(new KeyPair(chunks[i+1].data));
+      keys.add(new KeyPair.public(chunks[i+1].data));
     }
     return keys;
   }

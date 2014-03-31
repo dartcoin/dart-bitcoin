@@ -161,7 +161,7 @@ class PeerAddress extends Object with BitcoinSerialization {
   Uint8List _serialize() {
     List<int> result = new List<int>();
     if(protocolVersion >= 31402) {
-      //TODO (copied from Java) this appears to be dynamic because the client only ever sends out it's own address
+      //TODO [bitcoinj]: this appears to be dynamic because the client only ever sends out it's own address
       //so assumes itself to be up.  For a fuller implementation this needs to be dynamic only if
       //the address refers to this client.
       int secs = new DateTime.now().millisecondsSinceEpoch ~/ 1000;

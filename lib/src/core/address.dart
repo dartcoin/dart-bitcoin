@@ -49,7 +49,7 @@ class Address {
    * 
    * To create an address from a P2SH script, use the [PayToScriptHashOutputScript] class.
    */
-  factory Address.fromP2SHHash(Uint8List hash160, [NetworkParameters params = NetworkParameters.MAIN_NET]) =>
+  factory Address.p2sh(Uint8List hash160, [NetworkParameters params = NetworkParameters.MAIN_NET]) =>
     new Address(hash160, params, params.p2shHeader);
   
   int get version => _version;
@@ -79,6 +79,15 @@ class Address {
     }
     return null;
   }
+  
+  // *******************
+  // ** address types **
+  // *******************
+  
+  /**
+   * Checks if this address is a regular pay-to-pubkey-hash address.
+   */
+  bool get isPayToPubkeyHashAddress => _version == params.addressHeader;
   
   // I first placed this check in the [PayToScriptHashOutputScript] class, 
   // like I did with the [matchesType()] methods in the standard Scripts, 

@@ -91,9 +91,9 @@ void _p2shAddress() {
 
   // Test that we can convert them from hashes
   Uint8List hex = Utils.hexToBytes("2ac4b0b501117cc8119c5797b519538d4942e90e");
-  Address a = new Address.fromP2SHHash(hex, _mainParams);
+  Address a = new Address.p2sh(hex, _mainParams);
   expect(a.toString(), equals("35b9vsyH1KoFT5a5KtrKusaCcPLkiSo1tU"));
-  Address b = new Address.fromP2SHHash(Utils.hexToBytes("18a0e827269b5211eb51a4af1b2fa69333efa722"), _testParams);
+  Address b = new Address.p2sh(Utils.hexToBytes("18a0e827269b5211eb51a4af1b2fa69333efa722"), _testParams);
   expect(b.toString(), equals("2MuVSxtfivPKJe93EC1Tb9UhJtGhsoWEHCe"));
 }
 

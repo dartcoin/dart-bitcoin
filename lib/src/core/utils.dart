@@ -251,13 +251,6 @@ class Utils {
     return result;
   }
   
-  //TODO
-  static Uint8List intTo2CBytes(int val, [int size]) {
-    if(val < 0) {
-      
-    }
-  }
-  
   /**
    * Converts the BE endian two's complement encoded bytes to an integer.
    * 
@@ -278,7 +271,6 @@ class Utils {
 //   * 
 //   * [address] can be a IPv4 or IPv6 address.
 //   */
-//  // TODO change as soon as InternetAddress has it's own encoding method
 //  static Uint8List encodeInternetAddressAsIPv6(    address) {
 //    if(address.type == InternetAddressType.IP_V6)
 //      return new Uint8List.fromList(Uri.parseIPv6Address(address.address));

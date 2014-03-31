@@ -1,7 +1,6 @@
 part of dartcoin.core;
 
 class AlertMessage extends Message {
-  //TODO implement AlertMessage
   
   static const int ALERT_VERSION = 1;
   
@@ -43,7 +42,7 @@ class AlertMessage extends Message {
   Uint8List get signature => _signature;
   
   bool get isSignatureValid =>
-    KeyPair.verifySignatureForPubkey(message, 
+    KeyPair.verifySignatureForPubkey(Utils.doubleDigest(message),
         new ECDSASignature.fromDER(signature), params.alertSigningKey);
   
   int _deserializePayload(Uint8List bytes, bool lazy, bool retain) {

@@ -3,7 +3,11 @@ part of dartcoin.core;
 class MnemonicException implements Exception {
   
   final String message;
+
   MnemonicException([this.message]);
+
+  @override
+  String toString() => "MnemonicException:$message";
   
 }
 

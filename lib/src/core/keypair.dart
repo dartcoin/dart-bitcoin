@@ -2,64 +2,93 @@ part of dartcoin.core;
 
 class KeyPair {
 
-  static final ECCurve _CURVE = new fp.ECCurve(
-      new BigInteger("fffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2f", 16), //q
-      new BigInteger("0", 16), //a
-      new BigInteger("7", 16) //b
-  );
+  // EC curve definition "secp256k1"
+  static final _ec_q = new BigInteger("fffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2f", 16);
+  static final _ec_a = new BigInteger("0", 16);
+  static final _ec_b = new BigInteger("7", 16);
+  static final _ec_g = new BigInteger("0479be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8", 16);
+  static final _ec_n = new BigInteger("fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141", 16);
+  static final _ec_h = new BigInteger("1", 16);
 
-  static final ECDomainParameters _ECPARAMS = new ECDomainParametersImpl(
-      "secp256k1", _CURVE, _CURVE.decodePoint(
-          new BigInteger("0479be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8",
-            16).toByteArray()), //G
-      new BigInteger("fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141", 16), //n
-      new BigInteger("1", 16) //h
-  );
+  static final ECCurve EC_CURVE = new fp.ECCurve(_ec_q, _ec_a, _ec_b);
 
-  static final BigInteger _HALF_CURVE_ORDER = 
-      new BigInteger("fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141").shiftRight(1);
+  static final ECDomainParameters EC_PARAMS = new ECDomainParametersImpl(
+      "secp256k1", EC_CURVE, EC_CURVE.decodePoint(_ec_g.toByteArray()), _ec_n, _ec_h, null);
 
+  static final BigInteger HALF_CURVE_ORDER = _ec_n.shiftRight(1);
+
+  // instance variables
   BigInteger _priv;
   Uint8List _pub;
   // chache
   Uint8List _pubKeyHash;
 
-  // encrypted private keys according to BIP0038
+  // encrypted private key
   EncryptedPrivateKey _encryptedPrivateKey;
   KeyCrypter _keyCrypter;
 
   /**
    * Create a keypair from a private or public key.
    * 
-   * Keys can either be of the type bignum.BigInteger or Uint8List.
+   * If [key] is of type [BigInteger], a private key is created.
+   * If [key] if of type [Uint8List], a public key is created.
    * 
-   * Only type checks are performed on the data, no other validation is done.
-   * 
+   * To use other parameter types for keys, use the separate constructors
+   * [new KeyPair.public] and [new KeyPair.private].
    */
-  factory KeyPair([dynamic publicKey, dynamic privateKey, bool compressed = true]) {
-    if(publicKey == null && privateKey == null) 
+  factory KeyPair([dynamic key, bool compressed = false]) {
+    if(key == null)
       return new KeyPair.generate();
-    // convert private key
-    if(privateKey is Uint8List)
-      privateKey = new BigInteger.fromBytes(1, privateKey);
-    // convert public key
-    if(publicKey is BigInteger) 
-      publicKey = Utils.bigIntegerToBytes(publicKey, 65);
-    // create private key
-    if(privateKey is BigInteger) {
-      if(!(publicKey is Uint8List)) 
-        publicKey = publicKeyFromPrivateKey(privateKey, compressed);
-      return new KeyPair._internal(privateKey, publicKey);
-    }
-    // create public key
-    if(publicKey is Uint8List && privateKey == null) 
-      return new KeyPair._internal(null, publicKey);
-    // error
-    throw new Exception("The parameters were not of a usable type.");
+    if(key is Uint8List)
+      return new KeyPair.public(key);
+    if(key is BigInteger)
+      return new KeyPair.private(key, compressed: compressed);
   }
 
   /**
-   * Create a new BIP0038 encrypted provate key
+   * Create a new public key.
+   *
+   * Pass either a [Uint8List] or [BigInteger] to use as a public key.
+   */
+  factory KeyPair.public(dynamic publicKey) {
+     publicKey = _castPublic(publicKey);
+     if(publicKey is! Uint8List)
+      throw new ArgumentError("Public key must be either of type BigInteger or Uint8List");
+    return new KeyPair._internal(null, publicKey);
+  }
+
+  static dynamic _castPublic(dynamic key) {
+    if(key is BigInteger)
+      return Utils.bigIntegerToBytes(key, 65);
+    return key;
+  }
+
+  /**
+   * Create a new private key.
+   *
+   * Pass either a [Uint8List] or [BigInteger] to use as a private key.
+   * Same parameter types accepted for the optional public key.
+   */
+  factory KeyPair.private(dynamic privateKey, {dynamic publicKey, bool compressed: true}) {
+    privateKey = _castPrivate(privateKey);
+    if(privateKey is! BigInteger)
+      throw new ArgumentError("Private key must be either of type BigInteger or Uint8List");
+    publicKey = _castPublic(publicKey);
+    if(publicKey != null && publicKey is! Uint8List)
+      throw new ArgumentError("Public key must be either of type BigInteger or Uint8List");
+    if(publicKey == null)
+      publicKey = publicKeyFromPrivateKey(privateKey, compressed);
+    return new KeyPair._internal(privateKey, publicKey);
+  }
+
+  static dynamic _castPrivate(dynamic key) {
+    if(key is Uint8List)
+      return new BigInteger.fromBytes(1, key);
+    return key;
+  }
+
+  /**
+   * Create a new encrypted private key
    */
   factory KeyPair.encrypted(EncryptedPrivateKey encryptedPrivateKey, Uint8List publicKey, KeyCrypter keyCrypter) {
     if(keyCrypter == null) 
@@ -71,28 +100,39 @@ class KeyPair {
   }
 
   /**
-   * Intended for internal use only.
-   */
-  KeyPair._internal(BigInteger this._priv, Uint8List this._pub);
-
-  /**
    * Generate a new random key pair.
-   * 
+   *
    * Due to lack of real built-in Entropy sources in Dart, entropy must be provided.
    * This will be changed as soon as good entropy is available.
    */
   factory KeyPair.generate([Uint8List entropy]) {
     // ensure that at least 50 bytes of entropy are available
     Random rand = new Random();
-    BigInteger d;
+    BigInteger pk;
     do {
       entropy = new Uint8List.fromList(new List<int>()
-          ..addAll((entropy != null) ? entropy : [])
-          ..addAll(new List.filled(50, 0).map((e) => rand.nextInt(255))));
-      entropy = Utils.singleDigest(entropy);
-      d = new BigInteger.fromBytes(1, entropy.sublist(0, _ECPARAMS.n.bitLength() ~/ 8));
-    } while (d == BigInteger.ZERO || d >= _ECPARAMS.n);
+        ..addAll((entropy != null) ? entropy : [])
+        ..addAll(new List.filled(50, 0).map((e) => rand.nextInt(255))));
+      entropy = Utils.doubleDigest(entropy);
+      pk = new BigInteger.fromBytes(1, entropy.sublist(0, EC_PARAMS.n.bitLength() ~/ 8));
+    } while (pk == BigInteger.ZERO || pk >= EC_PARAMS.n);
+    return new KeyPair._internal(pk, publicKeyFromPrivateKey(pk, true));
   }
+
+  /**
+   * Create the private key encoded in [asn1bytes].
+   *
+   * For more info, see the definition of the ASN.1 format for EC private keys
+   * in the OpenSSL source code in ec_asn1.c.
+   */
+  factory KeyPair.fromASN1(Uint8List asn1bytes) {
+    return new KeyPair.private(extractPrivateKeyFromASN1(asn1bytes));
+  }
+
+  /**
+   * Intended for internal use only.
+   */
+  KeyPair._internal(BigInteger this._priv, Uint8List this._pub);
 
   Uint8List get publicKey => new Uint8List.fromList(_pub);
 
@@ -120,22 +160,32 @@ class KeyPair {
    * 32-bytes private key
    */
   BigInteger get privateKey {
-    return _priv;
+    if(_priv == null)
+      return null;
+    BigInteger copy = new BigInteger();
+    _priv.copyTo(copy);
+    return copy;
   }
 
   /**
    * Returns a 32 byte array containing the private key.
    */
   Uint8List get privateKeyBytes {
+    if(_priv == null)
+      return null;
     return Utils.bigIntegerToBytes(_priv, 32);
   }
 
+  /**
+   * Returns true if this [KeyPair] contains an unencrypted private key.
+   *
+   * Use [isEncrypted] to check if it does have an encrypted key.
+   */
   bool get hasPrivKey => _priv != null;
 
   bool get isEncrypted => _encryptedPrivateKey != null && _keyCrypter != null;
 
-  EncryptedPrivateKey get encryptedPrivateKey => 
-      (_encryptedPrivateKey == null) ? null : _encryptedPrivateKey.clone();
+  EncryptedPrivateKey get encryptedPrivateKey => _encryptedPrivateKey;
 
   KeyCrypter get keyCrypter => _keyCrypter;
 
@@ -144,9 +194,10 @@ class KeyPair {
    * 
    * If [params] is ommited, the MAINNET params will be used.
    */
-  Address toAddress([NetworkParameters params = NetworkParameters.MAIN_NET]) => 
-      new Address(Utils.sha256hash160(_pub), params);
+  Address getAddress([NetworkParameters params = NetworkParameters.MAIN_NET]) =>
+      new Address(pubKeyHash, params);
 
+  @override
   String toString() {
     StringBuffer sb = new StringBuffer()
         ..write("pub:")
@@ -165,8 +216,10 @@ class KeyPair {
   }
 
   /**
-   * This method irreversibly deletes the private key from memory.
-   * The key will still be usable as a public key only.
+   * This method irreversibly deletes the private key from memory,
+   * also when it is an encrypted key.
+   *
+   * The [KeyPair] will still be usable as a public key only.
    */
   void clearPrivateKey() {
     _priv = null;
@@ -207,20 +260,21 @@ class KeyPair {
       if(keyCrypter == null) 
         throw new Exception("There is no KeyCrypter to decrypt the private key for signing.");
 
-      privateKeyForSigning = new BigInteger(1, keyCrypter.decrypt(_encryptedPrivateKey, aesKey));
+      privateKeyForSigning = new BigInteger.fromBytes(1,
+          keyCrypter.decrypt(_encryptedPrivateKey, aesKey));
       // Check encryption was correct.
       if(!Utils.equalLists(_pub, publicKeyFromPrivateKey(privateKeyForSigning, isCompressed))) 
         throw new Exception("Could not decrypt bytes");
     } else {
       // No decryption of private key required.
-      if(_priv == null)
-        throw new Exception("This ECKey does not have the private key necessary for signing.");
+      if(!hasPrivKey)
+        throw new Exception("This KeyPair does not have the private key necessary for signing.");
       else
         privateKeyForSigning = _priv;
     }
 
     ECDSASigner signer = _createSigner();
-    PrivateKeyParameter privKey = new PrivateKeyParameter(new ECPrivateKey(privateKeyForSigning, _ECPARAMS));
+    PrivateKeyParameter privKey = new PrivateKeyParameter(new ECPrivateKey(privateKeyForSigning, EC_PARAMS));
     signer.init(true, privKey);
     ECSignature ecSig = signer.generateSignature(input.bytes);
     final ECDSASignature signature = new ECDSASignature(ecSig.r, ecSig.s);
@@ -238,21 +292,13 @@ class KeyPair {
     return verifySignatureForPubkey(data, signature, _pub);
   }
 
-  static bool verifySignatureForPubkey(Uint8List data, ECDSASignature
-      signature, Uint8List pubkey) {
+  static bool verifySignatureForPubkey(Uint8List data, ECDSASignature signature, Uint8List pubkey) {
     ECDSASigner signer = _createSigner();
-    PublicKeyParameter params = new PublicKeyParameter(new ECPublicKey(
-        _ECPARAMS.curve.decodePoint(pubkey), _ECPARAMS));
+    PublicKeyParameter params = new PublicKeyParameter(
+        new ECPublicKey(EC_PARAMS.curve.decodePoint(pubkey), EC_PARAMS));
     signer.init(false, params);
     ECSignature ecSig = new ECSignature(signature.r, signature.s);
     return signer.verifySignature(data, ecSig);
-  }
-
-  /**
-   * Verifies the given ASN.1 encoded ECDSA signature against a hash using the public key.
-   */
-  bool verifyASN1(Uint8List data, Uint8List signature, Uint8List pub) {
-    return verify(data, new ECDSASignature.fromDER(signature));
   }
 
   /**
@@ -306,8 +352,8 @@ class KeyPair {
     //                  0x1D = second key with even y, 0x1E = second key with odd y
     if(header < 27 || header > 34) 
       throw new Exception("Header byte out of range: $header");
-    BigInteger r = new BigInteger.fromBytes(1, signatureEncoded.getRange(1, 33));
-    BigInteger s = new BigInteger.fromBytes(1, signatureEncoded.getRange(33, 65));
+    BigInteger r = new BigInteger.fromBytes(1, new List.from(signatureEncoded.getRange( 1, 33)));
+    BigInteger s = new BigInteger.fromBytes(1, new List.from(signatureEncoded.getRange(33, 65)));
     ECDSASignature sig = new ECDSASignature(r, s);
     Uint8List messageBytes = Utils.formatMessageForSigning(message);
     // Note that the C++ code doesn't actually seem to specify any character encoding. Presumably it's whatever
@@ -371,7 +417,7 @@ class KeyPair {
       throw new Exception("Message is null");
     // 1.0 For j from 0 to h   (h == recId here and the loop is outside this function)
     //   1.1 Let x = r + jn
-    BigInteger n = _ECPARAMS.n; // Curve order.
+    BigInteger n = EC_PARAMS.n; // Curve order.
     BigInteger i = new BigInteger(recId / 2);
     BigInteger x = sig.r + (i * n);
     //   1.2. Convert the integer x to an octet string X of length mlen using the conversion routine
@@ -381,7 +427,7 @@ class KeyPair {
     //        do another iteration of Step 1.
     //
     // More concisely, what these points mean is to use X as a compressed public key.
-    fp.ECCurve curve = _CURVE;
+    fp.ECCurve curve = EC_CURVE;
 
     BigInteger prime = curve.q;
     // Bouncy Castle is not consistent about the letter it uses for the prime.
@@ -411,14 +457,14 @@ class KeyPair {
     BigInteger rInv = sig.r.modInverse(n);
     BigInteger srInv = rInv.multiply(sig.s).mod(n);
     BigInteger eInvrInv = rInv.multiply(eInv).mod(n);
-    ECPoint p1 = _ECPARAMS.G * eInvrInv;
+    ECPoint p1 = EC_PARAMS.G * eInvrInv;
     ECPoint p2 = R * srInv;
     fp.ECPoint q = p2 + p1;
     if(compressed) {
       // We have to manually recompress the point as the compressed-ness gets lost when multiply() is used.
       q = new fp.ECPoint(curve, q.x, q.y, true);
     }
-    return new KeyPair(null, q.getEncoded());
+    return new KeyPair.public(q.getEncoded());
   }
 
 
@@ -432,9 +478,15 @@ class KeyPair {
    * This method returns a new encrypted key and leaves the original unchanged.
    * To be secure you need to clear the original, unencrypted private key bytes.
    */
-  KeyPair encrypt(KeyCrypter keyCrypter, KeyParameter aesKey) {
-    EncryptedPrivateKey encryptedPrivateKey = keyCrypter.encrypt(privateKeyBytes, aesKey);
+  KeyPair encrypt(KeyCrypter keyCrypter, KeyParameter encryptionKey) {
+    if(isEncrypted)
+      throw new Exception("Key already encrypted");
+    EncryptedPrivateKey encryptedPrivateKey = keyCrypter.encrypt(privateKeyBytes, encryptionKey);
     return new KeyPair.encrypted(encryptedPrivateKey, _pub, keyCrypter);
+  }
+
+  KeyPair encryptWithPassphrase(KeyCrypter keyCrypter, String passphrase) {
+    return encrypt(keyCrypter, keyCrypter.deriveKey(passphrase));
   }
 
   /**
@@ -442,16 +494,22 @@ class KeyPair {
    * has some chance of throwing KeyCrypterException due to the corrupted padding that will result, but it can also
    * just yield a garbage key.
    */
-  KeyPair decrypt(KeyCrypter keyCrypter, KeyParameter aesKey) {
+  KeyPair decrypt(KeyCrypter keyCrypter, KeyParameter decryptionKey) {
+    if(!isEncrypted)
+      throw new Exception("Key is not encrypted");
     // Check that the keyCrypter matches the one used to encrypt the keys, if set.
     if(this.keyCrypter != null && this.keyCrypter != keyCrypter) {
       throw new Exception("The keyCrypter being used to decrypt the key is different to the one that was used to encrypt it");
     }
-    Uint8List unencryptedPrivateKey = keyCrypter.decrypt(encryptedPrivateKey, aesKey);
-    KeyPair key = new KeyPair(new BigInteger(1, unencryptedPrivateKey), null, isCompressed);
-    if(!Utils.equalLists(key._pub, _pub)) 
-      throw new Exception("Provided AES key is wrong");
+    Uint8List unencryptedPrivateKey = keyCrypter.decrypt(encryptedPrivateKey, decryptionKey);
+    KeyPair key = new KeyPair.private(new BigInteger.fromBytes(1, unencryptedPrivateKey), compressed: isCompressed);
+    if(!Utils.equalLists(key._pub, _pub))
+      throw new ArgumentError("Provided AES key is wrong");
     return key;
+  }
+
+  KeyPair decryptWithPassphrase(KeyCrypter keyCrypter, String passphrase) {
+    return decrypt(keyCrypter, keyCrypter.deriveKey(passphrase));
   }
 
   /**
@@ -463,24 +521,17 @@ class KeyPair {
    * by the private key) you can use this method to check when you *encrypt* a wallet that it can definitely be decrypted successfully.
    * See {@link Wallet#encrypt(KeyCrypter keyCrypter, KeyParameter aesKey)} for example usage.
    */
-  static bool encryptionIsReversible(
-                                     KeyPair originalKey, KeyPair encryptedKey, KeyCrypter keyCrypter, KeyParameter aesKey) {
-    KeyPair rebornUnencryptedKey = encryptedKey.decrypt(keyCrypter, aesKey);
-    if(rebornUnencryptedKey == null) 
+  static bool encryptionIsReversible(KeyPair originalKey, KeyPair encryptedKey,
+                                     KeyCrypter keyCrypter, KeyParameter aesKey) {
+    if(originalKey == null || ! originalKey.hasPrivKey)
+      throw new ArgumentError("The original key provided is not a private key");
+    try {
+      KeyPair rebornUnencryptedKey = encryptedKey.decrypt(keyCrypter, aesKey);
+      if (rebornUnencryptedKey == null || rebornUnencryptedKey.privateKeyBytes == null)return false;
+      return Utils.equalLists(originalKey.privateKeyBytes, rebornUnencryptedKey.privateKeyBytes);
+    } on KeyCrypterException {
       return false;
-    Uint8List originalPrivateKeyBytes = originalKey.privateKeyBytes;
-    if(originalPrivateKeyBytes != null) {
-      if(rebornUnencryptedKey.privateKeyBytes == null) 
-        return false;
-      if(originalPrivateKeyBytes.length != rebornUnencryptedKey.privateKeyBytes.length) 
-        return false;
-      for (int i = 0; i < originalPrivateKeyBytes.length; i++) {
-        if(originalPrivateKeyBytes[i] != rebornUnencryptedKey.privateKeyBytes[i])
-          return false;
-      }
     }
-    // Key can successfully be decrypted.
-    return true;
   }
 
 
@@ -492,9 +543,9 @@ class KeyPair {
    * Retrieve the public key from the given private key.
    * Use `new BigInteger.fromBytes(signum, magnitude)` to convert a byte array into a BigInteger.
    */
-  static Uint8List publicKeyFromPrivateKey(BigInteger privateKey, 
-                                           [bool compressed = true]) {
-    ECPoint point = _ECPARAMS.G * privateKey;
+  static Uint8List publicKeyFromPrivateKey(
+      BigInteger privateKey, [bool compressed = false]) {
+    ECPoint point = EC_PARAMS.G * privateKey;
     return point.getEncoded(compressed);
   }
 
@@ -523,7 +574,7 @@ class KeyPair {
   /** Decompress a compressed public key (x co-ord and low-bit of y-coord). */
   static ECPoint _decompressKey(BigInteger xBN, bool yBit) {
     // This code is adapted from Bouncy Castle ECCurve.Fp.decodePoint(), but it wasn't easily re-used.
-    fp.ECCurve curve = _CURVE;
+    fp.ECCurve curve = EC_CURVE;
     ECFieldElement x = new fp.ECFieldElement(curve.q, xBN);
     ECFieldElement alpha = x * (x.square() + curve.a) + curve.b;
     ECFieldElement beta = alpha.sqrt();
@@ -539,7 +590,6 @@ class KeyPair {
     }
   }
 
-  //TODO ASN1 private key encoding
   static BigInteger extractPrivateKeyFromASN1(Uint8List asn1privkey) {
     // To understand this code, see the definition of the ASN.1 format for EC private keys in the OpenSSL source
     // code in ec_asn1.c:
@@ -551,76 +601,63 @@ class KeyPair {
     //   ASN1_EXP_OPT(EC_PRIVATEKEY, publicKey, ASN1_BIT_STRING, 1)
     // } ASN1_SEQUENCE_END(EC_PRIVATEKEY)
     //
-    /*try {
-      ASN1InputStream decoder = new ASN1InputStream(asn1privkey);
-      DLSequence seq = (DLSequence) decoder.readObject();
-      checkArgument(seq.size() == 4, "Input does not appear to be an ASN.1 OpenSSL EC private key");
-      checkArgument(((DERInteger) seq.getObjectAt(0)).getValue().equals(BigInteger.ONE),
-      "Input is of wrong version");
-      Object obj = seq.getObjectAt(1);
-      byte[] bits = ((ASN1OctetString) obj).getOctets();
-      decoder.close();
-      return new BigInteger(1, bits);
-    } catch (IOException e) {
-      throw new RuntimeException(e);  // Cannot happen, reading from memory stream.
-    }*/
+    ASN1Parser parser = new ASN1Parser(asn1privkey);
+    ASN1Sequence seq = parser.nextObject() as ASN1Sequence;
+    if(seq is! ASN1Sequence || seq.elements.length != 4)
+      throw new ArgumentError("Priv key was not encoded as a Sequence with 4 elements.");
+    BigInteger version = (seq.elements[0] as ASN1Integer).valueAsBigInteger;
+    if(version != BigInteger.ONE)
+      throw new ArgumentError("The private is encoded using a different encoding version.");
+    Uint8List bits = (seq.elements[1] as ASN1OctetString).octets;
+    return new BigInteger.fromBytes(1, bits);
+  }
+
+  /**
+   * Not complete: the curve is not yet included and replaced by a 0 integer
+   */
+  //TODO complete when cipher supports encoding curves to ASN1 primitives
+  Uint8List toASN1() {
+    if(!hasPrivKey)
+      throw new Exception("KeyPair has no private key!");
+    ASN1Sequence seq = new ASN1Sequence()
+      ..add(new ASN1Integer(1))
+      ..add(new ASN1OctetString(privateKeyBytes))
+      ..add(new ASN1Integer(0)) // dummy
+      ..add(new ASN1BitString(_pub, tag: 1));
+    return seq.encodedBytes;
   }
 }
 
-
 class ECDSASignature {
-  BigInteger r, s;
+  BigInteger r;
+  BigInteger s;
 
-  ECDSASignature(this.r, this.s);
+  ECDSASignature(BigInteger this.r, BigInteger this.s);
 
   void ensureCanonical() {
-    if(s > KeyPair._HALF_CURVE_ORDER) {
+    if(s > KeyPair.HALF_CURVE_ORDER) {
       // The order of the curve is the number of valid points that exist on that curve. If S is in the upper
       // half of the number of valid points, then bring it back to the lower half. Otherwise, imagine that
       //    N = 10
       //    s = 8, so (-8 % 10 == 2) thus both (r, 8) and (r, 2) are valid solutions.
       //    10 - 8 == 2, giving us always the latter solution, which is canonical.
-      s = KeyPair._ECPARAMS.n - s;
+      s = KeyPair.EC_PARAMS.n - s;
     }
   }
 
-  //TODO whenever DER encoding is supported for Dart, change this to a less hacky method
-
   Uint8List encodeToDER() {
-    // lengths are encoded using a single byte because lengths are never larger than 127
-    List<int> rBytes = r.toByteArray();
-    List<int> sBytes = s.toByteArray();
-    return new Uint8List.fromList(new List<int>()
-        ..add(0x30) // start DER sequence
-        ..add(4 + rBytes.length + sBytes.length) // length of all that follows
-        ..add(0x02) // start DER integer
-        ..add(rBytes.length) // length of integer r
-        ..addAll(rBytes)
-        ..add(0x02) // start DER integer
-        ..add(sBytes.length) // length of integer s
-        ..addAll(sBytes));
+    ASN1Sequence seq = new ASN1Sequence();
+    seq.add(new ASN1Integer(r));
+    seq.add(new ASN1Integer(s));
+    return seq.encodedBytes;
   }
 
   factory ECDSASignature.fromDER(Uint8List bytes) {
-    int offset = 0;
-    if(bytes[offset++] != 0x30) 
-      throw new FormatException("Invalid DER encoding");
-    if(bytes[offset++] != bytes.length - 2) 
-      throw new FormatException("Invalid DER encoding");
-    if(bytes[offset++] != 0x02) 
-      throw new FormatException("Invalid DER encoding");
-    int rBytesLength = bytes[offset++];
-    Uint8List rBytes = bytes.sublist(offset, offset + rBytesLength);
-    offset += rBytesLength;
-    if(bytes[offset++] != 0x02) 
-      throw new FormatException("Invalid DER encoding");
-    int sBytesLength = bytes[offset++];
-    Uint8List sBytes = bytes.sublist(offset, offset + sBytesLength);
-    offset += sBytesLength;
-    if(offset != bytes.length) 
-      throw new FormatException("Invalid DER encoding");
-    return new ECDSASignature(new BigInteger.fromBytes(1, rBytes),
-        new BigInteger.fromBytes(1, sBytes));
+    ASN1Parser parser = new ASN1Parser(bytes);
+    ASN1Sequence seq = parser.nextObject() as ASN1Sequence;
+    BigInteger r = (seq.elements[0] as ASN1Integer).valueAsPositiveBigInteger;
+    BigInteger s = (seq.elements[1] as ASN1Integer).valueAsPositiveBigInteger;
+    return new ECDSASignature(r, s);
   }
 }
 

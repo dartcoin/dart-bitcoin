@@ -4,28 +4,48 @@ part of dartcoin.core;
 class EncryptedPrivateKey {
   
   // the actual key
-  Uint8List encryptedKey;
+  Uint8List _encryptedKey;
   // the initialisation vector
-  Uint8List iv;
+  Uint8List _iv;
 
-  EncryptedPrivateKey(this.encryptedKey, this.iv);
+  EncryptedPrivateKey(Uint8List encryptedKey, Uint8List iv) {
+    _encryptedKey = encryptedKey;
+    _iv = iv;
+  }
 
-  EncryptedPrivateKey.copy(EncryptedPrivateKey key): this(key.iv, key.encryptedKey);
+  Uint8List get encryptedKey {
+    if(_encryptedKey == null) return null;
+    return new Uint8List.fromList(_encryptedKey);
+  }
 
-  EncryptedPrivateKey clone() => new EncryptedPrivateKey.copy(this);
+  Uint8List get iv {
+    if(_iv == null) return null;
+    return new Uint8List.fromList(_iv);
+  }
 
+  /**
+   * Clone this encrypted private key.
+   */
+  EncryptedPrivateKey clone() => new EncryptedPrivateKey(this._encryptedKey, this._iv);
+
+  @override
   operator ==(EncryptedPrivateKey other) {
     if(other is! EncryptedPrivateKey) return false;
     if(identical(this, other)) return true;
-    return iv == other.iv && encryptedKey == other.encryptedKey;
+    return _iv == other._iv && _encryptedKey == other._encryptedKey;
   }
-  
-  int get hashCode => Utils.listHashCode(encryptedKey) ^ Utils.listHashCode(iv);
 
-  String toString() => "EncryptedPrivateKey [initialisationVector=$iv, encryptedPrivateBytes=$encryptedKey]";
+  @override
+  int get hashCode => Utils.listHashCode(_encryptedKey) ^ Utils.listHashCode(_iv);
 
+  @override
+  String toString() => "EncryptedPrivateKey [initialisationVector=$_iv, encryptedPrivateBytes=$_encryptedKey]";
+
+  /**
+   * Clear this private key.
+   */
   void clear() {
-    iv = null;
-    encryptedKey = null;
+    _iv = null;
+    _encryptedKey = null;
   }
 }

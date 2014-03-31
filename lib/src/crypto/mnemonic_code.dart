@@ -45,7 +45,6 @@ class MnemonicCode {
   /**
    * Convert mnemonic word list to seed.
    */
-  //TODO find PBKDF2SHA512 implementation for Dart
   static Uint8List toSeed(List<String> words, String passphrase) {
     
     // To create binary seed from mnemonic, we use PBKDF2 function

@@ -21,7 +21,7 @@ class TransactionSignature extends ECDSASignature with BitcoinSerialization {
       _setSigHashFlags(mode == null ? mode : SigHash.ALL, 
           anyoneCanPay == null ? anyoneCanPay : false);
   }
-  
+
   // no lazy deserialization
   factory TransactionSignature.deserialize(Uint8List bytes, {int length, bool requireCanonical: false, NetworkParameters params}) {
     if(requireCanonical && !isEncodingCanonical(bytes)) throw new SerializationException("Signature is not canonical");
@@ -35,7 +35,7 @@ class TransactionSignature extends ECDSASignature with BitcoinSerialization {
   }
   
   factory TransactionSignature.dummy() {
-    ECDSASignature sig = new ECDSASignature(KeyPair._HALF_CURVE_ORDER, KeyPair._HALF_CURVE_ORDER);
+    ECDSASignature sig = new ECDSASignature(KeyPair.HALF_CURVE_ORDER, KeyPair.HALF_CURVE_ORDER);
     return new TransactionSignature(sig);
   }
   

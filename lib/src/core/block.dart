@@ -396,7 +396,7 @@ class Block extends Object with BitcoinSerialization {
     // an invalid block, but if we didn't validate this then an untrusted man-in-the-middle could obtain the next
     // valid block from the network and simply replace the transactions in it with their own fictional
     // transactions that reference spent or non-existant inputs.
-    if(_txs.isEmpty) //TODO I believe this will throw a nullpointer
+    if(_txs == null || _txs.isEmpty)
       throw new VerificationException("Block had no transactions");
     _needInstance();
     if(this.serializationLength > MAX_BLOCK_SIZE)

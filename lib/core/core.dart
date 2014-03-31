@@ -35,6 +35,9 @@ import "package:cipher/key_derivators/pbkdf2.dart";
 import "package:cipher/digests/sha512.dart";
 import "package:cipher/params/key_derivators/pbkdf2_parameters.dart";
 
+// tmp
+import "package:asn1lib/asn1lib.dart";
+
 
 // utils
 part "../src/core/utils.dart";
@@ -55,6 +58,7 @@ part "../src/core/keypair.dart";
 part "../src/core/transaction_signature.dart";
 // private key security
 part "../src/crypto/key_crypter.dart";
+part "../src/crypto/key_crypter_exception.dart";
 part "../src/crypto/key_crypter_scrypt.dart";
 part "../src/crypto/encrypted_private_key.dart";
 

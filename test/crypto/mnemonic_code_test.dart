@@ -147,9 +147,9 @@ void _testVectors() {
     Uint8List seed = MnemonicCode.toSeed(code, "TREZOR");
     Uint8List entropy = _mc.toEntropy(_split(vecCode));
 
-    expect(Utils.bytesToHex(entropy), equals(vecData));
-    expect(code.join(" "), equals(vecCode));
-    expect(Utils.bytesToHex(seed), equals(vecSeed));
+    expect(Utils.bytesToHex(entropy), equals(vecData), reason: "incorrect entropy");
+    expect(code.join(" "), equals(vecCode), reason: "incorrect mnemonic");
+    expect(Utils.bytesToHex(seed), equals(vecSeed), reason: "incorrect seed");
   }
 }
 

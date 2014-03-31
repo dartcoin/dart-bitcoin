@@ -38,7 +38,7 @@ class TransactionInput extends Object with BitcoinSerialization {
    * It is specified by its [TransactionOutPoint] format, but can carry any [Script] as [scriptSig].
    */
   TransactionInput.coinbase([Script scriptSig]) {
-    _outpoint = new TransactionOutPoint(txid: Sha256Hash.ZERO_HASH, index: 0xFFFFFFFF); //TODO verify
+    _outpoint = new TransactionOutPoint(txid: Sha256Hash.ZERO_HASH, index: -1);
     _scriptSig = (scriptSig != null) ? scriptSig : Script.EMPTY_SCRIPT;
   }
   
@@ -106,7 +106,7 @@ class TransactionInput extends Object with BitcoinSerialization {
     _needInstance();
     return _outpoint.hashCode ^ _scriptSig.hashCode ^ _sequence.hashCode;
   }
-  
+
   Uint8List _serialize() {
     Uint8List encodedScript = _scriptSig.encode();
     return new Uint8List.fromList(new List()
@@ -115,7 +115,7 @@ class TransactionInput extends Object with BitcoinSerialization {
       ..addAll(encodedScript)
       ..addAll(Utils.uintToBytesLE(_sequence, 4)));
   }
-  
+
   int _deserialize(Uint8List bytes, bool lazy, bool retain) {
     int offset = 0;
     _outpoint = new TransactionOutPoint.deserialize(bytes, lazy: lazy, retain: retain);

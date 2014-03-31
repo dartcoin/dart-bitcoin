@@ -21,69 +21,95 @@ class KeyCrypterScrypt implements KeyCrypter {
   static const int SCRYPT_r = 8;
   static const int SCRYPT_p = 8;
   
-  ScryptParameters _scryptParams; 
-  
-  KeyCrypterScrypt([ScryptParameters scryptParameters]) {
-    if(scryptParameters == null) {
-      Uint8List salt = new Uint8List(SALT_LENGTH);
-      //TODO random bytes in salt
-      scryptParameters = scryptParamsWithSalt(salt);
-    }
+  ScryptParameters _scryptParams;
+
+  /**
+   * Create a new KeyCrypter.
+   *
+   * If none are given, the BIP0038 defaults will be used.
+   */
+  KeyCrypterScrypt({Uint8List salt, int iterations}) {
+    if(salt == null)
+      salt = _randomBytes(SALT_LENGTH);
+    if(iterations == null)
+      iterations = SCRYPT_N;
+    _scryptParams = generateScryptParams(salt, iterations);
+  }
+
+  KeyCrypterScrypt.withParams(ScryptParameters scryptParameters) {
     _scryptParams = scryptParameters;
+  }
+
+  //TODO temp, need true random bytes in salt
+  static Uint8List _randomBytes(int n) {
+    Random r = new Random();
+    return new Uint8List.fromList(new List.generate(n, (int i) => r.nextInt(255)));
   }
   
   /**
    * The salt must be of length [SALT_LENGTH];
    */
-  static ScryptParameters scryptParamsWithSalt(Uint8List salt) {
+  static ScryptParameters generateScryptParams(Uint8List salt, [int iterations = SCRYPT_N]) {
     if(salt.length != SALT_LENGTH)
       throw new ArgumentError("Incorrect salt length: ${salt.length} instead of $SALT_LENGTH");
-    return new ScryptParameters(SCRYPT_N, SCRYPT_r, SCRYPT_p, KEY_LENGTH, salt);
+    return new ScryptParameters(iterations, SCRYPT_r, SCRYPT_p, KEY_LENGTH, salt);
   }
   
   KeyParameter deriveKey(String passphrase) {
-    Uint8List passBytes = new Uint8List.fromList(new Utf8Encoder().convert(passphrase));
-    Uint8List keyBytes = new Uint8List(KEY_LENGTH);
-    Scrypt scrypt = new Scrypt()
-      ..init(_scryptParams)
-      ..deriveKey(passBytes, 0, keyBytes, 0);
-    return new KeyParameter(keyBytes);
+    Uint8List passBytes = Utils.stringToUTF8(passphrase);
+    Uint8List keyBytes = new Uint8List(_scryptParams.desiredKeyLength);
+    try {
+      Scrypt scrypt = new Scrypt()
+        ..init(_scryptParams)
+        ..deriveKey(passBytes, 0, keyBytes, 0);
+      return new KeyParameter(keyBytes);
+    } catch(e) {
+      throw new KeyCrypterException("Could not derive key from passphrase and salt.", e);
+    }
   }
 
   EncryptedPrivateKey encrypt(Uint8List privKey, KeyParameter aesKey) {
     if(privKey == null || aesKey == null) throw new ArgumentError();
-    Uint8List iv = new Uint8List(BLOCK_LENGTH);
-    // TODO fill iv with random bytes from securerandom
-    ParametersWithIV keyWithIv = new ParametersWithIV(aesKey, iv);
-    PaddedBlockCipher cipher = new PaddedBlockCipherImpl(new PKCS7Padding(), new CBCBlockCipher(new AESFastEngine()));
-    cipher.init(true, new PaddedBlockCipherParameters(keyWithIv, null));
-    Uint8List encryptedKey = cipher.process(privKey);
-    return new EncryptedPrivateKey(encryptedKey, iv);
+    try {
+      Uint8List iv = _randomBytes(BLOCK_LENGTH);
+      BlockCipher cipher = _createBlockCipher(true, aesKey, iv);
+      Uint8List encryptedKey = cipher.process(privKey);
+      return new EncryptedPrivateKey(encryptedKey, iv);
+    } catch(e) {
+      throw new KeyCrypterException("Could not encrypt key.", e);
+    }
   }
   
   Uint8List decrypt(EncryptedPrivateKey encryptedPrivKey, KeyParameter aesKey) {
     if(encryptedPrivKey == null || aesKey == null) throw new ArgumentError();
-    ParametersWithIV keyWithIv = new ParametersWithIV(aesKey, encryptedPrivKey.iv);
-    PaddedBlockCipher cipher = new PaddedBlockCipherImpl(new PKCS7Padding(), new CBCBlockCipher(new AESFastEngine()));
-    cipher.init(false, new PaddedBlockCipherParameters(keyWithIv, null));
-    return cipher.process(encryptedPrivKey.encryptedKey);
+    try {
+      BlockCipher cipher = _createBlockCipher(false, aesKey, encryptedPrivKey.iv);
+      return cipher.process(encryptedPrivKey.encryptedKey);
+    } catch (e) {
+      throw new KeyCrypterException("Could not decrypt key.", e);
+    }
   }
-  
+
+  // create a new blockcipher used for encrypting and decryptingprivate keys
+  BlockCipher _createBlockCipher(bool forEncryption, KeyParameter aesKey, Uint8List iv) {
+    ParametersWithIV keyWithIv = new ParametersWithIV(aesKey, iv);
+    PaddedBlockCipher cipher = new PaddedBlockCipherImpl(
+        new PKCS7Padding(), new CBCBlockCipher(new AESFastEngine()));
+    cipher.init(forEncryption, new PaddedBlockCipherParameters(keyWithIv, null));
+    return cipher;
+  }
+
+  @override
   String toString() => "Scrypt/AES";
-  
-  /* TODO cipher does not have a ScryptParams.hashCode
-   *  also, Dart lacks Uint8List.hashCode and Uint8List.==. Hard to implement
-   *  https://code.google.com/p/dart/issues/detail?id=16335&thanks=16335&ts=1390849795
-   *  ==> dart?collections/equality
-   */
+
+  @override
   operator ==(KeyCrypterScrypt other) {
     if(other is! KeyCrypterScrypt) return false;
     if(identical(this, other)) return true;
-    // return _scryptParams == other._scryptParams;
+    return _scryptParams == other._scryptParams;
   }
-  
-  int get hashCode {
-    // return _scryptParams.hashCode;
-  }
+
+  @override
+  int get hashCode => _scryptParams.hashCode;
   
 }

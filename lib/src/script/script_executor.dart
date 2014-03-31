@@ -562,7 +562,6 @@ class ScriptExecutor {
 
     connectedScript = removeAllInstancesOf(connectedScript, Script.encodeData(sigBytes));
 
-    // TODO (from bitcoinj): Use int for indexes everywhere, we can't have that many inputs/outputs
     bool sigValid = false;
     
     TransactionSignature sig = new TransactionSignature.deserialize(sigBytes, length: sigBytes.length, requireCanonical: false);

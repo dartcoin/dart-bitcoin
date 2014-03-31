@@ -31,9 +31,9 @@ class PayToPubKeyHashInputScript extends Script {
   
   TransactionSignature get signature => new TransactionSignature.deserialize(chunks[0].data, length: chunks[0].data.length, requireCanonical: false);
   
-  KeyPair get pubKey => new KeyPair(chunks[1].data);
+  KeyPair get pubKey => new KeyPair.public(chunks[1].data);
   
-  Address getAddress([NetworkParameters params]) => new KeyPair(pubKey).toAddress(params);
+  Address getAddress([NetworkParameters params]) => pubKey.getAddress(params);
   
   /**
    * Script must contain two chunks, each of which are data chunks.
