@@ -10,10 +10,10 @@ class KeyPair {
   static final _ec_n = new BigInteger("fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141", 16);
   static final _ec_h = new BigInteger("1", 16);
 
-  static final ECCurve EC_CURVE = new fp.ECCurve(_ec_q, _ec_a, _ec_b);
+  static final ECCurve _EC_CURVE = new fp.ECCurve(_ec_q, _ec_a, _ec_b);
 
   static final ECDomainParameters EC_PARAMS = new ECDomainParametersImpl(
-      "secp256k1", EC_CURVE, EC_CURVE.decodePoint(_ec_g.toByteArray()), _ec_n, _ec_h, null);
+      "secp256k1", _EC_CURVE, _EC_CURVE.decodePoint(_ec_g.toByteArray()), _ec_n, _ec_h, null);
 
   static final BigInteger HALF_CURVE_ORDER = _ec_n.shiftRight(1);
 
@@ -273,9 +273,7 @@ class KeyPair {
         privateKeyForSigning = _priv;
     }
 
-    ECDSASigner signer = _createSigner();
-    PrivateKeyParameter privKey = new PrivateKeyParameter(new ECPrivateKey(privateKeyForSigning, EC_PARAMS));
-    signer.init(true, privKey);
+    ECDSASigner signer = _createSigner(new ECPrivateKey(privateKeyForSigning, EC_PARAMS));
     ECSignature ecSig = signer.generateSignature(input.bytes);
     final ECDSASignature signature = new ECDSASignature(ecSig.r, ecSig.s);
     signature.ensureCanonical();
@@ -293,10 +291,7 @@ class KeyPair {
   }
 
   static bool verifySignatureForPubkey(Uint8List data, ECDSASignature signature, Uint8List pubkey) {
-    ECDSASigner signer = _createSigner();
-    PublicKeyParameter params = new PublicKeyParameter(
-        new ECPublicKey(EC_PARAMS.curve.decodePoint(pubkey), EC_PARAMS));
-    signer.init(false, params);
+    ECDSASigner signer = _createSigner(new ECPublicKey(EC_PARAMS.curve.decodePoint(pubkey), EC_PARAMS));
     ECSignature ecSig = new ECSignature(signature.r, signature.s);
     return signer.verifySignature(data, ecSig);
   }
@@ -307,7 +302,7 @@ class KeyPair {
    */
   String signMessage(String message, [KeyParameter aesKey]) {
     if(_priv == null) 
-      throw new Exception("This ECKey does not have the private key necessary for signing.");
+      throw new StateError("This ECKey does not have the private key necessary for signing.");
     Uint8List data = Utils.formatMessageForSigning(message);
     Sha256Hash hash = new Sha256Hash.doubleDigest(data);
     ECDSASignature sig = sign(hash, aesKey);
@@ -380,10 +375,18 @@ class KeyPair {
     return Utils.equalLists(key._pub, _pub);
   }
 
-  static ECDSASigner _createSigner() {
+  static ECDSASigner _createSigner(dynamic key) {
+    var params;
+    if(key is ECPublicKey)
+      params = new PublicKeyParameter(key);
+    else if(key is ECPrivateKey)
+      params = new PrivateKeyParameter(key);
+    else throw new ArgumentError("Something went wrong");
+
     Mac signerMac = new HMac(new SHA256Digest(), 64);
     // = new Mac("SHA-256/HMAC")
-    return new ECDSASigner(null, signerMac);
+    return new ECDSASigner(null, signerMac)
+      ..init(params is PrivateKeyParameter, params);
   }
 
 
@@ -427,7 +430,7 @@ class KeyPair {
     //        do another iteration of Step 1.
     //
     // More concisely, what these points mean is to use X as a compressed public key.
-    fp.ECCurve curve = EC_CURVE;
+    fp.ECCurve curve = _EC_CURVE;
 
     BigInteger prime = curve.q;
     // Bouncy Castle is not consistent about the letter it uses for the prime.
@@ -574,7 +577,7 @@ class KeyPair {
   /** Decompress a compressed public key (x co-ord and low-bit of y-coord). */
   static ECPoint _decompressKey(BigInteger xBN, bool yBit) {
     // This code is adapted from Bouncy Castle ECCurve.Fp.decodePoint(), but it wasn't easily re-used.
-    fp.ECCurve curve = EC_CURVE;
+    fp.ECCurve curve = _EC_CURVE;
     ECFieldElement x = new fp.ECFieldElement(curve.q, xBN);
     ECFieldElement alpha = x * (x.square() + curve.a) + curve.b;
     ECFieldElement beta = alpha.sqrt();
