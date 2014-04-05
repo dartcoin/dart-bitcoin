@@ -25,7 +25,7 @@ class ScriptBuilder {
     if(encoded)
       _data.add(opcode & 0xff);
     else
-      _data.add(new ScriptChunk.fromOpCode(opcode & 0xff));
+      _data.add(new ScriptChunk.opCode(opcode & 0xff));
     return this;
   }
   
@@ -33,7 +33,7 @@ class ScriptBuilder {
     if(encoded)
       _data.addAll(Script.encodeData(data));
     else
-      _data.add(new ScriptChunk(false, data));
+      _data.add(new ScriptChunk.data(data));
     return this;
   }
   
@@ -41,7 +41,7 @@ class ScriptBuilder {
     if(encoded)
       _data.add(Script.encodeToOpN(num));
     else
-      _data.add(new ScriptChunk.fromOpCode(Script.encodeToOpN(num)));
+      _data.add(new ScriptChunk.opCode(Script.encodeToOpN(num)));
     return this;
   }
   

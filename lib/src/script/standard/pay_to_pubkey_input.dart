@@ -26,12 +26,12 @@ class PayToPubKeyInputScript extends Script {
   }
 
   TransactionSignature get signature => 
-      new TransactionSignature.deserialize(chunks[0].data);
+      new TransactionSignature.deserialize(chunks[0].bytes);
 
   /**
    * Script must contain only one chunk, the signature data chunk.
    */
   static bool matchesType(Script script) {
-    return script.chunks.length == 1 && script.chunks[0].data.length > 1;
+    return script.chunks.length == 1 && script.chunks[0].bytes.length > 1;
   }
 }

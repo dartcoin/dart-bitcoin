@@ -1,6 +1,33 @@
 part of dartcoin.core;
 
 class Utils {
+
+  /**
+   * Currently unused, but can be used to replace all occurences of
+   * - Uint8List.sublist()
+   * - new Uint8List.fromList()
+   *
+   * These methods copy over while that may not always be necessary.
+   *
+   * TODO consider using this method
+   */
+  Uint8List toBytes(List<int> bytes, [int start = 0, int end = -1]) {
+    if(bytes == null)
+      return null;
+    if(end == -1)
+      end = bytes.length;
+    if(bytes is Uint8List) {
+      return new Uint8List.view(bytes.buffer, start, end - start);
+    }
+    if(start == 0 && end == bytes.length) {
+      return new Uint8List.fromList(bytes);
+    }
+    Uint8List result = new Uint8List(end - start);
+    for(int i = 0 ; i < end - start ; i++) {
+      result[i] = bytes[start + i];
+    }
+    return result;
+  }
   
   /**
    * Calculates the SHA-256 hash of the input data.
@@ -82,26 +109,36 @@ class Utils {
   /**
    * Converts a hex string to a list of bytes.
    */
-  static String _BYTE_ALPHABET = "0123456789ABCDEF";
+  static const String _BYTE_ALPHABET = "0123456789ABCDEF";
+  static final RegExp HEX_REGEXP = new RegExp(r'/^[0-9A-Fa-f]+$/');
+
+//  static bool isHexString(String maybeHexString) => HEX_REGEXP.hasMatch(maybeHexString);
+  static bool isHexString(String hex) {
+    hex = hex.replaceAll(" ", "");
+    hex = hex.toUpperCase();
+    for(int i = 0 ; i < hex.length ; i++) {
+      if(!_BYTE_ALPHABET.contains(hex[i]))
+        return false;
+    }
+    return true;
+  }
+
   static Uint8List hexToBytes(String hex) {
     hex = hex.replaceAll(" ", "");
     hex = hex.toUpperCase();
-    if(hex.length % 2 != 0) {
+    if(hex.length % 2 != 0)
       hex = "0" + hex;
+    Uint8List result = new Uint8List(hex.length ~/ 2);
+    for(int i = 0 ; i < result.length ; i++) {
+      int value = (_BYTE_ALPHABET.indexOf(hex[i*2]) << 4) //= byte[0] * 16
+          + _BYTE_ALPHABET.indexOf(hex[i*2+1]);
+      result[i] = value;
     }
-    List<int> result = new List();
-    while(hex.length > 0) {
-      String byte = hex.substring(0, 2);
-      hex = hex.substring(2, hex.length);
-      
-      int value = (_BYTE_ALPHABET.indexOf(byte[0]) << 4) //= byte[0] * 16 
-          + _BYTE_ALPHABET.indexOf(byte[1]);
-      result.add(value);
-    }
-    return new Uint8List.fromList(result);
+    return result;
   }
   
   static Uint8List reverseBytes(Uint8List bytes) {
+    if(bytes == null) return null;
     int length = bytes.length;
     Uint8List result = new Uint8List(length);
     for(int i = 0 ; i < length ; i++)
@@ -198,7 +235,7 @@ class Utils {
       val = val >> 8;
       result.insert(0, mod);
     }
-    if(size >= 0 && result.length > size) throw new Exception("Value doesn't fit in given size.");
+    if(size >= 0 && result.length > size) throw new ArgumentError("Value doesn't fit in given size.");
     while(result.length < size) result.insert(0, 0);
     return new Uint8List.fromList(result);
   }
@@ -306,17 +343,18 @@ class Utils {
    */
   static BigInteger decodeMPI(Uint8List mpi, bool hasLength) {
     Uint8List buf;
-    if (hasLength) {
+    if(hasLength) {
       int length = bytesToUintBE(mpi, 4);
+      if(mpi.length != 4 + length)
+        throw new FormatException("Malformed MPI encoded integer");
       buf = mpi.sublist(4);
-    }
-    else {
+    } else {
       buf = mpi;
     }
-    if (buf.length == 0)
+    if(buf.length == 0)
       return BigInteger.ZERO;
     bool isNegative = (buf[0] & 0x80) == 0x80;
-    if (isNegative)
+    if(isNegative)
       buf[0] &= 0x7f;
     BigInteger result = new BigInteger(buf);
     return isNegative ? result.negate_op() : result;
@@ -329,7 +367,7 @@ class Utils {
    * @param includeLength indicates whether the 4 byte length field should be included
    */
   static Uint8List encodeMPI(BigInteger value, bool includeLength) {
-    if (value == 0) {
+    if (value == BigInteger.ZERO) {
       if (!includeLength)
         return new Uint8List(0);
       else
@@ -349,14 +387,12 @@ class Utils {
       if (isNegative)
         result[4] |= 0x80;
       return result;
-    }
-    else {
+    } else {
       Uint8List result;
       if (length != array.length) {
         result = new Uint8List(length);
         result.setRange(1, array.length + 1, array);
-      }
-      else {
+      } else {
         result = array;
       }
       if (isNegative)

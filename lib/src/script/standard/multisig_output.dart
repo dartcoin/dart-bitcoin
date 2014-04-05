@@ -28,12 +28,12 @@ class MultiSigOutputScript extends Script {
       throw new ScriptException("Given script is not an instance of this script type.");
   }
   
-  int get threshold => Script.decodeFromOpN(chunks[0].data[0]);
+  int get threshold => Script.decodeFromOpN(chunks[0].bytes[0]);
   
   List<KeyPair> get pubKeys {
     List<KeyPair> keys = new List();
     for(int i = 0 ; i < (chunks.length - 3) ; i++) {
-      keys.add(new KeyPair.public(chunks[i+1].data));
+      keys.add(new KeyPair.public(chunks[i+1].bytes));
     }
     return keys;
   }
@@ -44,15 +44,20 @@ class MultiSigOutputScript extends Script {
     if(chunks.length < 4 || chunks.length > 19)
       return false;
     // second chunks must be OP_N code with threshold, value from 0 to 16
-    if(Script.decodeFromOpN(chunks[0].data[0]) < 0 || Script.decodeFromOpN(chunks[0].data[0]) > 16)
+    try {
+      if (Script.decodeFromOpN(chunks[0].bytes[0]) < 0 || Script.decodeFromOpN(chunks[0].bytes[0]) > 16)
+        return false;
+    } on ScriptException {
+      // invalid OP_N
       return false;
+    }
     // intermediate chunks must be data chunks. these are the pubkeys
     for(int i = 0 ; i < (chunks.length - 3) ; i++) {
-      if(chunks[i+1].data.length <= 1)
+      if(chunks[i+1].bytes.length <= 1)
         return false;
     }
     // one but last chunk must be OP_N code with #pubkeys, must be #chunks - 1
-    if(Script.decodeFromOpN(chunks[chunks.length-2].data[0]) != chunks.length - 3)
+    if(Script.decodeFromOpN(chunks[chunks.length-2].bytes[0]) != chunks.length - 3)
       return false;
     // last chunk must be OP_MULTISIG opcode
     return chunks[chunks.length-1].equalsOpCode(ScriptOpCodes.OP_CHECKMULTISIG);

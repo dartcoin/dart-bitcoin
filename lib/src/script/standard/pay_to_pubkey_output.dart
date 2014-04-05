@@ -24,13 +24,13 @@ class PayToPubKeyOutputScript extends Script {
       throw new ScriptException("Given script is not an instance of this script type.");
   }
   
-  KeyPair get pubKey => new KeyPair.public(chunks[0].data);
+  KeyPair get pubKey => new KeyPair.public(chunks[0].bytes);
   
   Address getAddress([NetworkParameters params]) => new KeyPair.public(pubKey).getAddress(params);
   
   static bool matchesType(Script script) {
     return script.chunks.length == 2 && 
-        script.chunks[0].data.length > 1 && 
+        script.chunks[0].bytes.length > 1 &&
         script.chunks[1].equalsOpCode(ScriptOpCodes.OP_CHECKSIG);
   }
 }

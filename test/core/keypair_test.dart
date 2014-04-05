@@ -8,7 +8,9 @@ import "package:crypto/crypto.dart";
 import "package:bignum/bignum.dart";
 import "dart:math";
 import "dart:typed_data";
+import "dart:io";
 import "dart:async";
+import "package:json/json.dart" as json;
 import "package:cipher/cipher.dart";
 
 String _testPrivKey1 = "18E14A7B6A307F426A94F8114701E7C8E774E7F9A47E2C2035DB29A206321725";
@@ -389,48 +391,29 @@ void _clear() {
 }
 
 
-//void _testCanonicalSigs() {
-//  // Tests the canonical sigs from the reference client unit tests
-//  InputStream inps = getClass().getResourceAsStream("sig_canonical.json");
-//
-//  // Poor man's JSON parser (because pulling in a lib for this is overkill)
-//  while (inps.available() > 0) {
-//      while (inps.available() > 0 && inps.read() != '"') ;
-//      if (inps.available() < 1)
-//          break;
-//
-//      StringBuilder sig = new StringBuilder();
-//      int c;
-//      while (inps.available() > 0 && (c = inps.read()) != '"')
-//          sig.append(c);
-//
-//      expect(TransactionSignature.isEncodingCanonical(Utils.hexToBytes(sig.toString())), isTrue);
-//  }
-//  inps.close();
-//}
+void _testCanonicalSigs() {
+  File f = new File.fromUri(new Uri.file("../resources/sig_canonical.json"));
+  List<String> vectors = json.parse(f.readAsStringSync());
 
+  for(String vector in vectors) {
+    if(!Utils.isHexString(vector))
+      continue;
+    expect(TransactionSignature.isEncodingCanonical(Utils.hexToBytes(vector)), isTrue,
+    reason: "expected canonical: $vector");
+  }
+}
 
-//void _testNonCanonicalSigs() {
-//    // Tests the noncanonical sigs from the reference client unit tests
-//    InputStream inps = getClass().getResourceAsStream("sig_noncanonical.json");
-//
-//    // Poor man's JSON parser (because pulling in a lib for this is overkill)
-//    while (inps.available() > 0) {
-//        while (inps.available() > 0 && inps.read() != '"') ;
-//        if (inps.available() < 1)
-//            break;
-//
-//        StringBuilder sig = new StringBuilder();
-//        int c;
-//        while (inps.available() > 0 && (c = inps.read()) != '"')
-//            sig.append(c);
-//
-//        try {
-//            assertFalse(TransactionSignature.isEncodingCanonical(Utils.hexToBytes(sig.toString())));
-//        } catch (StringIndexOutOfBoundsException e) { } // Expected for non-hex strings in the JSON that we should ignore
-//    }
-//    inps.close();
-//}
+void _testNonCanonicalSigs() {
+  File f = new File.fromUri(new Uri.file("../resources/sig_noncanonical.json"));
+  List<String> vectors = json.parse(f.readAsStringSync());
+
+  for(String vector in vectors) {
+    if(!Utils.isHexString(vector))
+      continue;
+    expect(TransactionSignature.isEncodingCanonical(Utils.hexToBytes(vector)), isFalse,
+        reason: "expected noncanonical: $vector");
+  }
+}
 
 
 void _testCreatedSigAndPubkeyAreCanonical() {
@@ -449,7 +432,7 @@ void _testCreatedSigAndPubkeyAreCanonical() {
   Uint8List sigBytes = key.sign(new Sha256Hash(hash)).encodeToDER();
   Uint8List encodedSig = new Uint8List(sigBytes.length + 1);
   encodedSig.setRange(0, sigBytes.length, sigBytes);
-  encodedSig[sigBytes.length] = SigHash.ALL.value + 1;
+  encodedSig[sigBytes.length] = SigHash.ALL.value;
   if (!TransactionSignature.isEncodingCanonical(encodedSig)) {
     print(Utils.bytesToHex(sigBytes));
     fail("we must not generate non-canonical signatures");
@@ -494,6 +477,8 @@ void main() {
       test("keyRecoveryWithExcryptedKey", () => _keyRecoveryWithEncryptedKey());
       test("clear", () => _clear());
       test("createdSigsAndPubkeysAreCanonical", () => _testCreatedSigAndPubkeyAreCanonical());
+      test("canonicalSigs", () => _testCanonicalSigs());
+      test("nonCanonicalSigs", () => _testNonCanonicalSigs());
     });
   });
 }

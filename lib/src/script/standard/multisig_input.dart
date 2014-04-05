@@ -40,7 +40,7 @@ class MultiSigInputScript extends Script {
   }
   
   List<TransactionSignature> get signatures =>
-    chunks.sublist(0).map((c) => new TransactionSignature.deserialize(c.data, length: c.data.length));
+    chunks.sublist(0).map((c) => new TransactionSignature.deserialize(c.bytes, length: c.bytes.length));
   
   /**
    * 

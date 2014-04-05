@@ -21,14 +21,13 @@ class ScriptExecutor {
       bool shouldExecute = !ifStack.contains(false);
       
       if(!chunk.isOpCode) {
-        if(chunk.data.length > Script.MAX_SCRIPT_ELEMENT_SIZE) 
+        if(chunk.bytes.length > Script.MAX_SCRIPT_ELEMENT_SIZE)
           throw new ScriptException("Attempted to push a data string larger than 520 bytes", script);
         if(!shouldExecute)
           continue;
-        stack.add(chunk.data);
-      }
-      else {
-        int opcode = chunk.data[0];
+        stack.add(chunk.bytes);
+      } else {
+        int opcode = chunk.bytes[0];
         // increase opCount
         if (opcode > ScriptOpCodes.OP_16) {
           opCount++;
@@ -67,7 +66,7 @@ class ScriptExecutor {
             }
             if (stack.length < 1)
               throw new ScriptException("Attempted OP_IF on an empty stack", script, opcode);
-            ifStack.add(castToBool(stack.removeLast()));
+            ifStack.add(!castToBool(stack.removeLast()));
             continue;
           
           case ScriptOpCodes.OP_ELSE:
@@ -94,7 +93,7 @@ class ScriptExecutor {
             break;
           
           case ScriptOpCodes.OP_1NEGATE:
-            stack.add(new Uint8List.fromList(Utils.encodeMPI(BigInteger.ONE.negate_op(), false).reversed));
+            stack.add(Utils.reverseBytes(Utils.encodeMPI(BigInteger.ONE.negate_op(), false)));
             break;
 
           case ScriptOpCodes.OP_1:
@@ -113,7 +112,7 @@ class ScriptExecutor {
           case ScriptOpCodes.OP_14:
           case ScriptOpCodes.OP_15:
           case ScriptOpCodes.OP_16:
-            stack.add(new Uint8List.fromList(Utils.encodeMPI(new BigInteger(Script.decodeFromOpN(opcode)), false).reversed));
+            stack.add(Utils.reverseBytes(Utils.encodeMPI(new BigInteger(Script.decodeFromOpN(opcode)), false)));
             break;
           
           case ScriptOpCodes.OP_NOP:
@@ -212,7 +211,7 @@ class ScriptExecutor {
             break;
 
           case ScriptOpCodes.OP_DEPTH:
-            stack.add(new Uint8List.fromList(Utils.encodeMPI(new BigInteger(stack.length), false).reversed));
+            stack.add(Utils.reverseBytes(Utils.encodeMPI(new BigInteger(stack.length), false)));
             break;
           
           case ScriptOpCodes.OP_DROP:
@@ -249,13 +248,23 @@ class ScriptExecutor {
             int val = castToBigInteger(stack.removeLast()).intValue();
             if (val < 0 || val >= stack.length)
               throw new ScriptException("OP_PICK/OP_ROLL attempted to get data deeper than stack size", script, opcode);
-            DoubleLinkedQueueEntry<Uint8List> cursor = stack.lastEntry();
-            for (int i = 0; i < val + 1; i++)
-              cursor = cursor.previousEntry();
-            Uint8List OPROLLtmpChunk = cursor.element;
-            if (opcode == ScriptOpCodes.OP_ROLL)
-              cursor.remove();
-            stack.add(OPROLLtmpChunk);
+//            DoubleLinkedQueueEntry<Uint8List> cursor = stack.lastEntry();
+//            for (int i = 0; i < val; i++)
+//              cursor = cursor.previousEntry();
+//            Uint8List OPROLLtmpChunk = cursor.element;
+//            if (opcode == ScriptOpCodes.OP_ROLL) {
+//              cursor.remove();
+//            }
+//            stack.add(OPROLLtmpChunk);
+            List<Uint8List> tmpStack = new List<Uint8List>(val);
+            for(int i = 0 ; i < val ; i++)
+              tmpStack[i] = stack.removeLast();
+            Uint8List nTh = stack.last;
+            if(opcode == ScriptOpCodes.OP_ROLL)
+              stack.removeLast();
+            for(int i = 0 ; i < val ; i++)
+              stack.addLast(tmpStack[val - 1 - i]);
+            stack.addLast(nTh);
             break;
             
           case ScriptOpCodes.OP_ROT:
@@ -290,7 +299,7 @@ class ScriptExecutor {
           case ScriptOpCodes.OP_SIZE:
             if (stack.length < 1)
               throw new ScriptException("Attempted OP_SIZE on an empty stack", script, opcode);
-            stack.add(new Uint8List.fromList(Utils.encodeMPI(new BigInteger(stack.last.length), false).reversed));
+            stack.add(Utils.reverseBytes(Utils.encodeMPI(new BigInteger(stack.last.length), false)));
             break;
             
           case ScriptOpCodes.OP_INVERT:
@@ -301,9 +310,9 @@ class ScriptExecutor {
             
           case ScriptOpCodes.OP_EQUAL:
             if (stack.length < 2)
-              throw new ScriptException("Attempted OP_EQUALVERIFY on a stack with size < 2", script, opcode);
+              throw new ScriptException("Attempted OP_EQUAL on a stack with size < 2", script, opcode);
             stack.add(Utils.equalLists(stack.removeLast(), stack.removeLast()) ? 
-                new Uint8List.fromList([1]) : new Uint8List(1));
+                (new Uint8List(1)..[0]=1) : new Uint8List(1));
             break;
             
           case ScriptOpCodes.OP_EQUALVERIFY:
@@ -352,7 +361,7 @@ class ScriptExecutor {
                 throw new ScriptException("Unreacheable.", script, opcode);
             }
             
-            stack.add(new Uint8List.fromList(Utils.encodeMPI(new BigInteger(numericOPnum), false).reversed));
+            stack.add(Utils.reverseBytes(Utils.encodeMPI(new BigInteger(numericOPnum), false)));
             break;
             
           case ScriptOpCodes.OP_2MUL:
@@ -448,7 +457,7 @@ class ScriptExecutor {
                 throw new ScriptException("Opcode switched at runtime?", script, opcode);
             }
             
-            stack.add(new Uint8List.fromList(Utils.encodeMPI(new BigInteger(numericOPresult), false).reversed));
+            stack.add(Utils.reverseBytes(Utils.encodeMPI(new BigInteger(numericOPresult), false)));
             break;
             
           case ScriptOpCodes.OP_MUL:
@@ -475,9 +484,9 @@ class ScriptExecutor {
             int OPWITHINnum2 = castToBigInteger(stack.removeLast()).intValue();
             int OPWITHINnum1 = castToBigInteger(stack.removeLast()).intValue();
             if (OPWITHINnum2 <= OPWITHINnum1 && OPWITHINnum1 < OPWITHINnum3)
-              stack.add(new Uint8List.fromList(Utils.encodeMPI(BigInteger.ONE, false).reversed));
+              stack.add(Utils.reverseBytes(Utils.encodeMPI(BigInteger.ONE, false)));
             else
-              stack.add(new Uint8List.fromList(Utils.encodeMPI(BigInteger.ZERO, false).reversed));
+              stack.add(Utils.reverseBytes(Utils.encodeMPI(BigInteger.ZERO, false)));
             break;
               
           case ScriptOpCodes.OP_RIPEMD160:
@@ -558,7 +567,7 @@ class ScriptExecutor {
   
     // copy the program bytes
     Uint8List prog = new Uint8List.fromList(script.bytes);
-    Uint8List connectedScript = new Uint8List.fromList(prog.sublist(lastCodeSepLocation));
+    Uint8List connectedScript = prog.sublist(lastCodeSepLocation);
 
     connectedScript = removeAllInstancesOf(connectedScript, Script.encodeData(sigBytes));
 
@@ -569,7 +578,7 @@ class ScriptExecutor {
     sigValid = KeyPair.verifySignatureForPubkey(hash.bytes, sig, pubKey);
 
     if (opcode == ScriptOpCodes.OP_CHECKSIG)
-      stack.add(sigValid ? new Uint8List.fromList([1]) : new Uint8List(1));
+      stack.add(sigValid ? (new Uint8List.fromList(1)..[0]=1) : new Uint8List(1));
     else if (opcode == ScriptOpCodes.OP_CHECKSIGVERIFY)
       if (!sigValid)
         throw new ScriptException("Script failed OP_CHECKSIGVERIFY", script, opcode);
@@ -579,6 +588,7 @@ class ScriptExecutor {
                              int opCount, int lastCodeSepLocation, int opcode) {
     if (stack.length < 2)
       throw new ScriptException("Attempted OP_CHECKMULTISIG(VERIFY) on a stack with size < 2", script, opcode);
+
     int pubKeyCount = castToBigInteger(stack.removeLast()).intValue();
     if (pubKeyCount < 0 || pubKeyCount > 20)
       throw new ScriptException("OP_CHECKMULTISIG(VERIFY) with pubkey count out of range", script, opcode);
@@ -612,11 +622,10 @@ class ScriptExecutor {
   
     // copying
     Uint8List prog = new Uint8List.fromList(script.bytes);
-    Uint8List connectedScript = new Uint8List.fromList(prog.getRange(lastCodeSepLocation, prog.length));
+    Uint8List connectedScript = prog.sublist(lastCodeSepLocation, prog.length);
     
-    for (Uint8List sig in sigs) {
+    for (Uint8List sig in sigs)
       connectedScript = removeAllInstancesOf(connectedScript, Script.encodeData(sig));
-    }
     
     bool valid = true;
     while (sigs.length > 0) {
@@ -638,7 +647,7 @@ class ScriptExecutor {
     stack.removeLast();
 
     if (opcode == ScriptOpCodes.OP_CHECKMULTISIG) {
-      stack.add(valid ? new Uint8List.fromList([1]) : new Uint8List.fromList([0]));
+      stack.add(valid ? (new Uint8List(1)..[0]=1) : new Uint8List(1));
     } else if (opcode == ScriptOpCodes.OP_CHECKMULTISIGVERIFY) {
       if (!valid)
         throw new ScriptException("Script failed OP_CHECKMULTISIGVERIFY", script, opcode);
@@ -659,7 +668,7 @@ class ScriptExecutor {
       if (opcode >= 0 && opcode < ScriptOpCodes.OP_PUSHDATA1) {
         additionalBytes = opcode;
       } else if (opcode == ScriptOpCodes.OP_PUSHDATA1) {
-        additionalBytes = inputScript[cursor] + 1;
+        additionalBytes = (0xFF & inputScript[cursor]) + 1;
       } else if (opcode == ScriptOpCodes.OP_PUSHDATA2) {
         additionalBytes = ((0xFF & inputScript[cursor]) |
             ((0xFF & inputScript[cursor+1]) << 8)) + 2;
@@ -682,12 +691,11 @@ class ScriptExecutor {
    * Returns the script bytes of inputScript with all instances of the given op code removed
    */
   static Uint8List removeAllInstancesOfOp(Uint8List inputScript, int opCode) {
-    Uint8List bytes = new Uint8List(1);
-    bytes[0] = opCode;
+    Uint8List bytes = new Uint8List(1)..[0] = opCode;
     return removeAllInstancesOf(inputScript, bytes);
   }
   
-  static bool equalsRange(Uint8List a, int start, Uint8List b) {
+  static bool equalsRange(List a, int start, List b) {
     if (start + b.length > a.length)
       return false;
     for (int i = 0; i < b.length; i++)
@@ -708,12 +716,10 @@ class ScriptExecutor {
   static BigInteger castToBigInteger(Uint8List data) {
     if(data.length > 4)
       throw new ScriptException("Script attempted to use an integer larger than 4 bytes");
-    return Utils.decodeMPI(data, false);
+    return Utils.decodeMPI(Utils.reverseBytes(data), false);
   }
 
 }
-
-
 
 
 

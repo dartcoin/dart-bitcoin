@@ -24,6 +24,41 @@ class Script {
     }
     throw new ArgumentError("Either a [Uint8List] or an iterable of [ScriptChunk]s must be passed as argument.");
   }
+
+  factory Script.fromString(String string) {
+    if(string == null)
+      throw new ArgumentError("parameter should not be null");
+    List<ScriptChunk> chunks = new List<ScriptChunk>();
+    for(String s in string.split(" ")) {
+      if(s == "")
+        continue;
+      // try int
+      try {
+        int val = int.parse(s);
+        if (val >= -1 && val <= 16) {
+          chunks.add(new ScriptChunk.opCode(Script.encodeToOpN(val)));
+          continue;
+        }
+//        else
+//          Script.writeBytes(out, Utils.reverseBytes(Utils.encodeMPI(BigInteger.valueOf(val), false)));
+      } catch (e) {}
+      // try opcode
+      if(s.startsWith("OP_"))
+        s = s.substring(3);
+      int opcode = ScriptOpCodes.getOpCode(s);
+      if(opcode != ScriptOpCodes.OP_INVALIDOPCODE) {
+        chunks.add(new ScriptChunk.opCode(opcode));
+        continue;
+      }
+      // try data
+      if(s.startsWith("[") && s.endsWith("]")) {
+        chunks.add(new ScriptChunk.data(Utils.hexToBytes(s.substring(1, s.length - 1))));
+        continue;
+      }
+      throw new FormatException("The script string is invalid: $string");
+    }
+    return new Script(chunks);
+  }
   
   Uint8List get bytes {
     if(_bytes == null) {
@@ -70,24 +105,20 @@ class Script {
       int dataToRead = -1;
       if(opcode >= 0 && opcode < ScriptOpCodes.OP_PUSHDATA1) {
         dataToRead = opcode;
-      }
-      else if(opcode == ScriptOpCodes.OP_PUSHDATA1) {
+      } else if(opcode == ScriptOpCodes.OP_PUSHDATA1) {
         if(bytes.length < 1) throw new ScriptException("Unexpected end of script", this, opcode);
         dataToRead = bytes.removeFirst();
-      }
-      else if(opcode == ScriptOpCodes.OP_PUSHDATA2) {
+      } else if(opcode == ScriptOpCodes.OP_PUSHDATA2) {
         if(bytes.length < 2) throw new ScriptException("Unexpected end of script", this, opcode);
         dataToRead = bytes.removeFirst() | (bytes.removeFirst() << 8);
-      }
-      else if(opcode == ScriptOpCodes.OP_PUSHDATA4) {
+      } else if(opcode == ScriptOpCodes.OP_PUSHDATA4) {
         if(bytes.length < 2) throw new ScriptException("Unexpected end of script", this, opcode);
         dataToRead = bytes.removeFirst() | (bytes.removeFirst() << 8) | (bytes.removeFirst() << 16) | (bytes.removeFirst() << 24);
       }
       
       if(dataToRead < 0) {
         chunks.add(new ScriptChunk(true, new Uint8List.fromList([opcode]), startLocationInProgram));
-      }
-      else {
+      } else {
         if (dataToRead > bytes.length)
           throw new ScriptException("Push of data element that is larger than remaining data", this, opcode);
         chunks.add(new ScriptChunk(false, new Uint8List.fromList(_takeFirstN(dataToRead, bytes)), startLocationInProgram));
@@ -108,12 +139,14 @@ class Script {
     if(_bytes != null) return _bytes;
     List<int> bytes = new List<int>();
     for(ScriptChunk chunk in chunks) {
-      bytes.addAll(chunk.data);
+      bytes.addAll(chunk.bytes);
     }
     return new Uint8List.fromList(bytes);
   }
   
   static Uint8List encodeData(Uint8List data) {
+    if(data == null)
+      return new Uint8List(1); // one byte indicating a 0-length sequence
     List<int> result = new List<int>();
     if(data.length < ScriptOpCodes.OP_PUSHDATA1) {
       result.add(data.length);
@@ -162,7 +195,7 @@ class Script {
     int lastOpCode = ScriptOpCodes.OP_INVALIDOPCODE;
     for(ScriptChunk chunk in chunks) {
       if(chunk.isOpCode) {
-        int opcode = 0xFF & chunk.data[0];
+        int opcode = 0xFF & chunk.bytes[0];
         switch (opcode) {
         case ScriptOpCodes.OP_CHECKSIG:
         case ScriptOpCodes.OP_CHECKSIGVERIFY:
@@ -210,9 +243,10 @@ class Script {
     
     if (stack.length == 0)
       throw new ScriptException("Stack empty at end of script execution.");
-    
-    if (!ScriptExecutor.castToBool(stack.removeLast()))
-      throw new ScriptException("Script resulted in a non-true stack: " + stack.join(" "));
+
+    Uint8List last = stack.removeLast();
+    if (!ScriptExecutor.castToBool(last))
+      throw new ScriptException("Script resulted in a non-true stack: " + _printStack(stack, last));
 
     // P2SH is pay to script hash. It means that the scriptPubKey has a special form which is a valid
     // program but it has "useless" form that if evaluated as a normal program always returns true.
@@ -226,10 +260,10 @@ class Script {
     //     in RAM as possible, so if the outputs are made smaller and the inputs get bigger, then it's better for
     //     overall scalability and performance.
 
-    // TODO: Check if we can take out enforceP2SH if there's a checkpoint at the enforcement block.
+    // TODO [bitcoinj]: Check if we can take out enforceP2SH if there's a checkpoint at the enforcement block.
     if (enforceP2SH && PayToScriptHashOutputScript.matchesType(scriptPubKey)) {
       for (ScriptChunk chunk in chunks)
-        if (chunk.isOpCode && (chunk.data[0] & 0xff) > ScriptOpCodes.OP_16)
+        if (chunk.isOpCode && (chunk.bytes[0] & 0xff) > ScriptOpCodes.OP_16)
           throw new ScriptException("Attempted to spend a P2SH scriptPubKey with a script that contained script ops");
       
       Uint8List scriptPubKeyBytes = p2shStack.removeLast();
@@ -243,6 +277,19 @@ class Script {
       if (!ScriptExecutor.castToBool(p2shStack.removeLast()))
         throw new ScriptException("P2SH script execution resulted in a non-true stack");
     }
+  }
+
+  String _printStack(DoubleLinkedQueue stack, [Uint8List last]) {
+    StringBuffer sb = new StringBuffer()
+      ..write("[");
+    for(Uint8List elem in stack) {
+      sb..write("<" + Utils.bytesToHex(elem) + ">")
+        ..write(" ");
+    }
+    if(last != null) {
+      sb.write("<" + Utils.bytesToHex(last) + ">");
+    }
+    return (sb..write("]")).toString();
   }
   
 }

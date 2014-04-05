@@ -253,7 +253,7 @@ class Transaction extends Object with BitcoinSerialization {
    * The [connectedScript] parameter must be either of typr [Script] or [Uint8List].
    */
   Sha256Hash hashForSignature(int inputIndex, dynamic connectedScript, int sigHashFlags) {
-    _needInstance();
+    _needInstance(true);
     // The SIGHASH flags are used in the design of contracts, please see this page for a further understanding of
     // the purposes of the code in this method:
     //
@@ -274,7 +274,7 @@ class Transaction extends Object with BitcoinSerialization {
     for (int i = 0; i < _inputs.length; i++) {
       inputScripts[i] = _inputs[i].scriptSig;
       inputSequenceNumbers[i] = _inputs[i].sequence;
-      _inputs[i]._scriptSig = Script.EMPTY_SCRIPT;
+      _inputs[i].scriptSig = Script.EMPTY_SCRIPT;
     }
 
     // This step has no purpose beyond being synchronized with the reference clients bugs. OP_CODESEPARATOR
@@ -290,17 +290,18 @@ class Transaction extends Object with BitcoinSerialization {
     // the signature covers the hash of the prevout transaction which obviously includes the output script
     // already. Perhaps it felt safer to him in some way, or is another leftover from how the code was written.
     TransactionInput input = _inputs[inputIndex];
-    input._scriptSig = new Script(connectedScript);
+
+    input.scriptSig = new Script(connectedScript);
 
     List<TransactionOutput> outputs = _outputs;
-    if ((sigHashFlags & 0x1f) == (SigHash.NONE.value + 1)) {
+    if ((sigHashFlags & 0x1f) == (SigHash.NONE.value)) {
       // SIGHASH_NONE means no outputs are signed at all - the signature is effectively for a "blank cheque".
       _outputs = new List<TransactionOutput>(0);
       // The signature isn't broken by new versions of the transaction issued by other parties.
       for (int i = 0; i < _inputs.length; i++)
         if (i != inputIndex)
           _inputs[i]._sequence = 0;
-    } else if ((sigHashFlags & 0x1f) == (SigHash.SINGLE.value + 1)) {
+    } else if ((sigHashFlags & 0x1f) == (SigHash.SINGLE.value)) {
       // SIGHASH_SINGLE means only sign the output at the same index as the input (ie, my output).
       if (inputIndex >= _outputs.length) {
         // The input index is beyond the number of outputs, it's a buggy signature made by a broken
@@ -312,8 +313,8 @@ class Transaction extends Object with BitcoinSerialization {
         //
         // TODO: (from bitcoinj) Only allow this to happen if we are checking a signature, not signing a transactions
         for (int i = 0 ; i < _inputs.length ; i++) {
-          _inputs[i]._scriptSig = inputScripts[i];
-          _inputs[i]._sequence = inputSequenceNumbers[i];
+          _inputs[i].scriptSig = inputScripts[i];
+          _inputs[i].sequence = inputSequenceNumbers[i];
         }
         _outputs = outputs;
         // Satoshis bug is that SignatureHash was supposed to return a hash and on this codepath it
@@ -324,38 +325,37 @@ class Transaction extends Object with BitcoinSerialization {
       // that position are "nulled out". Unintuitively, the value in a "null" transaction is set to -1.
       _outputs = new List.from(_outputs.sublist(0, inputIndex + 1));
       for (int i = 0; i < inputIndex; i++)
-        _outputs[i] = new TransactionOutput(value: BigInteger.ONE.negate_op(), scriptPubKey: Script.EMPTY_SCRIPT, parent: this, params: params);
+        _outputs[i] = new TransactionOutput(value: -1, scriptPubKey: Script.EMPTY_SCRIPT, parent: this, params: params);
       // The signature isn't broken by new versions of the transaction issued by other parties.
       for (int i = 0; i < _inputs.length; i++)
         if (i != inputIndex)
-          _inputs[i]._sequence = 0;
+          _inputs[i].sequence = 0;
     }
 
-    List<TransactionInput> inputs = this.inputs;
+    List<TransactionInput> inputs = _inputs;
     if ((sigHashFlags & SigHash.ANYONE_CAN_PAY) == SigHash.ANYONE_CAN_PAY) {
       // SIGHASH_ANYONECANPAY means the signature in the input is not broken by changes/additions/removals
       // of other inputs. For example, this is useful for building assurance contracts.
-      _inputs = new List<TransactionInput>();
-      _inputs.add(input);
+      _inputs = [input];
     }
     
-    List<int> toHash = new List<int>()
-      ..addAll(this.serialize())
+    Uint8List toHash = new Uint8List.fromList(new List<int>()
+      ..addAll(serialize())
     // We also have to write a hash type (sigHashType is actually an unsigned char)
-      ..add(0x000000ff & sigHashFlags);
+      ..add(0x000000ff & sigHashFlags));
     // Note that this is NOT reversed to ensure it will be signed correctly. If it were to be printed out
     // however then we would expect that it is IS reversed.
     Sha256Hash hash = new Sha256Hash(Utils.doubleDigest(toHash));
 
     // Put the transaction back to how we found it.
+    _needInstance(true); // uncache
     _inputs = inputs;
     for (int i = 0; i < inputs.length; i++) {
-      inputs[i]._scriptSig = inputScripts[i];
-      inputs[i]._sequence = inputSequenceNumbers[i];
+      inputs[i].scriptSig = inputScripts[i];
+      inputs[i].sequence = inputSequenceNumbers[i];
     }
     _outputs = outputs;
     return hash;
-    
   }
   
   Uint8List _serialize() {

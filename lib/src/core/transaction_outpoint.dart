@@ -34,10 +34,21 @@ class TransactionOutPoint extends Object with BitcoinSerialization {
     _needInstance();
     return _txid;
   }
+
+  void set txid(Sha256Hash txid) {
+    _needInstance(true);
+    _txid = txid;
+    _tx = null;
+  }
   
   int get index {
     _needInstance();
     return _index;
+  }
+
+  void set index(int index) {
+    _needInstance(true);
+    _index = index & 0xffffffff;
   }
   
   /**

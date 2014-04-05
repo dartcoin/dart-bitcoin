@@ -34,7 +34,7 @@ class PayToPubKeyHashOutputScript extends PayToAddressOutputScript {
   Uint8List get pubkeyHash => new Uint8List.fromList(bytes.getRange(3,  23));
 
   Address getAddress([NetworkParameters params = NetworkParameters.MAIN_NET]) =>
-      new Address(bytes.getRange(3,  23), params, params.addressHeader);
+      new Address(pubkeyHash, params, params.addressHeader);
   
   static bool matchesType(Script script) {
     return script.bytes.length == LENGTH &&

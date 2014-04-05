@@ -8,7 +8,7 @@ part of dartcoin.core;
 // interface
 abstract class BitcoinSerializable {
   
-  BitcoinSerializable.deserialize(Uint8List bytes, 
+  BitcoinSerializable.deserialize(Uint8List bytes,
       { int length, 
         bool lazy, 
         bool retain,

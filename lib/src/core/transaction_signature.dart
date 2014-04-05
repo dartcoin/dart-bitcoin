@@ -27,7 +27,7 @@ class TransactionSignature extends ECDSASignature with BitcoinSerialization {
     if(requireCanonical && !isEncodingCanonical(bytes)) throw new SerializationException("Signature is not canonical");
     if(length == null)
       length = bytes[1] + 2;
-    TransactionSignature ts = new TransactionSignature(new ECDSASignature.fromDER(bytes.getRange(0, length - 1)), 
+    TransactionSignature ts = new TransactionSignature(new ECDSASignature.fromDER(bytes.sublist(0, length - 1)),
         sigHashFlags: bytes[length - 1]);
     ts.params = params;
     ts._serializationLength = length;
@@ -43,6 +43,16 @@ class TransactionSignature extends ECDSASignature with BitcoinSerialization {
   
   void _setSigHashFlags(SigHash mode, bool anyoneCanPay) {
     _sigHashFlags = SigHash.sigHashFlagsValue(mode, anyoneCanPay);
+  }
+
+  SigHash get sigHashMode {
+    int mode = _sigHashFlags & 0x1f;
+    if (mode == SigHash.NONE.value)
+      return SigHash.NONE;
+    else if (mode == SigHash.SINGLE.value)
+      return SigHash.SINGLE;
+    else
+      return SigHash.ALL;
   }
 
   /**
@@ -64,7 +74,7 @@ class TransactionSignature extends ECDSASignature with BitcoinSerialization {
       return false;
 
     int hashType = signature[signature.length-1] & ((~SigHash.ANYONE_CAN_PAY));
-    if (hashType < (SigHash.ALL.value + 1) || hashType > (SigHash.SINGLE.value + 1))
+    if (hashType < (SigHash.ALL.value) || hashType > (SigHash.SINGLE.value))
       return false;
 
     //                   "wrong type"                  "wrong length marker"
@@ -110,8 +120,13 @@ class SigHash {
   static const SigHash NONE   = const SigHash._(2);
   static const SigHash SINGLE = const SigHash._(3);
   
-  static const int ANYONE_CAN_PAY = 0x80; 
-  
+  static const int ANYONE_CAN_PAY = 0x80;
+
+  /**
+   * The bit-value of this SigHash flag.
+   *
+   * Note that in BitcoinJ, this value is retrieved by doing sigHash.ordinal() + 1.
+   */
   final int value;
   
   const SigHash._(int this.value);

@@ -29,9 +29,9 @@ class PayToPubKeyHashInputScript extends Script {
       throw new ScriptException("Given script is not an instance of this script type.");
   }
   
-  TransactionSignature get signature => new TransactionSignature.deserialize(chunks[0].data, length: chunks[0].data.length, requireCanonical: false);
+  TransactionSignature get signature => new TransactionSignature.deserialize(chunks[0].bytes, length: chunks[0].bytes.length, requireCanonical: false);
   
-  KeyPair get pubKey => new KeyPair.public(chunks[1].data);
+  KeyPair get pubKey => new KeyPair.public(chunks[1].bytes);
   
   Address getAddress([NetworkParameters params]) => pubKey.getAddress(params);
   
@@ -40,7 +40,7 @@ class PayToPubKeyHashInputScript extends Script {
    */
   static bool matchesType(Script script) {
     return script.chunks.length == 2 && 
-        script.chunks[0].data.length > 1 && 
-        script.chunks[1].data.length > 1;
+        script.chunks[0].bytes.length > 1 &&
+        script.chunks[1].bytes.length > 1;
   }
 }

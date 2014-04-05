@@ -45,6 +45,17 @@ void _hexToBytes() {
   expect(Utils.bytesToHex(bytes), equalsIgnoringCase(byteString));
 }
 
+void _isHexString() {
+  expect(Utils.isHexString("11"), isTrue,
+      reason: "11");
+  expect(Utils.isHexString(Utils.bytesToHex(Utils.stringToUTF8("Steven"))), isTrue,
+      reason: "steven to utf8");
+  expect(Utils.isHexString(" abd DFB109"), isTrue,
+      reason: " abd DFB109");
+  expect(Utils.isHexString("Steven"), isFalse,
+      reason: "Steven");
+}
+
 void _formatMessageForSigning() {
   //TODO
 }
@@ -103,6 +114,7 @@ void _testToSatoshi() {
   expect(Units.toSatoshi(0.01), equals(Units.CENT));
   expect(Units.toSatoshi(1E-2), equals(Units.CENT));
   expect(Units.toSatoshi(1.01), equals(Units.COIN + Units.CENT));
+  expect(Units.toSatoshi(21000000), equals(NetworkParameters.MAIN_NET.MAX_MONEY));
 }
 
 
@@ -115,17 +127,18 @@ void _testReverseBytes() {
 
 void main() {
   group("core.Utils", () {
-    test("utils_singledigest", () => _testSingleDigest());
-    test("utils_doubledigest", () => _testDoubleDigest());
-    test("utils_ripemd160", () => _ripemd160());
-    test("utils_sha1", () => _sha1digest());
-    test("utils_sha256hash160", () => _sha256hash160());
-    test("utils_hexToBytes", () => _hexToBytes());
-    test("utils_formatMessageForSigning", () => _formatMessageForSigning());
-    test("utils_equallists", () => _equalList());
-    test("utils_bigintToBytes", () => _bigIntToBytes());
-    test("utils_uintToBytes", () => _uintsToBytes());
-    //test("utils_ipv6encoding", () => _ipv6EncodingTest());
+    test("singledigest", () => _testSingleDigest());
+    test("doubledigest", () => _testDoubleDigest());
+    test("ripemd160", () => _ripemd160());
+    test("sha1", () => _sha1digest());
+    test("sha256hash160", () => _sha256hash160());
+    test("hexToBytes", () => _hexToBytes());
+    test("isHexString", () => _isHexString());
+    test("formatMessageForSigning", () => _formatMessageForSigning());
+    test("equallists", () => _equalList());
+    test("bigintToBytes", () => _bigIntToBytes());
+    test("uintToBytes", () => _uintsToBytes());
+    //test("ipv6encoding", () => _ipv6EncodingTest());
     // bitcoinj
     test("toSatoshi", () => _testToSatoshi());
     test("reverseBytes", () => _testReverseBytes());

@@ -362,7 +362,7 @@ class ScriptOpCodes {
     
     static String getOpCodeName(int opCode) {
       if(_opCodeMap.containsKey(opCode)) return _opCodeMap[opCode];
-      return "NON_OP(" + opCode.toString() + ")";
+      return "NON_OP($opCode)";
     }
     
     static int getOpCode(String opCodeName) {

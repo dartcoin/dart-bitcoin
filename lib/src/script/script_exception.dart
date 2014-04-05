@@ -1,12 +1,11 @@
 part of dartcoin.core;
 
-class ScriptException implements Exception {
-  
-  final String message;
+class ScriptException extends VerificationException {
+
   final Script script;
   final int opcode;
   
-  const ScriptException([String this.message, Script this.script, int this.opcode]);
+  ScriptException([String message, Script this.script, int this.opcode]) : super(message);
   
   @override
   String toString() => "ScriptException: $message";
