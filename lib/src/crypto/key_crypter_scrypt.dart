@@ -43,7 +43,10 @@ class KeyCrypterScrypt implements KeyCrypter {
   //TODO temp, need true random bytes in salt
   static Uint8List _randomBytes(int n) {
     Random r = new Random();
-    return new Uint8List.fromList(new List.generate(n, (int i) => r.nextInt(255)));
+    Uint8List result = new Uint8List(n);
+    for(int i = 0 ; i < n ; i++)
+      result[i] = r.nextInt(256);
+    return result;
   }
   
   /**
@@ -70,14 +73,14 @@ class KeyCrypterScrypt implements KeyCrypter {
 
   EncryptedPrivateKey encrypt(Uint8List privKey, KeyParameter aesKey) {
     if(privKey == null || aesKey == null) throw new ArgumentError();
-    try {
+//    try {
       Uint8List iv = _randomBytes(BLOCK_LENGTH);
       BlockCipher cipher = _createBlockCipher(true, aesKey, iv);
       Uint8List encryptedKey = cipher.process(privKey);
       return new EncryptedPrivateKey(encryptedKey, iv);
-    } catch(e) {
-      throw new KeyCrypterException("Could not encrypt key.", e);
-    }
+//    } catch(e) {
+//      throw new KeyCrypterException("Could not encrypt key.", e);
+//    }
   }
   
   Uint8List decrypt(EncryptedPrivateKey encryptedPrivKey, KeyParameter aesKey) {

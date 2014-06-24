@@ -224,7 +224,7 @@ class Transaction extends Object with BitcoinSerialization {
         throw new VerificationException("Transaction output negative");
       valueOut += output.value;
     }
-    if(valueOut > params.MAX_MONEY)
+    if(valueOut > NetworkParameters.MAX_MONEY)
       throw new VerificationException("Total transaction output value greater than possible");
 
     if(isCoinbase) {

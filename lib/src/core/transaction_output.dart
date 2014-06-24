@@ -9,6 +9,8 @@ class TransactionOutput extends Object with BitcoinSerialization {
                       Script scriptPubKey,
                       Transaction parent,
                       NetworkParameters params: NetworkParameters.MAIN_NET}) {
+    if(value < -1 || value > NetworkParameters.MAX_MONEY)
+      throw new ArgumentError("Amounts must be positive and smaller than the max value.");
     _value = value;
     _scriptPubKey = scriptPubKey;
     _parent = parent;
@@ -42,6 +44,8 @@ class TransactionOutput extends Object with BitcoinSerialization {
   }
   
   void set value(int value) {
+    if(value < -1 || value > NetworkParameters.MAX_MONEY)
+      throw new ArgumentError("Amounts must be positive and smaller than the max value.");
     _needInstance(true);
     _value = value;
   }
@@ -56,7 +60,7 @@ class TransactionOutput extends Object with BitcoinSerialization {
     _scriptPubKey = scriptPubKey;
   }
   
-  Transaction get parentTransaction => _parent;
+  Transaction get parentTransaction => _parent as Transaction;
   
   void set parentTransaction(Transaction parentTransaction) {
     _parent = parentTransaction;

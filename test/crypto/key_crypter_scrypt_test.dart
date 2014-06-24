@@ -26,12 +26,12 @@ void _setUp() {
   Uint8List salt = new Uint8List(KeyCrypterScrypt.SALT_LENGTH);
   Random r = new Random();
   for(int i = 0 ; i < KeyCrypterScrypt.SALT_LENGTH ; i++) salt[i] = r.nextInt(256); 
-  _scryptParameters = KeyCrypterScrypt.scryptParamsWithSalt(salt);
+  _scryptParameters = KeyCrypterScrypt.generateScryptParams(salt, 4);
 }
 
 
 void _testKeyCrypterGood1() {
-  KeyCrypterScrypt keyCrypter = new KeyCrypterScrypt(_scryptParameters);
+  KeyCrypterScrypt keyCrypter = new KeyCrypterScrypt.withParams(_scryptParameters);
 
   // Encrypt.
   EncryptedPrivateKey encryptedPrivateKey = keyCrypter.encrypt(_TEST_BYTES1, keyCrypter.deriveKey(_PASSWORD1));
@@ -52,7 +52,7 @@ void _testKeyCrypterGood1() {
  */
 
 void _testKeyCrypterGood2() {
-  KeyCrypterScrypt keyCrypter = new KeyCrypterScrypt(_scryptParameters);
+  KeyCrypterScrypt keyCrypter = new KeyCrypterScrypt.withParams(_scryptParameters);
 
   print("EncrypterDecrypterTest: Trying random UUIDs for plainText and passwords :");
   int numberOfTests = 16;
@@ -75,7 +75,7 @@ void _testKeyCrypterGood2() {
 
 
 void _testKeyCrypterWrongPassword() {
-  KeyCrypterScrypt keyCrypter = new KeyCrypterScrypt(_scryptParameters);
+  KeyCrypterScrypt keyCrypter = new KeyCrypterScrypt.withParams(_scryptParameters);
 
   // create a longer encryption string
   StringBuffer stringBuffer = new StringBuffer();
@@ -92,7 +92,7 @@ void _testKeyCrypterWrongPassword() {
 
 
 void _testEncryptDecryptBytes1() {
-    KeyCrypterScrypt keyCrypter = new KeyCrypterScrypt(_scryptParameters);
+    KeyCrypterScrypt keyCrypter = new KeyCrypterScrypt.withParams(_scryptParameters);
 
     // Encrypt bytes.
     EncryptedPrivateKey encryptedPrivateKey = keyCrypter.encrypt(_TEST_BYTES1, keyCrypter.deriveKey(_PASSWORD1));
@@ -108,7 +108,7 @@ void _testEncryptDecryptBytes1() {
 
 
 void _testEncryptDecryptBytes2() {
-    KeyCrypterScrypt keyCrypter = new KeyCrypterScrypt(_scryptParameters);
+    KeyCrypterScrypt keyCrypter = new KeyCrypterScrypt.withParams(_scryptParameters);
 
     // Encrypt random bytes of various lengths up to length 50.
     Random r = new Random();

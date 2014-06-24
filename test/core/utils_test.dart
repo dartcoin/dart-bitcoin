@@ -114,7 +114,7 @@ void _testToSatoshi() {
   expect(Units.toSatoshi(0.01), equals(Units.CENT));
   expect(Units.toSatoshi(1E-2), equals(Units.CENT));
   expect(Units.toSatoshi(1.01), equals(Units.COIN + Units.CENT));
-  expect(Units.toSatoshi(21000000), equals(NetworkParameters.MAIN_NET.MAX_MONEY));
+  expect(Units.toSatoshi(21000000), equals(NetworkParameters.MAX_MONEY));
 }
 
 

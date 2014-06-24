@@ -11,6 +11,10 @@ import "core/utils_test.dart" as utils;
 
 // crypto
 import "crypto/key_crypter_scrypt_test.dart" as key_crypter_scrypt;
+import "crypto/mnemonic_code_test.dart" as mnemonic_code;
+
+// scripts
+import "script/script_test.dart" as script;
 
 // serialization
 import "serialization/varint_test.dart" as varint; 
@@ -35,7 +39,10 @@ void main() {
   
   utils.main();
   // crypto
-  // TODO not yet working key_crypter_scrypt.main();
+  key_crypter_scrypt.main(); // TODO not yet working
+  mnemonic_code.main();
+  // script
+  script.main();
   // serialization
   varint.main();
   // wire

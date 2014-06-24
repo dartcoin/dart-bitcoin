@@ -23,6 +23,11 @@ abstract class NetworkParameters {
   
   static const int PROTOCOL_VERSION = 70001;
   static final Uint8List SATOSHI_KEY = Utils.hexToBytes("04fc9702847840aaf195de8442ebecedf5b095cdbb9bc716bda9110971b28a49e0ead8564ff0db22209e0374782c093bb899692d524e9d6a6956e7c5ecbcd68284");
+
+  /**
+   * The maximum money to be generated
+   */
+  static const int MAX_MONEY = 21000000 * Units.COIN;
   
   
   // NETWORK-SPECIFIC PARAMETERS
@@ -47,11 +52,6 @@ abstract class NetworkParameters {
   Uint8List get alertSigningKey => SATOSHI_KEY;
   
   List<int> get acceptableAddressHeaders => [addressHeader, p2shHeader];
-
-  /**
-   * The maximum money to be generated
-   */
-  int get MAX_MONEY => 21000000 * Units.COIN;
 
 
   static Block _createGenesis(NetworkParameters params) {

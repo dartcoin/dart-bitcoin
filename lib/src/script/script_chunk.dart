@@ -37,16 +37,16 @@ class ScriptChunk {
       return "[" + Utils.bytesToHex(bytes) + "]";
   }
   
-  bool equalsOpCode(int opCode) => _isOpCode && _data.length == 1 && _data[0] == opCode;
+  bool equalsOpCode(int opCode) => _isOpCode && _data[0] == opCode;
   
   Uint8List serialize() => _isOpCode ? new Uint8List.fromList(_data) : Script.encodeData(bytes);
   
   @override
   bool operator ==(ScriptChunk other) {
     if(other is! ScriptChunk) return false;
-    return Utils.equalLists(_data, other._data);
+    return _isOpCode == other._isOpCode && Utils.equalLists(_data, other._data);
   }
   
   @override
-  int get hashCode => Utils.listHashCode(_data);
+  int get hashCode => (_isOpCode ? 0xffff : 0) ^ Utils.listHashCode(_data);
 }

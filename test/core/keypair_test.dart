@@ -3,6 +3,7 @@ library dartcoin.test.core.keypair;
 import "package:unittest/unittest.dart";
 
 import "package:dartcoin/core/core.dart";
+import "../test_config.dart";
 
 import "package:crypto/crypto.dart";
 import "package:bignum/bignum.dart";
@@ -392,7 +393,7 @@ void _clear() {
 
 
 void _testCanonicalSigs() {
-  File f = new File.fromUri(new Uri.file("../resources/sig_canonical.json"));
+  File f = new File.fromUri(new Uri.file("$RESOURCES/sig_canonical.json"));
   List<String> vectors = json.parse(f.readAsStringSync());
 
   for(String vector in vectors) {
@@ -404,7 +405,7 @@ void _testCanonicalSigs() {
 }
 
 void _testNonCanonicalSigs() {
-  File f = new File.fromUri(new Uri.file("../resources/sig_noncanonical.json"));
+  File f = new File.fromUri(new Uri.file("$RESOURCES/sig_noncanonical.json"));
   List<String> vectors = json.parse(f.readAsStringSync());
 
   for(String vector in vectors) {
