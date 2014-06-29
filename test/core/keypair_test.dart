@@ -11,7 +11,7 @@ import "dart:math";
 import "dart:typed_data";
 import "dart:io";
 import "dart:async";
-import "package:json/json.dart" as json;
+import 'dart:convert';
 import "package:cipher/cipher.dart";
 
 String _testPrivKey1 = "18E14A7B6A307F426A94F8114701E7C8E774E7F9A47E2C2035DB29A206321725";
@@ -394,7 +394,7 @@ void _clear() {
 
 void _testCanonicalSigs() {
   File f = new File.fromUri(new Uri.file("$RESOURCES/sig_canonical.json"));
-  List<String> vectors = json.parse(f.readAsStringSync());
+  List<String> vectors = JSON.decode(f.readAsStringSync());
 
   for(String vector in vectors) {
     if(!Utils.isHexString(vector))
@@ -406,7 +406,7 @@ void _testCanonicalSigs() {
 
 void _testNonCanonicalSigs() {
   File f = new File.fromUri(new Uri.file("$RESOURCES/sig_noncanonical.json"));
-  List<String> vectors = json.parse(f.readAsStringSync());
+  List<String> vectors = JSON.decode(f.readAsStringSync());
 
   for(String vector in vectors) {
     if(!Utils.isHexString(vector))

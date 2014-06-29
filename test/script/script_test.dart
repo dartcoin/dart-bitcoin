@@ -7,7 +7,7 @@ import "../test_config.dart";
 
 import "package:bignum/bignum.dart";
 
-import "package:json/json.dart" as json;
+import "dart:convert";
 import "dart:io";
 
 import "dart:typed_data";
@@ -97,7 +97,7 @@ void _testIp() {
 
 void _dataDrivenValidScripts() {
   File f = new File.fromUri(new Uri.file("$RESOURCES/script_valid.json"));
-  List<List> vectors = json.parse(f.readAsStringSync());
+  List<List> vectors = JSON.decode(f.readAsStringSync());
 
   NetworkParameters params = NetworkParameters.TEST_NET;
 
@@ -107,13 +107,13 @@ void _dataDrivenValidScripts() {
     Script scriptPubKey = parseScriptString(instance[1]);
     expect(() => scriptSig.correctlySpends(
         new Transaction(params: params), 0, scriptPubKey, true), returnsNormally,
-        reason: json.stringify(instance));
+        reason: JSON.encode(instance));
   }
 }
 
 void _dataDrivenInvalidScripts() {
   File f = new File.fromUri(new Uri.file("$RESOURCES/script_invalid.json"));
-  List<List> vectors = json.parse(f.readAsStringSync());
+  List<List> vectors = JSON.decode(f.readAsStringSync());
 
   NetworkParameters params = NetworkParameters.TEST_NET;
 
@@ -124,13 +124,13 @@ void _dataDrivenInvalidScripts() {
 
     expect(() => scriptSig.correctlySpends(
         new Transaction(params: params), 0, scriptPubKey, true), throwsA(new isInstanceOf<ScriptException>()),
-        reason: json.stringify(instance));
+        reason: JSON.encode(instance));
   }
 }
 
 void _dataDrivenValidTransactions() {
   File f = new File.fromUri(new Uri.file("$RESOURCES/tx_valid.json"));
-  List<List> vectors = json.parse(f.readAsStringSync());
+  List<List> vectors = JSON.decode(f.readAsStringSync());
 
   NetworkParameters params = NetworkParameters.TEST_NET;
 
@@ -161,7 +161,7 @@ void _dataDrivenValidTransactions() {
     bool enforceP2SH = instance[2];
 
     expect(() => transaction.verify(), returnsNormally,
-    reason: json.stringify(instance));
+    reason: JSON.encode(instance));
 
     for(int i = 0; i < transaction.inputs.length; i++) {
       TransactionInput input = transaction.inputs[i];
@@ -188,7 +188,7 @@ void _dataDrivenValidTransactions() {
 
 void _dataDrivenInvalidTransactions() {
   File f = new File.fromUri(new Uri.file("$RESOURCES/tx_invalid.json"));
-  List<List> vectors = json.parse(f.readAsStringSync());
+  List<List> vectors =JSON.decode(f.readAsStringSync());
 
   NetworkParameters params = NetworkParameters.TEST_NET;
 
@@ -240,7 +240,7 @@ void _dataDrivenInvalidTransactions() {
       }
     }
 
-    expect(valid, isFalse, reason: json.stringify(instance));
+    expect(valid, isFalse, reason: JSON.encode(instance));
   }
 }
 
