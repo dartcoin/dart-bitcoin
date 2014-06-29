@@ -57,9 +57,9 @@ class MnemonicCode {
     Uint8List pass = Utils.stringToUTF8(words.join(" "));
     Uint8List salt = Utils.stringToUTF8("mnemonic" + passphrase);
     
-    KeyDerivator deriv = new PBKDF2KeyDerivator(new HMac(new SHA512Digest(), 64));
+    KeyDerivator deriv = new PBKDF2KeyDerivator(new HMac(new SHA512Digest(), 128));
     deriv.init(new Pbkdf2Parameters(salt, _PBKDF2_ROUNDS, 64));
-    
+
     return deriv.process(pass);
   }
 

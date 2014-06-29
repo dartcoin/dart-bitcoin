@@ -137,23 +137,6 @@ void _setup() {
 }
 
 
-void _testVectors() {
-  for (int ii = 0; ii < _vectors.length; ii += 3) {
-    String vecData = _vectors[ii];
-    String vecCode = _vectors[ii+1];
-    String vecSeed = _vectors[ii+2];
-
-    List<String> code = _mc.toMnemonic(Utils.hexToBytes(vecData));
-    Uint8List seed = MnemonicCode.toSeed(code, "TREZOR");
-    Uint8List entropy = _mc.toEntropy(_split(vecCode));
-
-    expect(Utils.bytesToHex(entropy), equals(vecData), reason: "incorrect entropy");
-    expect(code.join(" "), equals(vecCode), reason: "incorrect mnemonic");
-    expect(Utils.bytesToHex(seed), equals(vecSeed), reason: "incorrect seed");
-  }
-}
-
-
 void _testBadEntropyLength() {
   Uint8List entropy = Utils.hexToBytes("7f7f7f7f7f7f7f7f7f7f7f7f7f7f");
   expect(() => _mc.toMnemonic(entropy), throwsA(new isInstanceOf<MnemonicLengthException>()));
@@ -176,17 +159,34 @@ void _testBadChecksum() {
   expect(() => _mc.check(words), throwsA(new isInstanceOf<MnemonicChecksumException>()));
 }
 
+
+void _testVectors() {
+  for (int ii = 0; ii < _vectors.length; ii += 3) {
+    String vecData = _vectors[ii];
+    String vecCode = _vectors[ii+1];
+    String vecSeed = _vectors[ii+2];
+
+    List<String> code = _mc.toMnemonic(Utils.hexToBytes(vecData));
+    Uint8List seed = MnemonicCode.toSeed(code, "TREZOR");
+    Uint8List entropy = _mc.toEntropy(_split(vecCode));
+
+    expect(Utils.bytesToHex(entropy), equals(vecData), reason: "incorrect entropy");
+    expect(code.join(" "), equals(vecCode), reason: "incorrect mnemonic");
+    expect(Utils.bytesToHex(seed), equals(vecSeed), reason: "incorrect seed");
+  }
+}
+
 List<String> _split(String words) => words.split(" ");
 
 
 void main() {
   group("crypto.MnemonicCode", () {
     setUp(() => _setup());
-    test("vectors", () => _testVectors());
     test("badEntropyLength", () => _testBadEntropyLength());
     test("badLength", () => _testBadLength());
     test("badWord", () => _testBadWord());
     test("badChecksum", () => _testBadChecksum());
+    test("vectors", () => _testVectors());
   });
 }
 
