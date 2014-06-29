@@ -6,13 +6,12 @@ homepage: http://www.dartcoin.org/
 dependencies:
   bignum: '>=0.0.4'
   cipher:
-    path: /Users/steven/git/cipher
+    path: /home/steven/git/cipher
   collection: any
   crypto: any
   json: any
   json_rpc: any
-  asn1lib:
-    path: /Users/steven/git/asn1lib
+  asn1lib: '>=0.3.1'
 dev_dependencies:
   browser: any
   unittest: any
