@@ -90,11 +90,15 @@ class Utils {
   }
   
   static Uint8List stringToUTF8(String string) {
-    return new Uint8List.fromList(new Utf8Encoder().convert(string));
+    Uint8List ret = new Uint8List(string.length);
+    for( int i = 0 ; i < string.length ; i++ ) {
+      ret[i] = string.codeUnitAt(i);
+    }
+    return ret;
   }
   
   static String UTF8ToString(Uint8List bytes) {
-    return new Utf8Decoder().convert(bytes);
+    return new String.fromCharCodes(bytes);
   }
   
   /**
