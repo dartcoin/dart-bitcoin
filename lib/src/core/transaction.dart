@@ -1,6 +1,6 @@
 part of dartcoin.core;
 
-class Transaction extends Object with BitcoinSerialization {
+class Transaction extends Object with HashRepresentable, BitcoinSerialization {
   
   static const int TRANSACTION_VERSION = 1;
   
@@ -236,16 +236,6 @@ class Transaction extends Object with BitcoinSerialization {
           throw new VerificationException("Coinbase input as input in non-coinbase transaction");
     }
   }
-  
-  @override
-  operator ==(Transaction other) {
-    if(other is! Transaction) return false;
-    if(identical(this, other)) return true;
-    return hash == other.hash;
-  }
-  
-  @override
-  int get hashCode => hash.hashCode;
   
   /**
    * 

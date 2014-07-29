@@ -19,6 +19,9 @@ import "script/script_test.dart" as script;
 // serialization
 import "serialization/varint_test.dart" as varint; 
 
+// hash representation
+import "hash/hash_representation_test.dart" as hash_representation;
+
 // wire
 import "wire/bloom_filter_test.dart" as bloom_filter;
 import "wire/message_serialization_test.dart" as message_serialization;
@@ -45,6 +48,8 @@ void main() {
   script.main();
   // serialization
   varint.main();
+  // hash representation
+  hash_representation.main();
   // wire
   bloom_filter.main();
   message_serialization.main();
