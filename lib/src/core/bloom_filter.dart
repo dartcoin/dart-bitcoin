@@ -110,23 +110,15 @@ class BloomFilter extends Object with BitcoinSerialization {
   String toString() => "Bloom Filter of size ${data.length} with $hashFuncs hash functions.";
 
   @override
-  int _deserialize(Uint8List bytes, bool lazy, bool retain) {
-    int offset = 0;
-    VarInt size = new VarInt.deserialize(bytes, lazy: false);
-    offset += size.size;
-    _data = bytes.sublist(offset, offset + size.value);
-    offset += size.value;
+  void _deserialize() {
+    _data = _readByteArray();
     if (_data.length > MAX_FILTER_SIZE)
       throw new SerializationException("Bloom filter out of size range.");
-    _hashFuncs = Utils.bytesToUintLE(bytes.sublist(offset), 4);
-    offset += 4;
+    _hashFuncs = _readUintLE();
     if (_hashFuncs > MAX_HASH_FUNCS)
       throw new SerializationException("Bloom filter hash function count out of range");
-    _nTweak = Utils.bytesToUintLE(bytes.sublist(offset), 4);
-    offset += 4;
-    _nFlags = bytes[offset];
-    offset += 1;
-    return offset;
+    _nTweak = _readUintLE();
+    _nFlags = _readUintLE(1);
   }
   
   /**
@@ -142,9 +134,9 @@ class BloomFilter extends Object with BitcoinSerialization {
   }
   
   @override
-  int _lazySerializationLength(Uint8List bytes) {
-    VarInt dataSize = new VarInt.deserialize(bytes, lazy: false);
-    return dataSize.size + dataSize.value + 4 + 4 + 1;
+  void _deserializeLazy() {
+    int dataSize = _readVarInt();
+    _serializationCursor += dataSize + 4 + 4 + 1;
   }
 
   static int _rotateLeft32 (int x, int r) {

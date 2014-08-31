@@ -22,13 +22,12 @@ class FilterLoadMessage extends Message {
     return _filter;
   }
   
-  int _deserializePayload(Uint8List bytes, bool lazy, bool retain) {
-    int offset = 0;
-    _filter = new BloomFilter.deserialize(bytes.sublist(offset), lazy: lazy, retain: retain, parent: this);
-    offset += _filter.serializationLength;
-    return offset;
+  @override
+  void _deserializePayload() {
+    _filter = _readObject(new BloomFilter._newInstance());
   }
-  
-  Uint8List _serialize_payload() => _filter.serialize();
+
+  @override
+  Uint8List _serializePayload() => _filter.serialize();
   
 }

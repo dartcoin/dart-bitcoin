@@ -47,7 +47,8 @@ class VarInt extends Object with BitcoinSerialization {
     _needInstance();
     return _value.hashCode;
   }
-  
+
+  @override
   Uint8List _serialize() {
     List<int> result;
     if(_value < 0xfd)
@@ -63,29 +64,33 @@ class VarInt extends Object with BitcoinSerialization {
     // sublist is necessary due to doubtful implementation of replaceRange
     return new Uint8List.fromList(result.sublist(0, size));
   }
-  
-  int _deserialize(Uint8List bytes, bool lazy, bool retain) {
-    if(bytes[0] == 0xfd) {
-      _value = Utils.bytesToUintLE(bytes.sublist(1, 3));
-      return 3;
+
+  @override
+  void _deserialize() {
+    int firstByte = _readUintLE(1);
+    if(firstByte == 0xfd) {
+      _value = _readUintLE(2);
+      return;
     }
-    else if(bytes[0] == 0xfe) {
-      _value = Utils.bytesToUintLE(bytes.sublist(1, 5));
-      return 5;
+    if(firstByte == 0xfe) {
+      _value = _readUintLE(4);
+      return;
     }
-    else if(bytes[0] == 0xff) {
-      _value = Utils.bytesToUintLE(bytes.sublist(1, 9));
-      return 9;
+    if(firstByte == 0xff) {
+      _value = _readUintLE(8);
+      return;
     }
-    _value = bytes[0];
-    return 1;
+    _value = firstByte;
   }
-  
-  int _lazySerializationLength(Uint8List bytes) {
-    if(bytes[0] == 0xfd) return 3;
-    if(bytes[0] == 0xfe) return 5;
-    if(bytes[0] == 0xff) return 9;
-    return 1;
+
+  @override
+  void _deserializeLazy() {
+    int firstByte = _readUintLE(1);
+    int size = 0;
+    if(firstByte == 0xfd) size = 2;
+    else if(firstByte == 0xfe) size = 4;
+    else if(firstByte == 0xff) size = 8;
+    _serializationCursor += size;
   }
   
   static int sizeOf(int value) {

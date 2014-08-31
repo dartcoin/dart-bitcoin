@@ -107,6 +107,7 @@ class TransactionInput extends Object with BitcoinSerialization {
     return _outpoint.hashCode ^ _scriptSig.hashCode ^ _sequence.hashCode;
   }
 
+  @override
   Uint8List _serialize() {
     Uint8List encodedScript = _scriptSig.encode();
     return new Uint8List.fromList(new List()
@@ -116,26 +117,18 @@ class TransactionInput extends Object with BitcoinSerialization {
       ..addAll(Utils.uintToBytesLE(_sequence, 4)));
   }
 
-  int _deserialize(Uint8List bytes, bool lazy, bool retain) {
-    int offset = 0;
-    _outpoint = new TransactionOutPoint.deserialize(bytes, lazy: lazy, retain: retain);
-    offset += _outpoint.serializationLength;
-    VarInt scrLn = new VarInt.deserialize(bytes.sublist(offset), lazy: false);
-    offset += scrLn.serializationLength;
-    _scriptSig = new Script(bytes.sublist(offset, offset + scrLn.value));
-    offset += scrLn.value;
-    _sequence = Utils.bytesToUintLE(bytes.sublist(offset), 4);
-    offset += 4;
-    return offset;
+  @override
+  void _deserialize() {
+    _outpoint = _readObject(new TransactionOutPoint._newInstance());
+    _scriptSig = new Script(_readByteArray());
+    _sequence = _readUintLE();
   }
   
   @override
-  int _lazySerializationLength(Uint8List bytes) => _calculateSerializationLength(bytes);
-  
-  static int _calculateSerializationLength(Uint8List bytes) {
-    int offset = TransactionOutPoint.SERIALIZATION_LENGTH;
-    VarInt scrLn = new VarInt.deserialize(bytes.sublist(offset), lazy: false);
-    return offset + scrLn.serializationLength + scrLn.value + 4;
+  void _deserializeLazy() {
+    _serializationCursor += TransactionOutPoint.SERIALIZATION_LENGTH;
+    int scrLn = _readVarInt();
+    _serializationCursor += scrLn + 4;
   }
 }
 

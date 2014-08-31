@@ -51,19 +51,17 @@ abstract class InventoryItemContainerMessage extends Message {
   // required for serialization
   InventoryItemContainerMessage._newInstance(String command) : super(command, null);
   
-  int _deserializePayload(Uint8List bytes, bool lazy, bool retain) {
-    int offset = 0;
-    VarInt nbItems = new VarInt.deserialize(bytes.sublist(offset), lazy: false);
-    offset += nbItems.size;
+  @override
+  void _deserializePayload() {
+    int nbItems = _readVarInt();
     _items = new List<InventoryItem>();
-    for(int i = 0 ; i < nbItems.value ; i++) {
-      _items.add(new InventoryItem.deserialize(bytes.sublist(offset), lazy: lazy, retain: retain));
-      offset += InventoryItem.SERIALIZATION_LENGTH;
+    for(int i = 0 ; i < nbItems ; i++) {
+      _items.add(_readObject(new InventoryItem._newInstance()));
     }
-    return offset;
   }
-  
-  Uint8List _serialize_payload() {
+
+  @override
+  Uint8List _serializePayload() {
     List<int> result = new List<int>()
       ..addAll(new VarInt(_items.length).serialize());
     for(InventoryItem item in _items) {

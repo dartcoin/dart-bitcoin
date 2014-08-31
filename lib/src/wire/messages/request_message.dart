@@ -43,23 +43,19 @@ abstract class RequestMessage extends Message {
   // required for serialization
   RequestMessage._newInstance(String command) : super(command, null);
   
-  int _deserializePayload(Uint8List bytes, bool lazy, bool retain) {
-    int offset = 0;
-    protocolVersion = Utils.bytesToUintLE(bytes.sublist(offset), 4);
-    offset += 4;
-    VarInt nbLocators = new VarInt.deserialize(bytes.sublist(offset), lazy: false);
-    offset += nbLocators.size;
-    _locators = new List<Sha256Hash>(nbLocators.value);
-    for(int i = 0 ; i < nbLocators.value ; i++) {
-      _locators.add(new Sha256Hash.deserialize(bytes.sublist(offset)));
-      offset += Sha256Hash.LENGTH;
+  @override
+  void _deserializePayload() {
+    protocolVersion = _readUintLE();
+    int nbLocators = _readVarInt();
+    _locators = new List<Sha256Hash>(nbLocators);
+    for(int i = 0 ; i < nbLocators ; i++) {
+      _locators.add(new Sha256Hash.deserialize(_readBytes(32)));
     }
-    _stop = new Sha256Hash.deserialize(bytes.sublist(offset));
-    offset += Sha256Hash.LENGTH;
-    return offset;
+    _stop = new Sha256Hash.deserialize(_readBytes(32));
   }
-  
-  Uint8List _serialize_payload() {
+
+  @override
+  Uint8List _serializePayload() {
     List<int> result = new List<int>()
       ..addAll(Utils.uintToBytesLE(protocolVersion, 4))
       ..addAll(new VarInt(_locators.length).serialize());

@@ -142,22 +142,22 @@ class PeerAddress extends Object with BitcoinSerialization {
     _needInstance();
     return _addr.hashCode ^ port.hashCode ^ time.hashCode ^ _services.hashCode;
   }
-  
-  int _deserialize(Uint8List bytes, bool lazy, bool retain) {
-    int offset = 0;
-    if(protocolVersion >= 31402) {
-      _time = Utils.bytesToUintLE(bytes, 4);
-      offset += 4;
-    }
-    _services = Utils.bytesToUBigIntLE(bytes.sublist(offset), 8);
-    offset += 8;
-    _addr = bytes.sublist(offset, offset + 16);
-    offset += 16;
-    _port = (0xff & bytes[offset]) << 8 | (0xff & bytes[offset + 1]);
-    offset += 2;
-    return offset;
+
+  @override
+  void _deserialize() {
+    if(protocolVersion >= 31402)
+      _time = _readUintLE();
+    _services = Utils.bytesToUBigIntLE(_readBytes(8));//_readUintLE(8); // does this work in javascript?
+    _addr = _readBytes(16);
+    _port = (0xff & _readUintLE(1)) << 8 | (0xff & _readUintLE(1));
   }
-  
+
+  @override
+  void _deserializeLazy() {
+    _serializationCursor += protocolVersion > 31402 ? SERIALIZATION_SIZE : SERIALIZATION_SIZE - 4;
+  }
+
+  @override
   Uint8List _serialize() {
     List<int> result = new List<int>();
     if(protocolVersion >= 31402) {
@@ -172,11 +172,6 @@ class PeerAddress extends Object with BitcoinSerialization {
       ..add(0xFF & _port >> 8)
       ..add(0xFF & _port);
     return new Uint8List.fromList(result);
-  }
-  
-  @override
-  int _lazySerializationLength(Uint8List bytes) {
-    return protocolVersion > 31402 ? SERIALIZATION_SIZE : SERIALIZATION_SIZE - 4;
   }
   
 }

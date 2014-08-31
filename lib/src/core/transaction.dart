@@ -357,7 +357,8 @@ class Transaction extends Object with BitcoinSerialization {
     _outputs = outputs;
     return hash;
   }
-  
+
+  @override
   Uint8List _serialize() {
     List<int> result = new List<int>()
       ..addAll(Utils.uintToBytesLE(_version, 4))
@@ -368,52 +369,36 @@ class Transaction extends Object with BitcoinSerialization {
     result.addAll(Utils.uintToBytesLE(_lockTime, 4));
     return new Uint8List.fromList(result);
   }
-  
-  int _deserialize(Uint8List bytes, bool lazy, bool retain) {
-    int offset = 0;
-    _version = Utils.bytesToUintLE(bytes, 4);
-    offset += 4;
-    VarInt nbInputs = new VarInt.deserialize(bytes.sublist(offset), lazy: false);
-    offset += nbInputs.serializationLength;
+
+  @override
+  void _deserialize() {
+    _version = _readUintLE();
+    int nbInputs = _readVarInt();
     _inputs = new List<TransactionInput>();
-    for(int i = 0 ; i < nbInputs.value ; i++) {
-      TransactionInput input = new TransactionInput.deserialize(bytes.sublist(offset), lazy: lazy, retain: retain, parent: this);
-      offset += input.serializationLength;
-      _inputs.add(input);
+    for(int i = 0 ; i < nbInputs ; i++) {
+      _inputs.add(_readObject(new TransactionInput._newInstance()));
     }
-    VarInt nbOutputs = new VarInt.deserialize(bytes.sublist(offset), lazy: false);
-    offset += nbOutputs.serializationLength;
+    int nbOutputs = _readVarInt();
     _outputs = new List<TransactionOutput>();
-    for(int i = 0 ; i < nbOutputs.value ; i++) {
-      TransactionOutput output = new TransactionOutput.deserialize(bytes.sublist(offset), lazy: lazy, retain: retain, parent: this);
-      offset += output.serializationLength;
-      _outputs.add(output);
+    for(int i = 0 ; i < nbOutputs ; i++) {
+      _outputs.add(_readObject(new TransactionOutput._newInstance()));
     }
-    _lockTime = Utils.bytesToUintLE(bytes.sublist(offset), 4);
-    offset += 4;
-    return offset;
+    _lockTime = _readUintLE();
   }
   
   @override
-  int _lazySerializationLength(Uint8List bytes) => _calculateSerializationLength(bytes);
-  
-  static int _calculateSerializationLength(Uint8List bytes) {
-    int offset = 0;
-    // version
-    offset += 4;
+  void _deserializeLazy() {
+    _serializationCursor += 4;
     // inputs
-    VarInt nbInputs = new VarInt.deserialize(bytes.sublist(offset), lazy: false);
-    offset += nbInputs.serializationLength;
-    for(int i = 0 ; i < nbInputs.value ; i++)
-      offset += TransactionInput._calculateSerializationLength(bytes.sublist(offset));
+    int nbInputs = _readVarInt();
+    for(int i = 0 ; i < nbInputs ; i++)
+      _readObject(new TransactionInput._newInstance(), lazy: true);
     // outputs
-    VarInt nbOutputs = new VarInt.deserialize(bytes.sublist(offset), lazy: false);
-    offset += nbOutputs.serializationLength;
-    for(int i = 0 ; i < nbOutputs.value ; i++)
-      offset += TransactionOutput._calculateSerializationLength(bytes.sublist(offset));
+    int nbOutputs = _readVarInt();
+    for(int i = 0 ; i < nbOutputs ; i++)
+      _readObject(new TransactionOutput._newInstance(), lazy: true);
     // locktime
-    offset += 4;
-    return offset;
+    _serializationCursor += 4;
   }
   
   @override

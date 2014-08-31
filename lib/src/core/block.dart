@@ -91,7 +91,7 @@ class Block extends Object with BitcoinSerialization {
   
   Sha256Hash _calculateHash() {
     if(isCached)
-      return new Sha256Hash(Utils.reverseBytes(Utils.doubleDigest(_serialization.sublist(0, HEADER_SIZE))));
+      return new Sha256Hash(Utils.reverseBytes(Utils.doubleDigest(new Uint8List.view(_serializationBuffer, _serializationOffset, HEADER_SIZE))));
     _needInstance();
     return new Sha256Hash(Utils.reverseBytes(Utils.doubleDigest(_serializeHeader())));
   }
@@ -466,59 +466,44 @@ class Block extends Object with BitcoinSerialization {
     }
     return new Uint8List.fromList(result);
   }
-  
-  /**
-   * Returns the header size
-   */
-  int _deserializeHeader(Uint8List bytes) {
-    _version = Utils.bytesToUintLE(bytes.sublist(0, 4));
-    _previous = new Sha256Hash.deserialize(bytes.sublist(4, 36));
-    _merkle = new Sha256Hash.deserialize(bytes.sublist(36, 68));
-    _timestamp = Utils.bytesToUintLE(bytes.sublist(68), 4);
-    _difficultyTarget = Utils.bytesToUintLE(bytes.sublist(72), 4);
-    _nonce = Utils.bytesToUintLE(bytes.sublist(76), 4);
-    return HEADER_SIZE;
+
+  void _deserializeHeader() {
+    _version = _readUintLE();
+    _previous = new Sha256Hash.deserialize(_readBytes(32));
+    _merkle = new Sha256Hash.deserialize(_readBytes(32));
+    _timestamp = _readUintLE();
+    _difficultyTarget = _readUintLE();
+    _nonce = _readUintLE();
   }
-  
-  /**
-   * Returns the serialization length after the header (varint + sum of txs)
-   */
-  int _deserializeTransactions(Uint8List bytes, bool lazy, bool retain) {
-    int offset = 0;
+
+  void _deserializeTransactions() {
     List<Transaction> txs = new List<Transaction>();
-    VarInt nbTx = new VarInt.deserialize(bytes.sublist(offset), lazy: false);
-    offset += nbTx.serializationLength;
-    for(int i = 0 ; i < nbTx.value ; i++) {
-      Transaction tx = new Transaction.deserialize(bytes.sublist(offset), lazy: lazy, retain: retain, params: params);
-      offset += tx.serializationLength;
+    int nbTx = _readVarInt();
+    for(int i = 0 ; i < nbTx ; i++) {
+      Transaction tx = _readObject(new Transaction._newInstance());
       txs.add(tx);
     }
     _txs = txs.length > 0 ? txs : null;
-    return offset;
   }
-  
-  int _deserialize(Uint8List bytes, bool lazy, bool retain) {
+
+  @override
+  void _deserialize() {
     // parse header
-    int offset = _deserializeHeader(bytes);
+    _deserializeHeader();
     // check if this block is only a header or a full block
-    if(_serializationLength == HEADER_SIZE || bytes.length == HEADER_SIZE)
-      return offset;
+    if(_serializationLength == HEADER_SIZE || (_serializationBuffer.lengthInBytes - _serializationOffset) == HEADER_SIZE)
+      return;
     // parse transactions
-    offset += _deserializeTransactions(bytes.sublist(offset), lazy, retain);
-    return offset;
+    _deserializeTransactions();
   }
   
   @override
-  int _lazySerializationLength(Uint8List bytes) => _calculateSerializationLength(bytes);
-  
-  static int _calculateSerializationLength(Uint8List bytes) {
-    int offset = HEADER_SIZE;
+  void   _deserializeLazy() {
+    _serializationCursor += HEADER_SIZE;
     // transactions
-    VarInt nbTx = new VarInt.deserialize(bytes.sublist(offset), lazy: false);
-    offset += nbTx.serializationLength;
-    for(int i = 0 ; i < nbTx.value ; i++)
-      offset += Transaction._calculateSerializationLength(bytes.sublist(offset));
-    return offset;
+    int nbTx = _readVarInt();
+    for(int i = 0 ; i < nbTx ; i++)
+      Transaction tx = _readObject(new Transaction._newInstance(), lazy: true);
   }
   
   @override

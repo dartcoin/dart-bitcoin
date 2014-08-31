@@ -22,12 +22,11 @@ class TransactionMessage extends Message {
     return _tx;
   }
   
-  int _deserializePayload(Uint8List bytes, bool lazy, bool retain) {
-    int offset = 0;
-    _tx = new Transaction.deserialize(bytes.sublist(offset), lazy: lazy, retain: retain, parent: this);
-    offset += _tx.serializationLength;
-    return offset; 
+  @override
+  void _deserializePayload() {
+    _tx = _readObject(new Transaction._newInstance());
   }
-  
-  Uint8List _serialize_payload() => _tx.serialize();
+
+  @override
+  Uint8List _serializePayload() => _tx.serialize();
 }

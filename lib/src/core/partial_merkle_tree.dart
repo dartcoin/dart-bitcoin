@@ -66,7 +66,8 @@ class PartialMerkleTree extends Object with BitcoinSerialization {
       _needInstance();
       return new UnmodifiableListView(_hashes);
     }
-    
+
+    @override
     Uint8List _serialize() {
       List<int> result = new List<int>()
         ..addAll(Utils.uintToBytesLE(_transactionCount, 4))
@@ -76,23 +77,25 @@ class PartialMerkleTree extends Object with BitcoinSerialization {
         ..addAll(_matchedChildBits);
       return new Uint8List.fromList(result);
     }
-    
-    int _deserialize(Uint8List bytes, bool lazy, bool retain) {
-      int offset = 0;
-      _transactionCount = Utils.bytesToUintLE(bytes, 4);
-      offset += 4;
-      VarInt nbHashes = new VarInt.deserialize(bytes.sublist(offset), lazy: false);
-      offset += nbHashes.serializationLength;
-      _hashes = new List<Sha256Hash>(nbHashes.value);
-      for(int i = 0 ; i < nbHashes.value ; i++) {
-        _hashes[i] = new Sha256Hash.deserialize(bytes.sublist(offset, offset + Sha256Hash.LENGTH));
-        offset += Sha256Hash.LENGTH;
+
+    @override
+    void _deserialize() {
+      _transactionCount = _readUintLE();
+      int nbHashes = _readVarInt();
+      _hashes = new List<Sha256Hash>(nbHashes);
+      for(int i = 0 ; i < nbHashes ; i++) {
+        _hashes[i] = new Sha256Hash.deserialize(_readBytes(32));
       }
-      VarInt nbFlagBytes = new VarInt.deserialize(bytes.sublist(offset), lazy: false);
-      offset += nbFlagBytes.serializationLength;
-      _matchedChildBits = bytes.sublist(offset, offset + nbFlagBytes.value);
-      offset += nbFlagBytes.value;
-      return offset;
+      _matchedChildBits = _readByteArray();
+    }
+
+    @override
+    void _deserializeLazy() {
+      _serializationCursor += 4;
+      int nbHashes = _readVarInt();
+      _serializationCursor += Sha256Hash.LENGTH * nbHashes;
+      int nbBytes = _readVarInt();
+      _serializationCursor += nbBytes;
     }
     
     /**

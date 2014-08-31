@@ -113,7 +113,7 @@ void _testSerialization(bool lazy) {
     int ts = block.timestamp;
     block.timestamp = ts;
   }
-  expect(block.serialize(), equals(blockBytes));
+  expect(block.serialize(), equals(blockBytes), reason: "failed serialization test in mode lazy = $lazy");
 }
 
 

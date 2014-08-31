@@ -77,16 +77,22 @@ class TransactionOutPoint extends Object with BitcoinSerialization {
     _needInstance();
     return _index.hashCode ^ _txid.hashCode;
   }
-  
+
+  @override
   Uint8List _serialize() {
     return new Uint8List.fromList(new List<int>()
       ..addAll(_txid.serialize())
       ..addAll(Utils.uintToBytesLE(_index, 4)));
   }
-  
-  int _deserialize(Uint8List bytes, bool lazy, bool retain) {
-    _txid = new Sha256Hash.deserialize(bytes.sublist(0, 32));
-    _index = Utils.bytesToUintLE(bytes.sublist(32), 4);
-    return SERIALIZATION_LENGTH;
+
+  @override
+  int _deserialize() {
+    _txid = new Sha256Hash.deserialize(_readBytes(32));
+    _index = _readUintLE();
+  }
+
+  @override
+  void deserializeLazy() {
+    _serializationCursor += 32 + 4;
   }
 }

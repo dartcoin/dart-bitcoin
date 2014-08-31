@@ -47,12 +47,18 @@ class InventoryItem extends Object with BitcoinSerialization {
     return _hash;
   }
   
-  int _deserialize(Uint8List bytes, bool lazy, bool retain) {
-    _type = new InventoryItemType._(Utils.bytesToUintLE(bytes, 4));
-    _hash = new Sha256Hash.deserialize(bytes.sublist(4, Sha256Hash.LENGTH + 4));
-    return SERIALIZATION_LENGTH;
+  @override
+  void _deserialize() {
+    _type = new InventoryItemType._(_readUintLE());
+    _hash = new Sha256Hash.deserialize(_readBytes(32));
   }
-  
+
+  @override
+  void _deserializeLazy() {
+    _serializationCursor += SERIALIZATION_LENGTH;
+  }
+
+  @override
   Uint8List _serialize() {
     return new Uint8List.fromList(new List<int>()
       ..addAll(Utils.uintToBytesLE(_type.value, 4))

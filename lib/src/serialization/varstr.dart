@@ -48,29 +48,24 @@ class VarStr extends Object with BitcoinSerialization {
     _needInstance();
     return _content.hashCode;
   }
-  
+
+  @override
   Uint8List _serialize() {
     List<int> contentBytes = new Utf8Encoder().convert(_content);
     return new Uint8List.fromList(new List<int>()
       ..addAll(new VarInt(contentBytes.length).serialize())
       ..addAll(contentBytes));
   }
-  
-  int _deserialize(Uint8List bytes, bool lazy, bool retain) {
-    int offset = 0;
-    VarInt size = new VarInt.deserialize(bytes, lazy: false);
-    offset += size.serializationLength;
-    _content = new Utf8Decoder().convert(bytes.sublist(offset, offset + size.value));
-    offset += size.value;
-    return offset;
+
+  @override
+  void _deserialize() {
+    _content = new Utf8Decoder().convert(_readByteArray());
   }
-  
-  int _lazySerializationLength(Uint8List bytes) {
-    int offset = 0;
-    VarInt size = new VarInt.deserialize(bytes, lazy: false);
-    offset += size.serializationLength;
-    offset += size.value;
-    return offset;
+
+  @override
+  void _deserializeLazy() {
+    int size = _readVarInt();
+    _serializationCursor += size;
   }
   
 }

@@ -22,12 +22,11 @@ class BlockMessage extends Message {
     return _block;
   }
   
-  int _deserializePayload(Uint8List bytes, bool lazy, bool retain) {
-    int offset = 0;
-    _block = new Block.deserialize(bytes.sublist(offset), lazy: lazy, retain: retain, parent: this);
-    offset += _block.serializationLength;
-    return offset;
+  @override
+  void _deserializePayload() {
+    _block = _readObject(new Block._newInstance());
   }
-  
-  Uint8List _serialize_payload() => _block.serialize();
+
+  @override
+  Uint8List _serializePayload() => _block.serialize();
 }

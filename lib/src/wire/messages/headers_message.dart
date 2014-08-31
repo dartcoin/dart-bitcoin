@@ -33,20 +33,18 @@ class HeadersMessage extends Message {
     header._parent = null;
   }
   
-  int _deserializePayload(Uint8List bytes, bool lazy, bool retain) {
-    int offset = 0;
-    VarInt nbHeaders = new VarInt.deserialize(bytes.sublist(offset), lazy: false);
-    offset += nbHeaders.size;
-    List<Block> headers = new List<Block>(nbHeaders.value);
-    for(int i = 0 ; i < nbHeaders.value ; i++) {
-      headers[i] = new Block.deserialize(bytes.sublist(offset), lazy: lazy, length: Block.HEADER_SIZE + 1, parent: this);
-      offset += Block.HEADER_SIZE + 1;
+  @override
+  void _deserializePayload() {
+    int nbHeaders = _readVarInt();
+    List<Block> headers = new List<Block>(nbHeaders);
+    for(int i = 0 ; i < nbHeaders ; i++) {
+      headers[i] = _readObject(new Block._newInstance(), length: Block.HEADER_SIZE + 1);
     }
     _headers = headers;
-    return offset;
   }
-  
-  Uint8List _serialize_payload() {
+
+  @override
+  Uint8List _serializePayload() {
     List<int> result = new List<int>()
       ..addAll(new VarInt(_headers.length).serialize());
     for(Block header in _headers) {

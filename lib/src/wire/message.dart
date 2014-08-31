@@ -1,34 +1,33 @@
 part of dartcoin.core;
 
-typedef Message _MessageDeserializer(Uint8List bytes, int length, bool lazy, NetworkParameters params, int protocolVersion);
+typedef Message _MessageInstanceGenerator();
 
 abstract class Message extends Object with BitcoinSerialization {
-  
-  // closurizing constructors is not (yet) possible
-  static final Map<String, _MessageDeserializer> _MESSAGE_DESERIALIZERS = {
-        "addr"         : (Uint8List bts, int len, bool laz, bool ret, NetworkParameters par, int prv) => new AddressMessage.deserialize(bts, length: len, lazy: laz, retain: ret, params: par, protocolVersion: prv),
-        "alert"        : (Uint8List bts, int len, bool laz, bool ret, NetworkParameters par, int prv) => new AlertMessage.deserialize(bts, length: len, retain: ret, params: par, protocolVersion: prv),
-        "block"        : (Uint8List bts, int len, bool laz, bool ret, NetworkParameters par, int prv) => new BlockMessage.deserialize(bts, length: len, lazy: laz, retain: ret, params: par, protocolVersion: prv),
-        "filteradd"    : (Uint8List bts, int len, bool laz, bool ret, NetworkParameters par, int prv) => new FilterAddMessage.deserialize(bts, length: len, lazy: laz, retain: ret, params: par, protocolVersion: prv),
-        "filterclear"  : (Uint8List bts, int len, bool laz, bool ret, NetworkParameters par, int prv) => new FilterClearMessage.deserialize(bts, length: len, lazy: laz, retain: ret, params: par, protocolVersion: prv),
-        "filterload"   : (Uint8List bts, int len, bool laz, bool ret, NetworkParameters par, int prv) => new FilterLoadMessage.deserialize(bts, length: len, lazy: laz, retain: ret, params: par, protocolVersion: prv),
-        "getaddr"      : (Uint8List bts, int len, bool laz, bool ret, NetworkParameters par, int prv) => new GetAddressMessage.deserialize(bts, lazy: laz, retain: ret, params: par, protocolVersion: prv),
-        "getblocks"    : (Uint8List bts, int len, bool laz, bool ret, NetworkParameters par, int prv) => new GetBlocksMessage.deserialize(bts, length: len, lazy: laz, retain: ret, params: par, protocolVersion: prv),
-        "getdata"      : (Uint8List bts, int len, bool laz, bool ret, NetworkParameters par, int prv) => new GetDataMessage.deserialize(bts, length: len, lazy: laz, retain: ret, params: par, protocolVersion: prv),
-        "getheaders"   : (Uint8List bts, int len, bool laz, bool ret, NetworkParameters par, int prv) => new GetHeadersMessage.deserialize(bts, length: len, lazy: laz, retain: ret, params: par, protocolVersion: prv),
-        "headers"      : (Uint8List bts, int len, bool laz, bool ret, NetworkParameters par, int prv) => new HeadersMessage.deserialize(bts, length: len, lazy: laz, retain: ret, params: par, protocolVersion: prv),
-        "inv"          : (Uint8List bts, int len, bool laz, bool ret, NetworkParameters par, int prv) => new InventoryMessage.deserialize(bts, length: len, lazy: laz, retain: ret, params: par, protocolVersion: prv),
-        "mempool"      : (Uint8List bts, int len, bool laz, bool ret, NetworkParameters par, int prv) => new MemPoolMessage.deserialize(bts, length: len, lazy: laz, retain: ret, params: par, protocolVersion: prv),
-        "merkleblock"  : (Uint8List bts, int len, bool laz, bool ret, NetworkParameters par, int prv) => new MerkleBlockMessage.deserialize(bts, length: len, lazy: laz, retain: ret, params: par, protocolVersion: prv),
-        "notfound"     : (Uint8List bts, int len, bool laz, bool ret, NetworkParameters par, int prv) => new NotFoundMessage.deserialize(bts, length: len, lazy: laz, retain: ret, params: par, protocolVersion: prv),
-        "ping"         : (Uint8List bts, int len, bool laz, bool ret, NetworkParameters par, int prv) => new PingMessage.deserialize(bts, lazy: laz, retain: ret, params: par, protocolVersion: prv),
-        "pong"         : (Uint8List bts, int len, bool laz, bool ret, NetworkParameters par, int prv) => new PongMessage.deserialize(bts, lazy: laz, retain: ret, params: par, protocolVersion: prv),
-        "tx"           : (Uint8List bts, int len, bool laz, bool ret, NetworkParameters par, int prv) => new TransactionMessage.deserialize(bts, length: len, lazy: laz, retain: ret, params: par, protocolVersion: prv),
-        "verack"       : (Uint8List bts, int len, bool laz, bool ret, NetworkParameters par, int prv) => new VerackMessage.deserialize(bts, lazy: laz, retain: ret, params: par, protocolVersion: prv),
-        "version"      : (Uint8List bts, int len, bool laz, bool ret, NetworkParameters par, int prv) => new VersionMessage.deserialize(bts, length: len, retain: ret, params: par, protocolVersion: prv),
+
+  static final Map<String, _MessageInstanceGenerator> _MESSAGE_INSTANCE_GENERATORS = {
+      "addr"         : () => new AddressMessage._newInstance(),
+      "alert"        : () => new AlertMessage._newInstance(),
+      "block"        : () => new BlockMessage._newInstance(),
+      "filteradd"    : () => new FilterAddMessage._newInstance(),
+      "filterclear"  : () => new FilterClearMessage._newInstance(),
+      "filterload"   : () => new FilterLoadMessage._newInstance(),
+      "getaddr"      : () => new GetAddressMessage._newInstance(),
+      "getblocks"    : () => new GetBlocksMessage._newInstance(),
+      "getdata"      : () => new GetDataMessage._newInstance(),
+      "getheaders"   : () => new GetHeadersMessage._newInstance(),
+      "headers"      : () => new HeadersMessage._newInstance(),
+      "inv"          : () => new InventoryMessage._newInstance(),
+      "mempool"      : () => new MemPoolMessage._newInstance(),
+      "merkleblock"  : () => new MerkleBlockMessage._newInstance(),
+      "notfound"     : () => new NotFoundMessage._newInstance(),
+      "ping"         : () => new PingMessage._newInstance(),
+      "pong"         : () => new PongMessage._newInstance(),
+      "tx"           : () => new TransactionMessage._newInstance(),
+      "verack"       : () => new VerackMessage._newInstance(),
+      "version"      : () => new VersionMessage._newInstance(),
   };
   
-  static const int HEADER_LENGTH = 4 + COMMAND_LENGTH + 4 + 4;
+  static const int HEADER_LENGTH = 24; // = 4 + COMMAND_LENGTH + 4 + 4;
   static const int COMMAND_LENGTH = 12;
   
   String command;
@@ -45,9 +44,11 @@ abstract class Message extends Object with BitcoinSerialization {
     if(bytes.length < HEADER_LENGTH)
       throw new SerializationException("Too few bytes to be a Message");
     String command = _parseCommand(bytes.sublist(4, 4 + COMMAND_LENGTH));
-    if(!_MESSAGE_DESERIALIZERS.containsKey(command))
+    if(!_MESSAGE_INSTANCE_GENERATORS.containsKey(command))
       throw new SerializationException("Unknown message command code: $command");
-    return _MESSAGE_DESERIALIZERS[command](bytes, length, lazy, retain, params, protocolVersion); 
+    BitcoinSerialization instance = _MESSAGE_INSTANCE_GENERATORS[command]();
+    return new BitcoinSerialization._internal(instance, bytes.buffer, bytes.offsetInBytes, length,
+        lazy, retain, params, protocolVersion, null);
   }
   
   /**
@@ -60,20 +61,21 @@ abstract class Message extends Object with BitcoinSerialization {
     if(params == null) params = NetworkParameters.MAIN_NET;
     if(command.length > 12)
       throw new ArgumentError("Command length should not be greater than 12.");
-    List<int> result = new List<int>();
-    // the magic value
-    result.addAll(Utils.uintToBytesLE(params.magicValue, 4));
-    // the command code
-    result.addAll(_encodeCommand(command));
-    // the payload length
-    result.addAll(Utils.uintToBytesLE(payloadBytes.length, 4));
-    // the checksum
     Uint8List checksum = _calculateChecksum(payloadBytes);
-    result.addAll(checksum);
+    Uint8List bytes = new Uint8List.fromList(new List<int>()
+    // the magic value
+    ..addAll(Utils.uintToBytesLE(params.magicValue, 4))
+    // the command code
+    ..addAll(_encodeCommand(command))
+    // the payload length
+    ..addAll(Utils.uintToBytesLE(payloadBytes.length, 4))
+    // the checksum
+    ..addAll(checksum)
     // the payload
-    result.addAll(payloadBytes);
-    return new Message.deserialize(new Uint8List.fromList(result), 
-        length: result.length, lazy: lazy, retain: retain, params: params, protocolVersion: protocolVersion);
+    ..addAll(payloadBytes));
+    BitcoinSerialization instance = _MESSAGE_INSTANCE_GENERATORS[command]();
+    return new BitcoinSerialization._internal(instance, bytes.buffer, bytes.offsetInBytes, bytes.lengthInBytes,
+        lazy, retain, params, protocolVersion, null);
   }
   
   /**
@@ -92,27 +94,32 @@ abstract class Message extends Object with BitcoinSerialization {
   
   Uint8List get payload => serialize().sublist(HEADER_LENGTH);
   
-  int _deserialize(Uint8List bytes, bool lazy, bool retain) {
-    int offset = 0;
-    if(bytes.length < 16) 
-      throw new SerializationException("Cannot deserialize because serialization is too short.");
-    _setParamsFromMagic(Utils.bytesToUintLE(bytes, 4));
-    offset += 4;
-    String cmd = _parseCommand(bytes.sublist(offset, offset + COMMAND_LENGTH));
-    offset += COMMAND_LENGTH;
+  @override
+  void _deserialize() {
+    _setParamsFromMagic(_readUintLE());
+    String cmd = _parseCommand(_readBytes(COMMAND_LENGTH));
     if(command != null && command != cmd)
       throw new SerializationException("Deserialization error: serialization belongs to different message type.");
-    int payloadLength = Utils.bytesToUintLE(bytes.sublist(offset), 4);
+    int payloadLength = _readUintLE();
+    Uint8List sum = _readBytes(4);
     _serializationLength = HEADER_LENGTH + payloadLength; // must be set here because _validSum requires payload, which requires this value
-    offset += 4;
-    Uint8List sum = bytes.sublist(offset, offset + 4);
-    offset += 4;
-    Uint8List payload = bytes.sublist(HEADER_LENGTH);
-    if(payloadLength != _deserializePayload(payload, lazy, retain))
+    int prePayloadCursor = _serializationCursor;
+    _deserializePayload();
+    if(_serializationCursor - prePayloadCursor != payloadLength)
       throw new SerializationException("Incorrect payload length");
+    // hacky method to get the payload back:
+    Uint8List payload = new Uint8List.view(_serializationBuffer, _serializationOffset + HEADER_LENGTH, payloadLength);
     if(!Utils.equalLists(sum, _calculateChecksum(payload)))
       throw new SerializationException("Incorrect checksum provided in serialized message");
-    return HEADER_LENGTH + payloadLength;
+  }
+
+  @override
+  void _deserializeLazy() {
+    // magic + command
+    _serializationCursor += 4 + COMMAND_LENGTH;
+    int payloadLength = _readUintLE();
+    // checksum + payload
+    _serializationCursor += 4 + payloadLength;
   }
   
   void _setParamsFromMagic(int magic) {
@@ -123,8 +130,9 @@ abstract class Message extends Object with BitcoinSerialization {
       throw new SerializationException("Unknown network packet magic used.");
   }
   
-  int _deserializePayload(Uint8List bytes, bool lazy, bool retain);
-  
+  void _deserializePayload();
+
+  @override
   Uint8List _serialize() {
     if(command.length > 12)
       throw new SerializationException("Command length should not be greater than 12.");
@@ -134,7 +142,7 @@ abstract class Message extends Object with BitcoinSerialization {
     // the command code
     result.addAll(_encodeCommand(command));
     // prepare payload
-    Uint8List payloadBytes = _serialize_payload();
+    Uint8List payloadBytes = _serializePayload();
     // the payload length
     result.addAll(Utils.uintToBytesLE(payloadBytes.length, 4));
     // the checksum
@@ -145,7 +153,7 @@ abstract class Message extends Object with BitcoinSerialization {
     return new Uint8List.fromList(result);
   }
   
-  Uint8List _serialize_payload();
+  Uint8List _serializePayload();
   
   static String _parseCommand(Uint8List bytes) {
     int word = COMMAND_LENGTH;
@@ -158,11 +166,6 @@ abstract class Message extends Object with BitcoinSerialization {
     while(commandBytes.length < COMMAND_LENGTH)
       commandBytes.add(0);
     return commandBytes;
-  }
-  
-  int _lazySerializationLength(Uint8List bytes) {
-    int payloadLength = Utils.bytesToUintLE(bytes.sublist(4 + COMMAND_LENGTH), 4);
-    return HEADER_LENGTH + payloadLength;
   }
   
   void _needInstance([bool clearCache = false]) {

@@ -80,14 +80,17 @@ class FilteredBlock extends Object with BitcoinSerialization {
       return false;
   }
   
-  /** Gets the set of transactions which were provided using provideTransaction() which match in getTransactionHashes() */
+  /**
+   * Gets the set of transactions which were provided using provideTransaction() which match in getTransactionHashes()
+   */
   Map<Sha256Hash, Transaction> get associatedTransactions {
     _needInstance();
     return new UnmodifiableMapView(_txs);
   }
   
   // serialization
-  
+
+  @override
   Uint8List _serialize() {
     List<int> result = new List<int>();
     if(_header.isHeader)
@@ -97,14 +100,17 @@ class FilteredBlock extends Object with BitcoinSerialization {
     result.addAll(_merkle.serialize());
     return new Uint8List.fromList(result);
   }
-  
-  int _deserialize(Uint8List bytes, bool lazy, bool retain) {
-    int offset = 0;
-    _header = new Block.deserializeHeader(bytes, lazy: lazy, retain: retain, parent: this);
-    offset += Block.HEADER_SIZE;
-    _merkle = new PartialMerkleTree.deserialize(bytes.sublist(offset), lazy: lazy, retain: retain);
-    offset += _merkle.serializationLength;
-    return offset;
+
+  @override
+  void _deserialize() {
+    _header = _readObject(new Block._newInstance(), length: Block.HEADER_SIZE);
+    _merkle = _readObject(new PartialMerkleTree._newInstance());
+  }
+
+  @override
+  void _deserializeLazy() {
+    _serializationCursor += Block.HEADER_SIZE;
+    _readObject(new PartialMerkleTree._newInstance(), lazy: true);
   }
   
 }

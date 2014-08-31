@@ -25,16 +25,13 @@ class FilterAddMessage extends Message {
     return new Uint8List.fromList(_data);
   }
 
-  int _deserializePayload(Uint8List bytes, bool lazy, bool retain) {
-    int offset = 0;
-    VarInt dataSize = new VarInt.deserialize(bytes, lazy: false);
-    offset += dataSize.size;
-    _data = bytes.sublist(offset, offset + dataSize.value);
-    offset += dataSize.value;
-    return offset;
+  @override
+  void _deserializePayload() {
+    _data = _readByteArray();
   }
-  
-  Uint8List _serialize_payload() {
+
+  @override
+  Uint8List _serializePayload() {
     return new Uint8List.fromList(
         new List<int>()
         ..addAll(new VarInt(_data.length).serialize())

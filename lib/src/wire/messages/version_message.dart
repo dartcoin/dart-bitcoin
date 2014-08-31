@@ -49,7 +49,7 @@ class VersionMessage extends Message {
   }
   
   // required for serialization
-  VersionMessage._newInstance() : super("version", null);
+  VersionMessage._newInstance() : super("version", null) { _lazySerialization = false; }
   
   /**
    * 
@@ -128,54 +128,43 @@ class VersionMessage extends Message {
     return lastHeight ^ clientVersion ^ services.hashCode ^ time ^ subVer.hashCode ^ myAddress.hashCode
         ^ theirAddress.hashCode * (relayBeforeFilter ? 1 : 2);
   }
-  
-  
-  Uint8List _serialize_payload() {
+
+  @override
+  int _deserializePayload() {
+    clientVersion = _readUintLE();
+    services = Utils.bytesToUBigIntLE(_readBytes(8));//_readUintLE(8);
+    time = _readUintLE(8);
+    // for PeerAddresses in the version message, the protocolVersion must be hard coded to 0
+    myAddress = _readObject(new PeerAddress._newInstance().._protocolVersion = 0);
+    if(clientVersion < 106) return;
+    // only when protocolVersion >= 106
+    theirAddress = _readObject(new PeerAddress._newInstance().._protocolVersion = 0);
+    nonce = _readUintLE(8);
+    // initialize default values for flags that may be missing from old nodes
+    subVer = "";
+    lastHeight = 0;
+    relayBeforeFilter = true;
+    if(_deserializationBytesAvailable() <= 0) return;
+    subVer = _readVarStr();
+    if(_deserializationBytesAvailable() <= 0) return;
+    lastHeight = _readUintLE();
+    if(_deserializationBytesAvailable() <= 0) return;
+    relayBeforeFilter = _readUintLE(1) != 0;
+  }
+
+  @override
+  Uint8List _serializePayload() {
     return new Uint8List.fromList(new List<int>()
       ..addAll(Utils.uintToBytesLE(clientVersion, 4))
       ..addAll(Utils.uBigIntToBytesLE(services, 8))
       ..addAll(Utils.uintToBytesLE(time, 8))
       ..addAll(myAddress.serialize())
-      // we are version >= 106
+    // we are version >= 106
       ..addAll(theirAddress.serialize())
       ..addAll(Utils.uintToBytesLE(nonce, 8))
       ..addAll(new VarStr(subVer).serialize())
       ..addAll(Utils.uintToBytesLE(lastHeight, 4))
       ..add(relayBeforeFilter ? 1 : 0));
-  }
-  
-  int _deserializePayload(Uint8List bytes, bool lazy, bool retain) {
-    int offset = 0;
-    clientVersion = Utils.bytesToUintLE(bytes, 4);
-    offset += 4;
-    services = Utils.bytesToUBigIntLE(bytes.sublist(offset), 8);
-    offset += 8;
-    time = Utils.bytesToUintLE(bytes.sublist(offset), 8);
-    offset += 8;
-    // for PeerAddresses in the version message, the protocolVersion must be hard coded to 0
-    myAddress = new PeerAddress.deserialize(bytes.sublist(offset), lazy: lazy, retain: retain, protocolVersion: 0, params: this.params);
-    offset += myAddress.serializationLength;
-    if(clientVersion < 106) return offset;
-    // only when protocolVersion >= 106
-    theirAddress = new PeerAddress.deserialize(bytes.sublist(offset), lazy: lazy, retain: retain, protocolVersion: 0, params: this.params);
-    offset += theirAddress.serializationLength;
-    nonce = Utils.bytesToUintLE(bytes.sublist(offset), 8);
-    offset += 8;
-    // initialize default values for flags that may be missing from old nodes
-    subVer = "";
-    lastHeight = 0;
-    relayBeforeFilter = true;
-    if(offset >= bytes.length) return offset;
-    VarStr sv = new VarStr.deserialize(bytes.sublist(offset), lazy: lazy, params: this.params);
-    offset += sv.serializationLength;
-    subVer = sv.content;
-    if(offset >= bytes.length) return offset;
-    lastHeight = Utils.bytesToUintLE(bytes.sublist(offset), 4);
-    offset += 4;
-    if(offset >= bytes.length) return offset;
-    relayBeforeFilter = bytes[offset] != 0;
-    offset += 1;
-    return offset;
   }
 }
 

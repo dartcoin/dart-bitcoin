@@ -9,17 +9,22 @@ part of dartcoin.core;
  * 
  * We recommend the constructor factory UsingClass.deserialize(Uint8List bytes) => _fromBytes(bytes);
  */
-abstract class BitcoinSerialization implements BitcoinSerializable {
+abstract class BitcoinSerialization implements BitcoinSerializable, TypedData {
 
   static const int UNKNOWN_LENGTH = -1;
 
-  Uint8List _serialization = null;
+  ByteBuffer _serializationBuffer;
+  int _serializationOffset;
+  // the cursor should always be null when not actively deserializing
+  int _serializationCursor;
   // this flag means that only a serialization is present, so it has not been deserialized yet
   bool _instanceReady = true;
+  bool _lazySerialization; // subclasses force immedaite deserialization by setting this to false
   bool _retainSerialization = false;
   int _serializationLength = UNKNOWN_LENGTH;
 
   // use getters for these attributes
+  //  (for unit tests, they can be hard coded before deserialization by setting them on the new instance)
   NetworkParameters _params;
   int _protocolVersion;
   
@@ -44,21 +49,32 @@ abstract class BitcoinSerialization implements BitcoinSerializable {
         NetworkParameters params: NetworkParameters.MAIN_NET, 
         int protocolVersion,
         BitcoinSerialization parent}) {
+    // make sure the Uint8List is not a view on a buffer that is actually larger
+    //  if this is the case, we copy the Uint8List so that we get a new ByteBuffer
+    return new BitcoinSerialization._internal(instance, bytes.buffer, bytes.offsetInBytes, bytes.lengthInBytes,
+        lazy, retain, params, protocolVersion, parent);
+  }
+
+  factory BitcoinSerialization._internal(BitcoinSerialization instance, ByteBuffer buffer, int offset, int length,
+      bool lazy, bool retain, NetworkParameters params, int protocolVersion, BitcoinSerialization parent) {
     // fix defaults from subconstructors that default to null
-    if(lazy == null)   lazy   = true;
+    if(instance._lazySerialization == null) // subclasses can force immediate deserializing by setting lazy to false
+      instance._lazySerialization = lazy != null ? lazy : true;
     if(retain == null) retain = false;
     if(length == null) length = UNKNOWN_LENGTH;
     if(params == null) params = NetworkParameters.MAIN_NET;
     //
-    instance._serialization = bytes;
+    instance._serializationBuffer = buffer;
+    instance._serializationOffset = offset;
     if(length != UNKNOWN_LENGTH) instance._serializationLength = length;
     instance._retainSerialization = retain;
     instance._instanceReady = false;
-    instance._params = params;
-    instance._protocolVersion = protocolVersion;
-    instance._parent = parent;
-    if(!lazy) {
-      instance._performDeserialization(false);
+    // allow hardcoding them
+    instance._params = instance._params == null ? params : instance._params;
+    instance._protocolVersion = instance._protocolVersion == null ? protocolVersion : instance._protocolVersion;
+    instance._parent = instance._parent == null ? parent : instance._parent;
+    if(!instance._lazySerialization) {
+      instance._performDeserialization();
     }
     return instance;
   }
@@ -68,13 +84,16 @@ abstract class BitcoinSerialization implements BitcoinSerializable {
    */
   Uint8List serialize() {
     if (isCached) {
-      if (_serializationLength <= UNKNOWN_LENGTH) 
-        _serializationLength = _lazySerializationLength(_serialization);
-      return new Uint8List.fromList(_serialization.sublist(0, _serializationLength));
+      if (_serializationLength <= UNKNOWN_LENGTH)
+        _performLazyDeserialization();
+      return new Uint8List.view(_serializationBuffer, _serializationOffset, _serializationLength);
     }
     Uint8List seri = _serialize();
-    _serializationLength = seri.length;
-    if (retainSerialization) _serialization = seri;
+    if (retainSerialization) {
+      _serializationBuffer = seri.buffer;
+      _serializationOffset = seri.offsetInBytes;
+    }
+    _serializationLength = seri.lengthInBytes;
     return new Uint8List.fromList(seri);
   }
 
@@ -82,7 +101,10 @@ abstract class BitcoinSerialization implements BitcoinSerializable {
 
   void set retainSerialization(bool retainSerialization) {
     _retainSerialization = retainSerialization;
-    if (!retainSerialization && _instanceReady) _serialization = null;
+    if (!retainSerialization && _instanceReady) {
+      _serializationBuffer = null;
+      _serializationOffset = 0;
+    }
   }
 
   /**
@@ -95,9 +117,9 @@ abstract class BitcoinSerialization implements BitcoinSerializable {
   int get serializationLength {
     if (_serializationLength > UNKNOWN_LENGTH)
       return _serializationLength;
-    if (!_instanceReady)
-      _serializationLength = _lazySerializationLength(_serialization);
-    else
+    if (!_instanceReady) {
+      _performLazyDeserialization();
+    } else
       _serializationLength = _serialize().length;
     return _serializationLength;
   }
@@ -108,7 +130,7 @@ abstract class BitcoinSerialization implements BitcoinSerializable {
    */
   bool get instanceReady => _instanceReady;
 
-  bool get isCached => _serialization != null;
+  bool get isCached => _serializationBuffer != null;
 
   Uint8List _serialize();
 
@@ -119,14 +141,15 @@ abstract class BitcoinSerialization implements BitcoinSerializable {
    * 
    * The lazy bool indicates whether sub-serializations should be lazily created or not.
    */
-  int _deserialize(Uint8List bytes, bool lazy, bool retain);
+  void _deserialize();
 
   /**
    * [BitcoinSerialization] subclasses can override this method to lazily calculate the serialization length.
+   * This method goes over the serialization, but does not interpret it more than required to know the final
+   * length of the serialization.
    */
-  int _lazySerializationLength(Uint8List bytes) {
+  void _deserializeLazy() {
     _needInstance();
-    return _serializationLength;
   }
 
   /**
@@ -137,22 +160,34 @@ abstract class BitcoinSerialization implements BitcoinSerializable {
   void _needInstance([bool clearCache = false]) {
     clearCache = clearCache != null ? clearCache : false;
     if(!_instanceReady) {
-      _performDeserialization(true);
     }
     if(clearCache) {
-      _serialization = null;
+      _serializationBuffer = null;
+      _serializationOffset = 0;
       _serializationLength = UNKNOWN_LENGTH;
       if(_parent != null)
         _parent._needInstance(true);
     }
   }
   
-  void _performDeserialization(bool lazy) {
-    _serializationLength = _deserialize(
-        _serializationLength <= UNKNOWN_LENGTH ? _serialization : _serialization.sublist(0, _serializationLength), 
-        lazy, _retainSerialization);
-    if (!_retainSerialization) _serialization = null;
+  void _performDeserialization() {
+    _serializationCursor = _serializationOffset;
+    _deserialize();
+    _serializationLength = _serializationCursor - _serializationOffset;
+    _serializationCursor = null;
+    if (!_retainSerialization) {
+      _serializationBuffer = null;
+      _serializationOffset = 0;
+    }
     _instanceReady = true;
+  }
+
+  void _performLazyDeserialization() {
+    _serializationCursor = _serializationOffset;
+    _deserializeLazy();
+    _serializationLength = _serializationLength > UNKNOWN_LENGTH ? _serializationLength :
+        _serializationCursor - _serializationOffset;
+    _serializationCursor = null;
   }
 
   NetworkParameters get params => (_params != null) ? _params :
@@ -171,6 +206,67 @@ abstract class BitcoinSerialization implements BitcoinSerializable {
   
   BitcoinSerialization get parent => _parent;
 
+
+  // methods inherited from TypedData
+
+  @override
+  ByteBuffer get buffer => _serializationBuffer;
+  @override
+  int get elementSizeInBytes => serializationLength;
+  @override
+  int get lengthInBytes => serializationLength;
+  @override
+  int get offsetInBytes => _serializationOffset;
+
+  // active deserialization methods
+
+  void _deserializationBytesRequired(int lenght) {
+    if(_serializationCursor + lenght > _serializationBuffer.lengthInBytes)
+      throw new SerializationException("The provided serialization is invalid or not complete.");
+  }
+
+  int _deserializationBytesAvailable() {
+    if(_serializationLength > UNKNOWN_LENGTH)
+      return _serializationLength - (_serializationCursor - _serializationOffset);
+    return _serializationBuffer.lengthInBytes - _serializationCursor;
+  }
+
+  Uint8List _readBytes(int length) {
+    _deserializationBytesRequired(length);
+    Uint8List result = new Uint8List.view(_serializationBuffer, _serializationCursor, length);
+    _serializationCursor += length;
+    return result;
+  }
+
+  BitcoinSerialization _readObject(BitcoinSerialization instance, {int length, bool lazy}) {
+    if(length != null)
+      _deserializationBytesRequired(length);
+    BitcoinSerialization result = new BitcoinSerialization._internal(instance,
+        _serializationBuffer, _serializationCursor, length,
+        (lazy != null ? lazy : _lazySerialization), _retainSerialization, params, protocolVersion, this);
+    _serializationCursor += result.serializationLength;
+    return result;
+  }
+
+  int _readVarInt() {
+    VarInt vi = _readObject(new VarInt._newInstance(), lazy: false);
+    return vi.value;
+  }
+
+  String _readVarStr() {
+    VarStr vs = _readObject(new VarStr._newInstance(), lazy: false);
+    return vs.content;
+  }
+
+  Uint8List _readByteArray() {
+    int size = _readVarInt();
+    return _readBytes(size);
+  }
+
+  int _readUintLE([int length = 4]) {
+    int result = Utils.bytesToUintLE(_readBytes(length), length);
+    return result;
+  }
 
 }
 

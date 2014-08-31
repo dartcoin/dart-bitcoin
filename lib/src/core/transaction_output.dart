@@ -86,7 +86,8 @@ class TransactionOutput extends Object with BitcoinSerialization {
     _needInstance();
     return _value.hashCode ^ _scriptPubKey.hashCode;
   }
-  
+
+  @override
   Uint8List _serialize() {
     Uint8List encodedScript = _scriptPubKey.encode();
     return new Uint8List.fromList(new List<int>()
@@ -94,24 +95,17 @@ class TransactionOutput extends Object with BitcoinSerialization {
       ..addAll(new VarInt(encodedScript.length).serialize())
       ..addAll(encodedScript));
   }
-  
-  int _deserialize(Uint8List bytes, bool lazy, bool retain) {
-    int offset = 0;
-    _value = Utils.bytesToUintLE(bytes, 8);
-    offset += 8;
-    VarInt scrLn = new VarInt.deserialize(bytes.sublist(offset), lazy: false);
-    offset += scrLn.serializationLength;
-    _scriptPubKey = new Script(bytes.sublist(offset, offset + scrLn.value));
-    offset += scrLn.value;
-    return offset;
+
+  @override
+  void _deserialize() {
+    _value = _readUintLE(8);
+    _scriptPubKey = new Script(_readByteArray());
   }
   
   @override
-  int _lazySerializationLength(Uint8List bytes) => _calculateSerializationLength(bytes);
-  
-  static int _calculateSerializationLength(Uint8List bytes) {
-    VarInt scrLn = new VarInt.deserialize(bytes.sublist(8), lazy: false);
-    return 8 + scrLn.serializationLength + scrLn.value;
-    
+  void _deserializeLazy() {
+    _serializationCursor += 8;
+    int scrLn = _readVarInt();
+    _serializationCursor += scrLn;
   }
 }

@@ -32,7 +32,7 @@ class AlertMessage extends Message {
   }
   
   // required for serialization
-  AlertMessage._newInstance() : super("alert", null);
+  AlertMessage._newInstance() : super("alert", null) { _lazySerialization = false; }
 
   factory AlertMessage.deserialize(Uint8List bytes, {int length, bool retain, NetworkParameters params, int protocolVersion}) => 
           new BitcoinSerialization.deserialize(new AlertMessage._newInstance(), bytes, length: length, lazy: false, retain: retain, params: params, protocolVersion: protocolVersion);
@@ -44,68 +44,44 @@ class AlertMessage extends Message {
   bool get isSignatureValid =>
     KeyPair.verifySignatureForPubkey(Utils.doubleDigest(message),
         new ECDSASignature.fromDER(signature), params.alertSigningKey);
-  
-  int _deserializePayload(Uint8List bytes, bool lazy, bool retain) {
-    int offset = 0;
-    VarInt contentLength = new VarInt.deserialize(bytes, lazy: false);
-    offset += contentLength.serializationLength;
-    _message = bytes.sublist(offset, offset + contentLength.value);
-    offset += contentLength.value;
-    VarInt signatureLength = new VarInt.deserialize(bytes.sublist(offset), lazy: false);
-    offset += signatureLength.serializationLength;
-    _signature = bytes.sublist(offset, offset + signatureLength.value);
-    offset += signatureLength.value;
+
+  @override
+  void _deserializePayload() {
+    int startCursor = _serializationCursor;
+    _message = _readByteArray();
+    _signature = _readByteArray();
+    int finalCursor = _serializationCursor;
+    _serializationCursor = startCursor;
+    _readVarInt(); // skip content size varint
     _parseMessage();
-    return offset;
+    _serializationCursor = finalCursor;
   }
-  
+
   void _parseMessage() {
-    int offset = 0;
-    version = Utils.bytesToUintLE(_message, 4);
-    offset += 4;
-    relayUntil = new DateTime.fromMillisecondsSinceEpoch(
-        Utils.bytesToUintLE(_message.sublist(offset), 8) * 1000);
-    offset += 8;
-    expiration = new DateTime.fromMillisecondsSinceEpoch(
-            Utils.bytesToUintLE(_message.sublist(offset), 8) * 1000);
-    offset += 8;
-    id = Utils.bytesToUintLE(_message.sublist(offset), 4);
-    offset += 4;
-    cancel = Utils.bytesToUintLE(_message.sublist(offset), 4);
-    offset += 4;
-    VarInt cancelSetSize = new VarInt.deserialize(_message.sublist(offset), lazy: false);
-    offset += cancelSetSize.serializationLength;
+    version = _readUintLE();
+    relayUntil = new DateTime.fromMillisecondsSinceEpoch(_readUintLE(8) * 1000);
+    expiration = new DateTime.fromMillisecondsSinceEpoch(_readUintLE(8) * 1000);
+    id = _readUintLE();
+    cancel = _readUintLE();
+    int cancelSetSize = _readVarInt();
     cancelSet = new HashSet<int>();
-    for(int i = 0 ; i < cancelSetSize.value ; i++) {
-      cancelSet.add(Utils.bytesToUintLE(_message.sublist(offset), 4));
-      offset += 4;
+    for(int i = 0 ; i < cancelSetSize ; i++) {
+      cancelSet.add(_readUintLE());
     }
-    minVer = Utils.bytesToUintLE(_message.sublist(offset), 4);
-    offset += 4;
-    maxVer = Utils.bytesToUintLE(_message.sublist(offset), 4);
-    offset += 4;
-    VarInt subVerSetSize = new VarInt.deserialize(_message.sublist(offset), lazy: false);
-    offset += subVerSetSize.serializationLength;
+    minVer = _readUintLE();
+    maxVer = _readUintLE();
+    int subVerSetSize = _readVarInt();
     matchingSubVer = new HashSet<String>();
-    for(int i = 0 ; i < subVerSetSize.value ; i++) {
-      VarStr subVer = new VarStr.deserialize(_message.sublist(offset), lazy: false);
-      matchingSubVer.add(subVer.content);
-      offset += subVer.serializationLength;
-    }
-    priority = Utils.bytesToUintLE(_message.sublist(offset), 4);
-    offset += 4;
-    VarStr commentStr = new VarStr.deserialize(_message.sublist(offset), lazy: false);
-    comment = commentStr.content;
-    offset += commentStr.serializationLength;
-    VarStr statucBarStr = new VarStr.deserialize(_message.sublist(offset), lazy: false);
-    statusBar = statucBarStr.content;
-    offset += statucBarStr.serializationLength;
-    VarStr reservedStr = new VarStr.deserialize(_message.sublist(offset), lazy: false);
-    reserved = reservedStr.content;
-    offset += reservedStr.serializationLength;
+    for(int i = 0 ; i < subVerSetSize ; i++)
+      matchingSubVer.add(_readVarStr());
+    priority = _readUintLE();
+    comment = _readVarStr();
+    statusBar = _readVarStr();
+    reserved = _readVarStr();
   }
-  
-  Uint8List _serialize_payload() { 
+
+  @override
+  Uint8List _serializePayload() {
     if(_message != null && _signature != null) {
       return new Uint8List.fromList(new List<int>()
           ..addAll(new VarInt(_message.length).serialize())

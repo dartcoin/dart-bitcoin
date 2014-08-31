@@ -39,24 +39,21 @@ class AddressMessage extends Message {
     _addresses.remove(address);
     address._parent = null;
   }
-  
-  int _deserializePayload(Uint8List bytes, bool lazy, bool retain) {
-    int offset = 0;
-    VarInt nbAddrs = new VarInt.deserialize(bytes.sublist(offset), lazy: false);
-    offset += nbAddrs.serializationLength;
-    if(nbAddrs.value > MAX_ADDRESSES) 
+
+  @override
+  void _deserializePayload() {
+    int nbAddrs = _readVarInt();
+    if(nbAddrs > MAX_ADDRESSES)
       throw new SerializationException("Too many addresses in AddressMessage");
-    List<PeerAddress> addresses = new List<PeerAddress>(nbAddrs.value);
-    for(int i = 0 ; i < nbAddrs.value ; i++) {
-      PeerAddress addr = new PeerAddress.deserialize(bytes.sublist(offset), lazy: lazy, retain: retain, params: params, protocolVersion: protocolVersion, parent: this);
-      addresses[i] = addr;
-      offset += addr.serializationLength;
+    List<PeerAddress> addresses = new List<PeerAddress>(nbAddrs);
+    for(int i = 0 ; i < nbAddrs ; i++) {
+      addresses[i] = _readObject(new PeerAddress._newInstance());
     }
     _addresses = addresses;
-    return offset;
   }
-  
-  Uint8List _serialize_payload() {
+
+  @override
+  Uint8List _serializePayload() {
     List<int> result = new List<int>()
       ..addAll(new VarInt(_addresses.length).serialize());
     _addresses.forEach((a) => result.addAll(a.serialize()));
