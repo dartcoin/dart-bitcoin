@@ -70,7 +70,7 @@ void _sValue() {
   final int ITERATIONS = 10;
   final KeyPair key = new KeyPair();
   for (int i = 0; i < ITERATIONS; i++) {
-    final Sha256Hash hash = new Sha256Hash.digest(new Uint8List.fromList([i]));
+    final Hash256 hash = new Hash256(Utils.singleDigest(new Uint8List.fromList([i])));
     ECDSASignature signature = key.sign(hash);
     var a = (signature.s / KeyPair.HALF_CURVE_ORDER).toString();
     expect(signature.s <= KeyPair.HALF_CURVE_ORDER, isTrue);
@@ -83,13 +83,13 @@ void _testSignatures() {
   // a message with it.
   BigInteger privkey = new BigInteger.fromBytes(1, Utils.hexToBytes("180cb41c7c600be951b5d3d0a7334acc7506173875834f7a6c4c786a28fcbb19"));
   KeyPair key = new KeyPair.private(privkey);
-  ECDSASignature output = key.sign(Sha256Hash.ZERO_HASH);
-  expect(key.verify(Sha256Hash.ZERO_HASH.bytes, output), isTrue);
+  ECDSASignature output = key.sign(Hash256.ZERO_HASH);
+  expect(key.verify(Hash256.ZERO_HASH.bytes, output), isTrue);
 
   // Test interop with a signature from elsewhere.
   Uint8List sig = Utils.hexToBytes("3046022100dffbc26774fc841bbe1c1362fd643609c6e42dcb274763476d87af2c0597e89e022100c59e3c13b96b316cae9fa0ab0260612c7a133a6fe2b3445b6bf80b3123bf274d");
 
-  expect(key.verify(Sha256Hash.ZERO_HASH.bytes, new ECDSASignature.fromDER(sig)), isTrue);
+  expect(key.verify(Hash256.ZERO_HASH.bytes, new ECDSASignature.fromDER(sig)), isTrue);
 }
 
 void _testSignatureDEREncoding() {
@@ -115,7 +115,7 @@ void _testASN1Roundtrip() {
     for (KeyPair key in [decodedKey, roundtripKey]) {
         Uint8List message = Utils.reverseBytes(Utils.hexToBytes(
                 "11da3761e86431e4a54c176789e41f1651b324d240d599a7067bee23d328ec2a"));
-        ECDSASignature output = key.sign(new Sha256Hash(message));
+        ECDSASignature output = key.sign(new Hash256(message));
         expect(key.verify(message, output), isTrue);
 
         output = new ECDSASignature.fromDER(Utils.hexToBytes(
@@ -126,8 +126,8 @@ void _testASN1Roundtrip() {
     // Try to sign with one key and verify with the other.
     Uint8List message = Utils.reverseBytes(Utils.hexToBytes(
         "11da3761e86431e4a54c176789e41f1651b324d240d599a7067bee23d328ec2a"));
-    expect(roundtripKey.verify(message, decodedKey.sign(new Sha256Hash(message))), isTrue);
-    expect(decodedKey.verify(message, roundtripKey.sign(new Sha256Hash(message))), isTrue);
+    expect(roundtripKey.verify(message, decodedKey.sign(new Hash256(message))), isTrue);
+    expect(decodedKey.verify(message, roundtripKey.sign(new Hash256(message))), isTrue);
 }
 
 
@@ -144,7 +144,7 @@ void _testKeyPairRoundtrip() {
   for (KeyPair key in [decodedKey, roundtripKey]) {
       Uint8List message = Utils.reverseBytes(Utils.hexToBytes(
               "11da3761e86431e4a54c176789e41f1651b324d240d599a7067bee23d328ec2a"));
-      ECDSASignature output = key.sign(new Sha256Hash(message));
+      ECDSASignature output = key.sign(new Hash256(message));
       expect(key.verify(message, output), isTrue);
 
       output = new ECDSASignature.fromDER(Utils.hexToBytes(
@@ -155,8 +155,8 @@ void _testKeyPairRoundtrip() {
   // Try to sign with one key and verify with the other.
   Uint8List message = Utils.reverseBytes(Utils.hexToBytes(
       "11da3761e86431e4a54c176789e41f1651b324d240d599a7067bee23d328ec2a"));
-  expect(roundtripKey.verify(message, decodedKey.sign(new Sha256Hash(message))), isTrue);
-  expect(decodedKey.verify(message, roundtripKey.sign(new Sha256Hash(message))), isTrue);
+  expect(roundtripKey.verify(message, decodedKey.sign(new Hash256(message))), isTrue);
+  expect(decodedKey.verify(message, roundtripKey.sign(new Hash256(message))), isTrue);
 }
 
 
@@ -214,7 +214,7 @@ void _verifyMessage() {
 void _keyRecovery() {
   KeyPair key = new KeyPair();
   String message = "Hello World!";
-  Sha256Hash hash = new Sha256Hash.digest(Utils.stringToUTF8(message));
+  Hash256 hash = new Hash256(Utils.singleDigest(Utils.stringToUTF8(message)));
   ECDSASignature sig = key.sign(hash);
   key = new KeyPair.public(key.publicKey);
   bool found = false;
@@ -338,7 +338,7 @@ void _keyRecoveryWithEncryptedKey() {
   KeyPair encryptedKey = unencryptedKey.encrypt(_keyCrypter, aesKey);
 
   String message = "Goodbye Jupiter!";
-  Sha256Hash hash = new Sha256Hash.digest(Utils.stringToUTF8(message));
+  Hash256 hash = new Hash256(Utils.singleDigest(Utils.stringToUTF8(message)));
   ECDSASignature sig = encryptedKey.sign(hash, aesKey);
   unencryptedKey = new KeyPair.public(unencryptedKey.publicKey);
   bool found = false;
@@ -430,7 +430,7 @@ void _testCreatedSigAndPubkeyAreCanonical() {
   Random r = new Random();
   for(int i = 0 ; i < 32 ; i++)
     hash[i] = r.nextInt(255);
-  Uint8List sigBytes = key.sign(new Sha256Hash(hash)).encodeToDER();
+  Uint8List sigBytes = key.sign(new Hash256(hash)).encodeToDER();
   Uint8List encodedSig = new Uint8List(sigBytes.length + 1);
   encodedSig.setRange(0, sigBytes.length, sigBytes);
   encodedSig[sigBytes.length] = SigHash.ALL.value;

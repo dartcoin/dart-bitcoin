@@ -2,7 +2,7 @@ part of dartcoin.core;
 
 class GetHeadersMessage extends RequestMessage {
   
-  GetHeadersMessage(List<Sha256Hash> locators, [Sha256Hash stop, NetworkParameters params]) : super("getheaders", locators, stop, params);
+  GetHeadersMessage(List<Hash256> locators, [Hash256 stop, NetworkParameters params]) : super("getheaders", locators, stop, params);
   
   // required for serialization
   GetHeadersMessage._newInstance() : super._newInstance("getheaders");

@@ -34,11 +34,11 @@ class PartialMerkleTree extends Object with BitcoinSerialization {
     Uint8List _matchedChildBits;
 
     // txids and internal hashes
-    List<Sha256Hash> _hashes;
+    List<Hash256> _hashes;
     
     PartialMerkleTree( { int transactionCount,
                          Uint8List matchedChildBits,
-                         List<Sha256Hash> hashes,
+                         List<Hash256> hashes,
                          NetworkParameters params: NetworkParameters.MAIN_NET}) {
       _transactionCount = transactionCount;
       _matchedChildBits = matchedChildBits;
@@ -62,7 +62,7 @@ class PartialMerkleTree extends Object with BitcoinSerialization {
       return _matchedChildBits;
     }
     
-    List<Sha256Hash> get hashes {
+    List<Hash256> get hashes {
       _needInstance();
       return new UnmodifiableListView(_hashes);
     }
@@ -71,7 +71,8 @@ class PartialMerkleTree extends Object with BitcoinSerialization {
     void _serialize(ByteSink sink) {
       _writeUintLE(sink, _transactionCount);
       _writeVarInt(sink, _hashes.length);
-      _hashes.forEach((hash) => sink.add(hash.serialize()));
+      for(Hash256 hash in _hashes)
+        _writeSHA256(sink, hash);
       _writeByteArray(sink, _matchedChildBits);
     }
 
@@ -79,9 +80,9 @@ class PartialMerkleTree extends Object with BitcoinSerialization {
     void _deserialize() {
       _transactionCount = _readUintLE();
       int nbHashes = _readVarInt();
-      _hashes = new List<Sha256Hash>(nbHashes);
+      _hashes = new List<Hash256>(nbHashes);
       for(int i = 0 ; i < nbHashes ; i++) {
-        _hashes[i] = new Sha256Hash.deserialize(_readBytes(32));
+        _hashes[i] = _readSHA256();
       }
       _matchedChildBits = _readByteArray();
     }
@@ -90,7 +91,7 @@ class PartialMerkleTree extends Object with BitcoinSerialization {
     void _deserializeLazy() {
       _serializationCursor += 4;
       int nbHashes = _readVarInt();
-      _serializationCursor += Sha256Hash.LENGTH * nbHashes;
+      _serializationCursor += Hash256.LENGTH * nbHashes;
       int nbBytes = _readVarInt();
       _serializationCursor += nbBytes;
     }
@@ -106,7 +107,7 @@ class PartialMerkleTree extends Object with BitcoinSerialization {
      *                      Required to be a LinkedHashSet in order to retain order or transactions in the block
      * @return the merkle root of this merkle tree
      */
-    Sha256Hash getTxnHashAndMerkleRoot(List<Sha256Hash> matchedHashes) {
+    Hash256 getTxnHashAndMerkleRoot(List<Hash256> matchedHashes) {
       _needInstance();
       matchedHashes.clear();
       
@@ -128,7 +129,7 @@ class PartialMerkleTree extends Object with BitcoinSerialization {
         height++;
       // traverse the partial tree
       _ValuesUsedForPMT used = new _ValuesUsedForPMT();
-      Sha256Hash merkleRoot = new Sha256Hash(_recursiveExtractHashes(height, 0, used, matchedHashes));
+      Hash256 merkleRoot = new Hash256(_recursiveExtractHashes(height, 0, used, matchedHashes));
       // verify that all bits were consumed (except for the padding caused by serializing it as a byte sequence)
       if ((used.bitsUsed + 7) ~/ 8 != _matchedChildBits.length ||
           // verify that all hashes were consumed
@@ -143,7 +144,7 @@ class PartialMerkleTree extends Object with BitcoinSerialization {
     
     // recursive function that traverses tree nodes, consuming the bits and hashes produced by TraverseAndBuild.
     // it returns the hash of the respective node.
-    Uint8List _recursiveExtractHashes(int height, int pos, _ValuesUsedForPMT used, List<Sha256Hash> matchedHashes) {
+    Uint8List _recursiveExtractHashes(int height, int pos, _ValuesUsedForPMT used, List<Hash256> matchedHashes) {
       _needInstance();
       if (used.bitsUsed >= _matchedChildBits.length * 8) {
         // overflowed the bits array - failure

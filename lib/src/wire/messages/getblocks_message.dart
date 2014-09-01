@@ -2,7 +2,7 @@ part of dartcoin.core;
 
 class GetBlocksMessage extends RequestMessage {
   
-  GetBlocksMessage(List<Sha256Hash> locators, [Sha256Hash stop, NetworkParameters params]) : super("getblocks", locators, stop, params);
+  GetBlocksMessage(List<Hash256> locators, [Hash256 stop, NetworkParameters params]) : super("getblocks", locators, stop, params);
   
   // required for serialization
   GetBlocksMessage._newInstance() : super._newInstance("getblocks");

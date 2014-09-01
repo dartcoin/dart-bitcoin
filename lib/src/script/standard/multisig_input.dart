@@ -31,7 +31,7 @@ class MultiSigInputScript extends Script {
    * Use [aesKeys] to specify the decryption keys for each key (if required). 
    * The [aesKeys] are mapped one-to-one with the [keys].
    */
-  factory MultiSigInputScript.fromKeys(List<KeyPair> keys, Sha256Hash message, [List<KeyParameter> aesKeys, bool encoded = true]) {
+  factory MultiSigInputScript.fromKeys(List<KeyPair> keys, Hash256 message, [List<KeyParameter> aesKeys, bool encoded = true]) {
     if(aesKeys == null) aesKeys = new List.filled(keys.length, null); // for convenience
     List<TransactionSignature> signatures = new List<TransactionSignature>(keys.length);
     for(int i = 0 ; i < keys.length ; i++)

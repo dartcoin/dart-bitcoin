@@ -574,7 +574,7 @@ class ScriptExecutor {
     bool sigValid = false;
     
     TransactionSignature sig = new TransactionSignature.deserialize(sigBytes, length: sigBytes.length, requireCanonical: false);
-    Sha256Hash hash = txContainingThis.hashForSignature(index, connectedScript, sig.sigHashFlags);
+    Hash256 hash = txContainingThis.hashForSignature(index, connectedScript, sig.sigHashFlags);
     sigValid = KeyPair.verifySignatureForPubkey(hash.bytes, sig, pubKey);
 
     if (opcode == ScriptOpCodes.OP_CHECKSIG)
@@ -633,7 +633,7 @@ class ScriptExecutor {
       // We could reasonably move this out of the loop, but because signature verification is significantly
       // more expensive than hashing, its not a big deal.
       TransactionSignature sig = new TransactionSignature.deserialize(sigs.first, length: sigs.first.length, requireCanonical: false);
-      Sha256Hash hash = txContainingThis.hashForSignature(index, connectedScript, sig.sigHashFlags);
+      Hash256 hash = txContainingThis.hashForSignature(index, connectedScript, sig.sigHashFlags);
       if (KeyPair.verifySignatureForPubkey(hash.bytes, sig, pubKey))
         sigs.removeFirst();
 

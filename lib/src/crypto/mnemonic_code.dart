@@ -100,7 +100,7 @@ class MnemonicCode {
           entropy[ii] |= 1 << (7 - jj);
 
     // Take the digest of the entropy.
-    Uint8List hash = new Sha256Hash.digest(entropy).bytes;
+    Uint8List hash = Utils.singleDigest(entropy);
     List<bool> hashBits = _bytesToBits(hash);
 
     // Check all the checksum bits.
@@ -121,7 +121,7 @@ class MnemonicCode {
     // We take initial entropy of ENT bits and compute its
     // checksum by taking first ENT / 32 bits of its SHA256 hash.
 
-    Uint8List hash = new Sha256Hash.digest(entropy).bytes;
+    Uint8List hash = Utils.singleDigest(entropy);
     List<bool> hashBits = _bytesToBits(hash);
     
     List<bool> entropyBits = _bytesToBits(entropy);

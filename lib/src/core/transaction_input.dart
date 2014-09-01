@@ -38,7 +38,7 @@ class TransactionInput extends Object with BitcoinSerialization {
    * It is specified by its [TransactionOutPoint] format, but can carry any [Script] as [scriptSig].
    */
   TransactionInput.coinbase([Script scriptSig]) {
-    _outpoint = new TransactionOutPoint(txid: Sha256Hash.ZERO_HASH, index: -1);
+    _outpoint = new TransactionOutPoint(txid: Hash256.ZERO_HASH, index: -1);
     _scriptSig = (scriptSig != null) ? scriptSig : Script.EMPTY_SCRIPT;
   }
   
@@ -86,7 +86,7 @@ class TransactionInput extends Object with BitcoinSerialization {
   
   bool get isCoinbase {
     _needInstance();
-    return _outpoint.txid == Sha256Hash.ZERO_HASH &&
+    return _outpoint.txid == Hash256.ZERO_HASH &&
         (_outpoint.index & 0xFFFFFFFF) == 0xFFFFFFFF;
   }
   

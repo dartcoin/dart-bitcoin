@@ -3,15 +3,15 @@ part of dartcoin.core;
 class Transaction extends Object with BitcoinSerialization {
   
   static const int TRANSACTION_VERSION = 1;
-  
-  Sha256Hash _hash;
+
+  Hash256 _hash;
   
   int _version;
   List<TransactionInput> _inputs;
   List<TransactionOutput> _outputs;
   int _lockTime;
   
-  Transaction({ Sha256Hash txid,
+  Transaction({ Hash256 txid,
                 List<TransactionInput> inputs, 
                 List<TransactionOutput> outputs,
                 int lockTime: 0,
@@ -71,19 +71,19 @@ class Transaction extends Object with BitcoinSerialization {
     _needInstance(true);
     _lockTime = lockTime;
   }
-  
-  Sha256Hash get hash {
+
+  Hash256 get hash {
     if(_hash == null) {
       _hash = _calculateHash();
     }
     return _hash;
   }
-  
-  Sha256Hash _calculateHash() {
-    return new Sha256Hash(Utils.reverseBytes(Utils.doubleDigest(serialize())));
+
+  Hash256 _calculateHash() {
+    return new Hash256(Utils.reverseBytes(Utils.doubleDigest(serialize())));
   }
-  
-  Sha256Hash get txid => hash;
+
+  Hash256 get txid => hash;
   
   int get amount {
     _needInstance();
@@ -171,7 +171,7 @@ class Transaction extends Object with BitcoinSerialization {
         params: params);
     addInput(input); // this method calls _needInstance(true) for us
     int sigHashFlags = SigHash.sigHashFlagsValue(sigHash, anyoneCanPay);
-    Sha256Hash hash = hashForSignature(_inputs.length - 1, scriptPubKey, sigHashFlags);
+    Hash256 hash = hashForSignature(_inputs.length - 1, scriptPubKey, sigHashFlags);
     ECDSASignature ecSig = sigKey.sign(hash);
     TransactionSignature txSig = new TransactionSignature(ecSig, mode: sigHash, anyoneCanPay: anyoneCanPay);
     if (PayToPubKeyOutputScript.matchesType(scriptPubKey))
@@ -252,7 +252,7 @@ class Transaction extends Object with BitcoinSerialization {
    * 
    * The [connectedScript] parameter must be either of typr [Script] or [Uint8List].
    */
-  Sha256Hash hashForSignature(int inputIndex, dynamic connectedScript, int sigHashFlags) {
+  Hash256 hashForSignature(int inputIndex, dynamic connectedScript, int sigHashFlags) {
     _needInstance(true);
     // The SIGHASH flags are used in the design of contracts, please see this page for a further understanding of
     // the purposes of the code in this method:
@@ -319,7 +319,7 @@ class Transaction extends Object with BitcoinSerialization {
         _outputs = outputs;
         // Satoshis bug is that SignatureHash was supposed to return a hash and on this codepath it
         // actually returns the constant "1" to indicate an error, which is never checked for. Oops.
-        return new Sha256Hash("0100000000000000000000000000000000000000000000000000000000000000");
+        return new Hash256("0100000000000000000000000000000000000000000000000000000000000000");
       }
       // In SIGHASH_SINGLE the outputs after the matching input index are deleted, and the outputs before
       // that position are "nulled out". Unintuitively, the value in a "null" transaction is set to -1.
@@ -345,7 +345,7 @@ class Transaction extends Object with BitcoinSerialization {
       ..add(0x000000ff & sigHashFlags));
     // Note that this is NOT reversed to ensure it will be signed correctly. If it were to be printed out
     // however then we would expect that it is IS reversed.
-    Sha256Hash hash = new Sha256Hash(Utils.doubleDigest(toHash));
+    Hash256 hash = new Hash256(Utils.doubleDigest(toHash));
 
     // Put the transaction back to how we found it.
     _needInstance(true); // uncache

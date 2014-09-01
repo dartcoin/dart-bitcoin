@@ -1,11 +1,14 @@
 library dartcoin.core;
 
 
+import "package:cryptoutils/cryptoutils.dart";
+export "package:cryptoutils/cryptoutils.dart" show Hash, Hash256, Hash160;
+
 import "dart:collection";
 import "dart:convert";
 import "dart:typed_data";
 import "dart:math";
-import "package:crypto/crypto.dart";
+import "package:crypto/crypto.dart" hide CryptoUtils, Hash;
 import "package:bignum/bignum.dart";
 import "package:collection/equality.dart";
 import "package:collection/algorithms.dart" show binarySearch;
@@ -42,7 +45,6 @@ import "package:asn1lib/asn1lib.dart";
 // utils
 part "../src/core/utils.dart";
 part "../src/core/units.dart";
-part "../src/core/sha256hash.dart";
 
 // serialization
 part "../src/serialization/byte_sink.dart";

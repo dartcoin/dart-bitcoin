@@ -2,40 +2,40 @@ part of dartcoin.core;
 
 abstract class RequestMessage extends Message {
   
-  List<Sha256Hash> _locators;
-  Sha256Hash _stop;
+  List<Hash256> _locators;
+  Hash256 _stop;
   
-  RequestMessage(String command, List<Sha256Hash> locators, 
-      [Sha256Hash stop, NetworkParameters params, int protocolVersion = NetworkParameters.PROTOCOL_VERSION]) : super(command, params) {
+  RequestMessage(String command, List<Hash256> locators,
+      [Hash256 stop, NetworkParameters params, int protocolVersion = NetworkParameters.PROTOCOL_VERSION]) : super(command, params) {
     if(stop == null) {
-      stop = Sha256Hash.ZERO_HASH;
+      stop = Hash256.ZERO_HASH;
     }
     _locators = locators;
     _stop = stop;
     this.protocolVersion = protocolVersion;
   }
   
-  List<Sha256Hash> get locators {
+  List<Hash256> get locators {
     _needInstance();
     return new UnmodifiableListView(_locators);
   }
-  
-  Sha256Hash get stop {
+
+  Hash256 get stop {
     _needInstance();
     return _stop;
   }
   
-  void set stop(Sha256Hash stop) {
+  void set stop(Hash256 stop) {
     _needInstance(true);
     _stop = stop;
   }
   
-  void addLocator(Sha256Hash locator) {
+  void addLocator(Hash256 locator) {
     _needInstance(true);
     _locators.add(locator);
   }
   
-  void removeLocator(Sha256Hash locator) {
+  void removeLocator(Hash256 locator) {
     _needInstance(true);
     _locators.remove(locator);
   }
@@ -47,20 +47,20 @@ abstract class RequestMessage extends Message {
   void _deserializePayload() {
     protocolVersion = _readUintLE();
     int nbLocators = _readVarInt();
-    _locators = new List<Sha256Hash>(nbLocators);
+    _locators = new List<Hash256>(nbLocators);
     for(int i = 0 ; i < nbLocators ; i++) {
-      _locators.add(new Sha256Hash.deserialize(_readBytes(32)));
+      _locators.add(_readSHA256());
     }
-    _stop = new Sha256Hash.deserialize(_readBytes(32));
+    _stop = _readSHA256();
   }
 
   @override
   void _serializePayload(ByteSink sink) {
     _writeUintLE(sink, protocolVersion);
     _writeVarInt(sink, _locators.length);
-    for(Sha256Hash hash in _locators) {
-     sink.add(hash.serialize());
+    for(Hash256 hash in _locators) {
+      _writeSHA256(sink, hash);
     }
-    sink.add(_stop.serialize());
+    _writeSHA256(sink, _stop);
   }
 }

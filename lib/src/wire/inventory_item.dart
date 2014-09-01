@@ -15,12 +15,12 @@ class InventoryItemType {
 
 class InventoryItem extends Object with BitcoinSerialization {
   
-  static const int SERIALIZATION_LENGTH = 4 + Sha256Hash.LENGTH;
+  static const int SERIALIZATION_LENGTH = 4 + Hash256.LENGTH;
   
   InventoryItemType _type;
-  Sha256Hash _hash;
+  Hash256 _hash;
   
-  InventoryItem(InventoryItemType type, Sha256Hash hash) {
+  InventoryItem(InventoryItemType type, Hash256 hash) {
     if(type == null || hash == null)
       throw new ArgumentError("None of the attributes should be null");
     _type = type;
@@ -41,8 +41,8 @@ class InventoryItem extends Object with BitcoinSerialization {
     _needInstance();
     return _type;
   }
-  
-  Sha256Hash get hash {
+
+  Hash256 get hash {
     _needInstance();
     return _hash;
   }
@@ -50,7 +50,7 @@ class InventoryItem extends Object with BitcoinSerialization {
   @override
   void _deserialize() {
     _type = new InventoryItemType._(_readUintLE());
-    _hash = new Sha256Hash.deserialize(_readBytes(32));
+    _hash = _readSHA256();
   }
 
   @override
@@ -61,7 +61,7 @@ class InventoryItem extends Object with BitcoinSerialization {
   @override
   void _serialize(ByteSink sink) {
     _writeUintLE(sink, _type.value);
-    sink.add(_hash.serialize());
+    _writeSHA256(sink, _hash);
   }
 
   @override

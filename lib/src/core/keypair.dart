@@ -248,7 +248,7 @@ class KeyPair {
   *
    * @param aesKey The AES key to use for decryption of the private key. If null then no decryption is required.
    */
-  ECDSASignature sign(Sha256Hash input, [KeyParameter aesKey]) {
+  ECDSASignature sign(Hash256 input, [KeyParameter aesKey]) {
     // The private key bytes to use for signing.
     BigInteger privateKeyForSigning;
 
@@ -304,7 +304,7 @@ class KeyPair {
     if(_priv == null) 
       throw new StateError("This ECKey does not have the private key necessary for signing.");
     Uint8List data = Utils.formatMessageForSigning(message);
-    Sha256Hash hash = new Sha256Hash.doubleDigest(data);
+    Hash256 hash = new Hash256(Utils.doubleDigest(data));
     ECDSASignature sig = sign(hash, aesKey);
     // Now we have to work backwards to figure out the recId needed to recover the signature.
     int recId = -1;
@@ -353,7 +353,7 @@ class KeyPair {
     Uint8List messageBytes = Utils.formatMessageForSigning(message);
     // Note that the C++ code doesn't actually seem to specify any character encoding. Presumably it's whatever
     // JSON-SPIRIT hands back. Assume UTF-8 for now.
-    Sha256Hash messageHash = new Sha256Hash.doubleDigest(messageBytes);
+    Hash256 messageHash = new Hash256(Utils.doubleDigest(messageBytes));
     bool compressed = false;
     if(header >= 31) {
       compressed = true;
@@ -410,7 +410,7 @@ class KeyPair {
    * @param compressed Whether or not the original pubkey was compressed.
    * @return An ECKey containing only the public part, or null if recovery wasn't possible.
    */
-  static KeyPair recoverFromSignature(int recId, ECDSASignature sig, Sha256Hash message, 
+  static KeyPair recoverFromSignature(int recId, ECDSASignature sig, Hash256 message,
                                       [bool compressed = true]) {
     if(recId < 0) 
       throw new Exception("recId must be positive");

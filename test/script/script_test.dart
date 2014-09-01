@@ -142,7 +142,7 @@ void _dataDrivenValidTransactions() {
       String hash = input[0];
       int index = input[1];
       String script = input[2];
-      Sha256Hash sha256Hash = new Sha256Hash(Utils.hexToBytes(hash));
+      Hash256 sha256Hash = new Hash256(hash);
       Script s = parseScriptString(script);
       // tmp skip scripts with CHECKSIG or MULTISIG
       for(ScriptChunk sc in s.chunks) {
@@ -200,7 +200,7 @@ void _dataDrivenInvalidTransactions() {
       String hash = input[0];
       int index = input[1];
       String script = input[2];
-      Sha256Hash sha256Hash = new Sha256Hash(Utils.hexToBytes(hash));
+      Hash256 sha256Hash = new Hash256(hash);
       scriptPubKeys[new TransactionOutPoint(params: params, index: index, txid: sha256Hash)] =
       parseScriptString(script);
     }

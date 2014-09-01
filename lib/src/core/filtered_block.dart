@@ -8,11 +8,11 @@ class FilteredBlock extends Object with BitcoinSerialization {
   
   PartialMerkleTree _merkle;
   // cached list of tx hashes
-  List<Sha256Hash> _hashes;
+  List<Hash256> _hashes;
   
-  Map<Sha256Hash, Transaction> _txs;
+  Map<Hash256, Transaction> _txs;
   
-  FilteredBlock(Block header, PartialMerkleTree merkleTree, [List<Sha256Hash> hashes]) {
+  FilteredBlock(Block header, PartialMerkleTree merkleTree, [List<Hash256> hashes]) {
     if(header == null || merkleTree == null)
       throw new ArgumentError("header or merkleTree is null");
     _header = header;
@@ -33,8 +33,8 @@ class FilteredBlock extends Object with BitcoinSerialization {
       _header.cloneAsHeader();
     return _header;
   }
-  
-  Sha256Hash get hash {
+
+  Hash256 get hash {
     _needInstance();
     return _header.hash;
   }
@@ -49,10 +49,10 @@ class FilteredBlock extends Object with BitcoinSerialization {
    */
   int get transactionCount => merkleTree.transactionCount;
   
-  List<Sha256Hash> get transactionHashes {
+  List<Hash256> get transactionHashes {
     if(_hashes == null) {
       _needInstance();
-      List<Sha256Hash> hashes = new List<Sha256Hash>();
+      List<Hash256> hashes = new List<Hash256>();
       if(_header.merkleRoot == _merkle.getTxnHashAndMerkleRoot(hashes)) {
         _hashes = hashes;
       } else {
@@ -71,8 +71,8 @@ class FilteredBlock extends Object with BitcoinSerialization {
   bool provideTransaction(Transaction tx) {
     _needInstance();
     if(_txs == null) 
-      _txs = new Map<Sha256Hash, Transaction>();
-    Sha256Hash hash = tx.hash;
+      _txs = new Map<Hash256, Transaction>();
+    Hash256 hash = tx.hash;
     if(_hashes.contains(hash)) {
       _txs[hash] = tx;
       return true;
@@ -83,7 +83,7 @@ class FilteredBlock extends Object with BitcoinSerialization {
   /**
    * Gets the set of transactions which were provided using provideTransaction() which match in getTransactionHashes()
    */
-  Map<Sha256Hash, Transaction> get associatedTransactions {
+  Map<Hash256, Transaction> get associatedTransactions {
     _needInstance();
     return new UnmodifiableMapView(_txs);//TODO something changed in the collection package
   }

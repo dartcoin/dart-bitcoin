@@ -24,11 +24,11 @@ class Block extends Object with BitcoinSerialization {
   /** A value for difficultyTarget (nBits) that allows half of all possible hash solutions. Used in unit testing. */
   static const int EASIEST_DIFFICULTY_TARGET = 0x207fFFFF;
   
-  Sha256Hash _hash;
+  Hash256 _hash;
   
   int _version;
-  Sha256Hash _previous;
-  Sha256Hash _merkle;
+  Hash256 _previous;
+  Hash256 _merkle;
   int _timestamp;
   int _difficultyTarget;
   int _nonce;
@@ -36,9 +36,9 @@ class Block extends Object with BitcoinSerialization {
   
   int _height;
   
-  Block({ Sha256Hash hash,
-          Sha256Hash previousBlock,
-          Sha256Hash merkleRoot,
+  Block({ Hash256 hash,
+        Hash256 previousBlock,
+        Hash256 merkleRoot,
           int timestamp,
           int difficultyTarget,
           int nonce: 0,
@@ -47,7 +47,7 @@ class Block extends Object with BitcoinSerialization {
           int version: BLOCK_VERSION,
           NetworkParameters params: NetworkParameters.MAIN_NET}) {
     _hash = hash;
-    _previous = previousBlock != null ? previousBlock : Sha256Hash.ZERO_HASH;
+    _previous = previousBlock != null ? previousBlock : Hash256.ZERO_HASH;
     _merkle = merkleRoot;
     _timestamp = timestamp != null ? timestamp : new DateTime.now().millisecondsSinceEpoch ~/ 1000;
     _difficultyTarget = difficultyTarget != null ? difficultyTarget : EASIEST_DIFFICULTY_TARGET;
@@ -81,18 +81,18 @@ class Block extends Object with BitcoinSerialization {
     _needInstance();
     return _version;
   }
-  
-  Sha256Hash get hash {
+
+  Hash256 get hash {
     if(_hash != null)
       return _hash;
     _hash = _calculateHash();
     return _hash;
   }
-  
-  Sha256Hash _calculateHash() {
+
+  Hash256 _calculateHash() {
     if(isCached)
-      return new Sha256Hash(Utils.reverseBytes(Utils.doubleDigest(new Uint8List.view(_serializationBuffer, _serializationOffset, HEADER_SIZE))));
-    return new Sha256Hash(Utils.reverseBytes(Utils.doubleDigest(_headerBytes)));
+      return new Hash256(Utils.reverseBytes(Utils.doubleDigest(new Uint8List.view(_serializationBuffer, _serializationOffset, HEADER_SIZE))));
+    return new Hash256(Utils.reverseBytes(Utils.doubleDigest(_headerBytes)));
   }
 
   Uint8List get _headerBytes {
@@ -101,18 +101,18 @@ class Block extends Object with BitcoinSerialization {
     _serializeHeader(sink);
     return sink.toUint8List();
   }
-  
-  Sha256Hash get previousBlock {
+
+  Hash256 get previousBlock {
     _needInstance();
     return _previous;
   }
   
-  void set previousBlock(Sha256Hash previousBlock) {
+  void set previousBlock(Hash256 previousBlock) {
     _needInstance(true);
     _previous = previousBlock;
   }
-  
-  Sha256Hash get merkleRoot {
+
+  Hash256 get merkleRoot {
     _needInstance();
     if(_merkle == null) {
       _needInstance(true);
@@ -121,7 +121,7 @@ class Block extends Object with BitcoinSerialization {
     return _merkle;
   }
   
-  void set merkleRoot(Sha256Hash merkleRoot) {
+  void set merkleRoot(Hash256 merkleRoot) {
     _needInstance(true);
     _merkle = merkleRoot;
   }
@@ -249,8 +249,8 @@ class Block extends Object with BitcoinSerialization {
     // Force a recalculation next time the values are needed.
     _merkle = null;
   }
-  
-  Sha256Hash _calculateMerkleRoot() {
+
+  Hash256 _calculateMerkleRoot() {
     _needInstance(true);
     // first add all tx hashes to the tree
     List<Uint8List> tree = new List<Uint8List>();
@@ -259,7 +259,7 @@ class Block extends Object with BitcoinSerialization {
     }
     // then complete the tree
     _buildMerkleTree(tree);
-    return new Sha256Hash(tree.last);
+    return new Hash256(tree.last);
   }
   
   static List<Uint8List> _buildMerkleTree(List<Uint8List> tree) {
@@ -325,7 +325,7 @@ class Block extends Object with BitcoinSerialization {
     if (target <= BigInteger.ZERO || target > params.proofOfWorkLimit)
       throw new VerificationException("Difficulty target is bad: $target");
 
-    BigInteger h = hash.toBigInteger();
+    BigInteger h = hash.asBigInteger();
     if(h > target) {
       // Proof of work check failed!
       if(throwException)
@@ -355,7 +355,7 @@ class Block extends Object with BitcoinSerialization {
   }
 
   void _checkMerkleRoot() {
-    Sha256Hash calculatedRoot = _calculateMerkleRoot();
+    Hash256 calculatedRoot = _calculateMerkleRoot();
     if (calculatedRoot != _merkle) {
       throw new VerificationException("Merkle hashes do not match: $calculatedRoot vs $_merkle");
     }
@@ -453,8 +453,8 @@ class Block extends Object with BitcoinSerialization {
   
   void _serializeHeader(ByteSink sink) {
     _writeUintLE(sink, _version);
-    sink.add(_previous.serialize());
-    sink.add(merkleRoot.serialize());
+    _writeSHA256(sink, _previous);
+    _writeSHA256(sink, merkleRoot);
     _writeUintLE(sink, _timestamp);
     _writeUintLE(sink, _difficultyTarget);
     _writeUintLE(sink, _nonce);
@@ -474,8 +474,8 @@ class Block extends Object with BitcoinSerialization {
 
   void _deserializeHeader() {
     _version = _readUintLE();
-    _previous = new Sha256Hash.deserialize(_readBytes(32));
-    _merkle = new Sha256Hash.deserialize(_readBytes(32));
+    _previous = _readSHA256();
+    _merkle = _readSHA256();
     _timestamp = _readUintLE();
     _difficultyTarget = _readUintLE();
     _nonce = _readUintLE();

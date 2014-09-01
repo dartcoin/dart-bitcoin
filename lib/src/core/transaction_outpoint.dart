@@ -3,22 +3,22 @@ part of dartcoin.core;
 class TransactionOutPoint extends Object with BitcoinSerialization {
   
   static const int SERIALIZATION_LENGTH = 36;
-  
-  Sha256Hash _txid;
+
+  Hash256 _txid;
   int _index;
   
   Transaction _tx;
   
   TransactionOutPoint({ Transaction transaction, 
                         int index: 0,
-                        Sha256Hash txid,
+                      Hash256 txid,
                         NetworkParameters params: NetworkParameters.MAIN_NET}) {
     if(transaction != null)
       txid = transaction.hash;
     if(index == -1)
       index = 0xFFFFFFFF;
     _index = index;
-    _txid = txid != null ? txid : Sha256Hash.ZERO_HASH;
+    _txid = txid != null ? txid : Hash256.ZERO_HASH;
     _tx = transaction;
     this.params = params;
     _serializationLength = SERIALIZATION_LENGTH;
@@ -29,13 +29,13 @@ class TransactionOutPoint extends Object with BitcoinSerialization {
   
   factory TransactionOutPoint.deserialize(Uint8List bytes, {bool lazy, bool retain, NetworkParameters params}) =>
       new BitcoinSerialization.deserialize(new TransactionOutPoint._newInstance(), bytes, length: SERIALIZATION_LENGTH, lazy: lazy, retain: retain, params: params);
-  
-  Sha256Hash get txid {
+
+  Hash256 get txid {
     _needInstance();
     return _txid;
   }
 
-  void set txid(Sha256Hash txid) {
+  void set txid(Hash256 txid) {
     _needInstance(true);
     _txid = txid;
     _tx = null;
@@ -80,13 +80,13 @@ class TransactionOutPoint extends Object with BitcoinSerialization {
 
   @override
   void _serialize(ByteSink sink) {
-    sink.add(_txid.serialize());
+    _writeSHA256(sink, _txid);
     _writeUintLE(sink, _index);
   }
 
   @override
   int _deserialize() {
-    _txid = new Sha256Hash.deserialize(_readBytes(32));
+    _txid = _readSHA256();
     _index = _readUintLE();
   }
 
