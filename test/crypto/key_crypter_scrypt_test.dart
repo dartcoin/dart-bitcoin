@@ -1,6 +1,7 @@
 library dartcoin.test.crypto.key_crypter_scrypt;
 
 import "package:unittest/unittest.dart";
+import "package:cryptoutils/cryptoutils.dart";
 
 import "package:dartcoin/core/core.dart";
 

@@ -2,6 +2,7 @@ library dartcoin.test.wire.serialization;
 
 
 import "package:unittest/unittest.dart";
+import "package:cryptoutils/cryptoutils.dart";
 
 import "package:dartcoin/core/core.dart";
 

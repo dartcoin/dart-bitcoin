@@ -1,6 +1,7 @@
 library dartcoin.test.wire.peer_address;
 
 import "package:unittest/unittest.dart";
+import "package:cryptoutils/cryptoutils.dart";
 
 import "package:dartcoin/core/core.dart";
 

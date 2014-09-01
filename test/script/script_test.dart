@@ -1,6 +1,7 @@
 library dartcoin.test.script.script_test;
 
 import "package:unittest/unittest.dart";
+import "package:cryptoutils/cryptoutils.dart";
 
 import "package:dartcoin/core/core.dart";
 import "../test_config.dart";

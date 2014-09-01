@@ -2,7 +2,6 @@ library dartcoin.core;
 
 
 import "package:cryptoutils/cryptoutils.dart";
-export "package:cryptoutils/cryptoutils.dart";
 
 import "dart:collection";
 import "dart:convert";

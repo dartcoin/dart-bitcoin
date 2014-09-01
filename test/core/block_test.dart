@@ -1,6 +1,7 @@
 library dartcoin.test.core.block;
 
 import "package:unittest/unittest.dart";
+import "package:cryptoutils/cryptoutils.dart";
 
 import "package:dartcoin/core/core.dart";
 

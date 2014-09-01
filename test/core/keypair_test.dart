@@ -1,11 +1,11 @@
 library dartcoin.test.core.keypair;
 
 import "package:unittest/unittest.dart";
+import "package:cryptoutils/cryptoutils.dart";
 
 import "package:dartcoin/core/core.dart";
 import "../test_config.dart";
 
-import "package:crypto/crypto.dart";
 import "package:bignum/bignum.dart";
 import "dart:math";
 import "dart:typed_data";

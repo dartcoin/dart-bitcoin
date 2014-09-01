@@ -1,6 +1,7 @@
 library dartcoin.test.core.filtered_block_and_partial_merkle_tree;
 
 import "package:unittest/unittest.dart";
+import "package:cryptoutils/cryptoutils.dart";
 
 import "package:dartcoin/core/core.dart";
 

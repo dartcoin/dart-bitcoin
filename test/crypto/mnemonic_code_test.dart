@@ -2,6 +2,7 @@ library dartcoin.test.crypto.mnemonic_code;
 
 
 import "package:unittest/unittest.dart";
+import "package:cryptoutils/cryptoutils.dart";
 
 import "package:dartcoin/core/core.dart";
 
@@ -166,7 +167,7 @@ void _testVectors() {
     String vecCode = _vectors[ii+1];
     String vecSeed = _vectors[ii+2];
 
-    List<String> code = _mc.toMneCryptoUtils.hexToBytes(Bytes(vecData));
+    List<String> code = _mc.toMnemonic(CryptoUtils.hexToBytes(vecData));
     Uint8List seed = MnemonicCode.toSeed(code, "TREZOR");
     Uint8List entropy = _mc.toEntropy(_split(vecCode));
 
