@@ -34,7 +34,7 @@ class ScriptChunk {
     if(_isOpCode)
       return ScriptOpCodes.getOpCodeName(bytes[0]);
     else
-      return "[" + Utils.bytesToHex(bytes) + "]";
+      return "[" + CryptoUtils.bytesToHex(bytes) + "]";
   }
   
   bool equalsOpCode(int opCode) => _isOpCode && _data[0] == opCode;

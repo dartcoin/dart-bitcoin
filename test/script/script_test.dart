@@ -47,7 +47,7 @@ void _testFromString() {
 }
 
 void _testScriptSig() {
-  Uint8List sigProgBytes = Utils.hexToBytes(sigProg);
+  Uint8List sigProgBytes = CryptoUtils.hexToBytes(sigProg);
   Script script = new Script(sigProgBytes);
   expect(PayToPubKeyHashInputScript.matchesType(script), isTrue);
   // Test we can extract the from address.
@@ -58,7 +58,7 @@ void _testScriptSig() {
 
 void _testScriptPubKey() {
   // Check we can extract the to address
-  Uint8List pubkeyBytes = Utils.hexToBytes(pubkeyProg);
+  Uint8List pubkeyBytes = CryptoUtils.hexToBytes(pubkeyProg);
   Script pubkey = new Script(pubkeyBytes);
   expect(pubkey.toString(), equals("DUP HASH160 [33e81a941e64cda12c6a299ed322ddbdd03f8d0e] EQUALVERIFY CHECKSIG"));
   expect(PayToPubKeyHashOutputScript.matchesType(pubkey), isTrue);
@@ -89,7 +89,7 @@ void _testP2SHOutputScript() {
 
 
 void _testIp() {
-  Uint8List bytes = Utils.hexToBytes("41043e96222332ea7848323c08116dddafbfa917b8e37f0bdf63841628267148588a09a43540942d58d49717ad3fabfe14978cf4f0a8b84d2435dad16e9aa4d7f935ac");
+  Uint8List bytes = CryptoUtils.hexToBytes("41043e96222332ea7848323c08116dddafbfa917b8e37f0bdf63841628267148588a09a43540942d58d49717ad3fabfe14978cf4f0a8b84d2435dad16e9aa4d7f935ac");
   Script s = new Script(bytes);
   expect(PayToPubKeyOutputScript.matchesType(s), isTrue);
 }
@@ -156,7 +156,7 @@ void _dataDrivenValidTransactions() {
       scriptPubKeys[new TransactionOutPoint(params: params, index: index, txid: sha256Hash)] = s;
     }
 
-    Uint8List bytes = Utils.hexToBytes(instance[1]);
+    Uint8List bytes = CryptoUtils.hexToBytes(instance[1]);
     Transaction transaction = new Transaction.deserialize(bytes, params: params);
     bool enforceP2SH = instance[2];
 
@@ -205,7 +205,7 @@ void _dataDrivenInvalidTransactions() {
       parseScriptString(script);
     }
 
-    Uint8List bytes = Utils.hexToBytes(instance[1]);
+    Uint8List bytes = CryptoUtils.hexToBytes(instance[1]);
     Transaction transaction = new Transaction.deserialize(bytes, params: params);
     bool enforceP2SH = instance[2];
     // we use a bool instead of multiple tests, because only one test has to fail
@@ -283,7 +283,7 @@ Script parseScriptString(String string) {
         out.addAll(Script.encodeData(Utils.reverseBytes(Utils.encodeMPI(new BigInteger(val), false))));
     } else if (new RegExp("^0x[0-9a-fA-F]*\$").hasMatch(w)) {
       // Raw hex data, inserted NOT pushed onto stack:
-      out.addAll(Utils.hexToBytes(w.substring(2)));
+      out.addAll(CryptoUtils.hexToBytes(w.substring(2)));
     } else if (w.length >= 2 && w.startsWith("'") && w.endsWith("'")) {
       // Single-quoted string, pushed as data. NOTE: this is poor-man's
       // parsing, spaces/tabs/newlines in single-quoted strings won't work.

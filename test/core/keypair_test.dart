@@ -19,31 +19,31 @@ String _testPubKey1 = "0450863AD64A87AE8A2FE83C1AF1A8403CB53F53E486D8511DAD8A048
 String _testAddress1 = "16UwLL9Risc3QfPqBUvKofHmBQ7wMtjvM";
 
 void _testAddress(String publicKey, String address) {
-  var bytes = Utils.hexToBytes("0450863AD64A87AE8A2FE83C1AF1A8403CB53F53E486D8511DAD8A04887E5B23522CD470243453A299FA9E77237716103ABC11A1DF38855ED6F2EE187E9C582BA6");
+  var bytes = CryptoUtils.hexToBytes("0450863AD64A87AE8A2FE83C1AF1A8403CB53F53E486D8511DAD8A04887E5B23522CD470243453A299FA9E77237716103ABC11A1DF38855ED6F2EE187E9C582BA6");
   KeyPair kp = new KeyPair.public(bytes);
   expect(kp.getAddress(), equals(new Address(address)));
 }
 
 void _testPrivToPub(String publicKey, String privateKey) {
-  var privBytes = Utils.hexToBytes(privateKey);
+  var privBytes = CryptoUtils.hexToBytes(privateKey);
   KeyPair kp = new KeyPair.private(privBytes, compressed: false);
-  var pub = Utils.bytesToHex(kp.publicKey);
+  var pub = CryptoUtils.bytesToHex(kp.publicKey);
   expect(pub, equalsIgnoringCase(publicKey));
   expect(kp.privateKeyBytes, equals(privBytes));
 }
 
 void _testClear(String privateKey) {
-  KeyPair kp = new KeyPair.private(Utils.hexToBytes(privateKey));
+  KeyPair kp = new KeyPair.private(CryptoUtils.hexToBytes(privateKey));
   kp.clearPrivateKey();
   expect(kp.privateKey, isNull);
   expect(kp.privateKeyBytes, isNull);
 }
 
 void _testEqualsAndHashCode(String private, String public) {
-  KeyPair kp1 = new KeyPair.private(Utils.hexToBytes(private));
-  KeyPair kp2 = new KeyPair.private(Utils.hexToBytes(private));
-  KeyPair kp3 = new KeyPair.public(Utils.hexToBytes(public));
-  KeyPair kp4 = new KeyPair.public(Utils.hexToBytes(public));
+  KeyPair kp1 = new KeyPair.private(CryptoUtils.hexToBytes(private));
+  KeyPair kp2 = new KeyPair.private(CryptoUtils.hexToBytes(private));
+  KeyPair kp3 = new KeyPair.public(CryptoUtils.hexToBytes(public));
+  KeyPair kp4 = new KeyPair.public(CryptoUtils.hexToBytes(public));
   expect(kp1 == kp2, isTrue);
   expect(kp1 == kp1, isTrue);
   expect(kp3 == kp4, isTrue);
@@ -81,13 +81,13 @@ void _sValue() {
 void _testSignatures() {
   // Test that we can construct an KeyPair from a private key (deriving the public from the private), then signing
   // a message with it.
-  BigInteger privkey = new BigInteger.fromBytes(1, Utils.hexToBytes("180cb41c7c600be951b5d3d0a7334acc7506173875834f7a6c4c786a28fcbb19"));
+  BigInteger privkey = new BigInteger.fromBytes(1, CryptoUtils.hexToBytes("180cb41c7c600be951b5d3d0a7334acc7506173875834f7a6c4c786a28fcbb19"));
   KeyPair key = new KeyPair.private(privkey);
   ECDSASignature output = key.sign(Hash256.ZERO_HASH);
   expect(key.verify(Hash256.ZERO_HASH.bytes, output), isTrue);
 
   // Test interop with a signature from elsewhere.
-  Uint8List sig = Utils.hexToBytes("3046022100dffbc26774fc841bbe1c1362fd643609c6e42dcb274763476d87af2c0597e89e022100c59e3c13b96b316cae9fa0ab0260612c7a133a6fe2b3445b6bf80b3123bf274d");
+  Uint8List sig = CryptoUtils.hexToBytes("3046022100dffbc26774fc841bbe1c1362fd643609c6e42dcb274763476d87af2c0597e89e022100c59e3c13b96b316cae9fa0ab0260612c7a133a6fe2b3445b6bf80b3123bf274d");
 
   expect(key.verify(Hash256.ZERO_HASH.bytes, new ECDSASignature.fromDER(sig)), isTrue);
 }
@@ -95,14 +95,14 @@ void _testSignatures() {
 void _testSignatureDEREncoding() {
   String derSig = "304502206faa2ebc614bf4a0b31f0ce4ed9012eb193302ec2bcaccc7ae8bb40577f47549022100c73a1a1acc209f3f860bf9b9f5e13e9433db6f8b7bd527a088a0e0cd0a4c83e9";
 
-  ECDSASignature sig = new ECDSASignature.fromDER(Utils.hexToBytes(derSig));
-  String encoded = Utils.bytesToHex(sig.encodeToDER());
+  ECDSASignature sig = new ECDSASignature.fromDER(CryptoUtils.hexToBytes(derSig));
+  String encoded = CryptoUtils.bytesToHex(sig.encodeToDER());
   expect(encoded, equals(derSig));
 }
 
 
 void _testASN1Roundtrip() {
-    Uint8List privkeyASN1 = Utils.hexToBytes(
+    Uint8List privkeyASN1 = CryptoUtils.hexToBytes(
             "3082011302010104205c0b98e524ad188ddef35dc6abba13c34a351a05409e5d285403718b93336a4aa081a53081a2020101302c06072a8648ce3d0101022100fffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2f300604010004010704410479be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8022100fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141020101a144034200042af7a2aafe8dafd7dc7f9cfb58ce09bda7dce28653ab229b98d1d3d759660c672dd0db18c8c2d76aa470448e876fc2089ab1354c01a6e72cefc50915f4a963ee");
     KeyPair decodedKey = new KeyPair.fromASN1(privkeyASN1);
 
@@ -113,18 +113,18 @@ void _testASN1Roundtrip() {
     expect(roundtripKey.privateKeyBytes, equals(decodedKey.privateKeyBytes));
 
     for (KeyPair key in [decodedKey, roundtripKey]) {
-        Uint8List message = Utils.reverseBytes(Utils.hexToBytes(
+        Uint8List message = Utils.reverseBytes(CryptoUtils.hexToBytes(
                 "11da3761e86431e4a54c176789e41f1651b324d240d599a7067bee23d328ec2a"));
         ECDSASignature output = key.sign(new Hash256(message));
         expect(key.verify(message, output), isTrue);
 
-        output = new ECDSASignature.fromDER(Utils.hexToBytes(
+        output = new ECDSASignature.fromDER(CryptoUtils.hexToBytes(
                 "304502206faa2ebc614bf4a0b31f0ce4ed9012eb193302ec2bcaccc7ae8bb40577f47549022100c73a1a1acc209f3f860bf9b9f5e13e9433db6f8b7bd527a088a0e0cd0a4c83e9"));
         expect(key.verify(message, output), isTrue);
     }
 
     // Try to sign with one key and verify with the other.
-    Uint8List message = Utils.reverseBytes(Utils.hexToBytes(
+    Uint8List message = Utils.reverseBytes(CryptoUtils.hexToBytes(
         "11da3761e86431e4a54c176789e41f1651b324d240d599a7067bee23d328ec2a"));
     expect(roundtripKey.verify(message, decodedKey.sign(new Hash256(message))), isTrue);
     expect(decodedKey.verify(message, roundtripKey.sign(new Hash256(message))), isTrue);
@@ -132,7 +132,7 @@ void _testASN1Roundtrip() {
 
 
 void _testKeyPairRoundtrip() {
-  Uint8List privkeyASN1 = Utils.hexToBytes(
+  Uint8List privkeyASN1 = CryptoUtils.hexToBytes(
           "3082011302010104205c0b98e524ad188ddef35dc6abba13c34a351a05409e5d285403718b93336a4aa081a53081a2020101302c06072a8648ce3d0101022100fffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2f300604010004010704410479be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8022100fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141020101a144034200042af7a2aafe8dafd7dc7f9cfb58ce09bda7dce28653ab229b98d1d3d759660c672dd0db18c8c2d76aa470448e876fc2089ab1354c01a6e72cefc50915f4a963ee");
   KeyPair decodedKey = new KeyPair.fromASN1(privkeyASN1);
 
@@ -142,18 +142,18 @@ void _testKeyPairRoundtrip() {
       new KeyPair.private(decodedKey.privateKeyBytes, publicKey: decodedKey.publicKey);
 
   for (KeyPair key in [decodedKey, roundtripKey]) {
-      Uint8List message = Utils.reverseBytes(Utils.hexToBytes(
+      Uint8List message = Utils.reverseBytes(CryptoUtils.hexToBytes(
               "11da3761e86431e4a54c176789e41f1651b324d240d599a7067bee23d328ec2a"));
       ECDSASignature output = key.sign(new Hash256(message));
       expect(key.verify(message, output), isTrue);
 
-      output = new ECDSASignature.fromDER(Utils.hexToBytes(
+      output = new ECDSASignature.fromDER(CryptoUtils.hexToBytes(
               "304502206faa2ebc614bf4a0b31f0ce4ed9012eb193302ec2bcaccc7ae8bb40577f47549022100c73a1a1acc209f3f860bf9b9f5e13e9433db6f8b7bd527a088a0e0cd0a4c83e9"));
       expect(key.verify(message, output), isTrue);
   }
 
   // Try to sign with one key and verify with the other.
-  Uint8List message = Utils.reverseBytes(Utils.hexToBytes(
+  Uint8List message = Utils.reverseBytes(CryptoUtils.hexToBytes(
       "11da3761e86431e4a54c176789e41f1651b324d240d599a7067bee23d328ec2a"));
   expect(roundtripKey.verify(message, decodedKey.sign(new Hash256(message))), isTrue);
   expect(decodedKey.verify(message, roundtripKey.sign(new Hash256(message))), isTrue);
@@ -183,8 +183,8 @@ void _testKeyPairRoundtrip() {
 //        KeyPair key = new KeyPair();
 //        KeyPair key1 = new DumpedPrivateKey(TestNet3Params.get(),
 //                key.getPrivateKeyEncoded(TestNet3Params.get()).toString()).getKey();
-//        expect(Utils.bytesToHex(key.getPrivKeyBytes()),
-//                Utils.bytesToHex(key1.getPrivKeyBytes()));
+//        expect(CryptoUtils.bytesToHex(key.getPrivKeyBytes()),
+//                CryptoUtils.bytesToHex(key1.getPrivKeyBytes()));
 //    }
 //}
 
@@ -262,7 +262,7 @@ void _testUnencryptedCreate() {
   // The reborn unencrypted private key bytes should match the
   // original private key.
   privateKeyBytes = unencryptedKey.privateKeyBytes;
-//  print("Reborn decrypted private key = " + Utils.bytesToHex(privateKeyBytes));
+//  print("Reborn decrypted private key = " + CryptoUtils.bytesToHex(privateKeyBytes));
 
   expect(privateKeyBytes, equals(originalPrivateKeyBytes));
 }
@@ -273,7 +273,7 @@ void _testEncryptedCreate() {
 
   // Copy the private key bytes for checking later.
   Uint8List originalPrivateKeyBytes = unencryptedKey.privateKeyBytes;
-//  print("Original private key = " + Utils.bytesToHex(originalPrivateKeyBytes));
+//  print("Original private key = " + CryptoUtils.bytesToHex(originalPrivateKeyBytes));
 
   EncryptedPrivateKey encryptedPrivateKey = _keyCrypter.encrypt(unencryptedKey.privateKeyBytes, _keyCrypter.deriveKey(_PASSWORD1));
   KeyPair encryptedKey = new KeyPair.encrypted(encryptedPrivateKey, unencryptedKey.publicKey, _keyCrypter);
@@ -292,7 +292,7 @@ void _testEncryptedCreate() {
 
   // The reborn unencrypted private key bytes should match the original private key.
   Uint8List privateKeyBytes = rebornUnencryptedKey.privateKeyBytes;
-//  print("Reborn decrypted private key = " + Utils.bytesToHex(privateKeyBytes));
+//  print("Reborn decrypted private key = " + CryptoUtils.bytesToHex(privateKeyBytes));
 
   expect(privateKeyBytes, equals(originalPrivateKeyBytes));
 }
@@ -399,7 +399,7 @@ void _testCanonicalSigs() {
   for(String vector in vectors) {
     if(!Utils.isHexString(vector))
       continue;
-    expect(TransactionSignature.isEncodingCanonical(Utils.hexToBytes(vector)), isTrue,
+    expect(TransactionSignature.isEncodingCanonical(CryptoUtils.hexToBytes(vector)), isTrue,
     reason: "expected canonical: $vector");
   }
 }
@@ -411,7 +411,7 @@ void _testNonCanonicalSigs() {
   for(String vector in vectors) {
     if(!Utils.isHexString(vector))
       continue;
-    expect(TransactionSignature.isEncodingCanonical(Utils.hexToBytes(vector)), isFalse,
+    expect(TransactionSignature.isEncodingCanonical(CryptoUtils.hexToBytes(vector)), isFalse,
         reason: "expected noncanonical: $vector");
   }
 }
@@ -422,7 +422,7 @@ void _testCreatedSigAndPubkeyAreCanonical() {
   // We dump failed data to error log because this test is not expected to be deterministic
   KeyPair key = new KeyPair();
   if(!key.isPubKeyCanonical) {
-    print(Utils.bytesToHex(key.publicKey));
+    print(CryptoUtils.bytesToHex(key.publicKey));
     fail("we must not generate non-canonical pubkeys");
   }
 
@@ -435,7 +435,7 @@ void _testCreatedSigAndPubkeyAreCanonical() {
   encodedSig.setRange(0, sigBytes.length, sigBytes);
   encodedSig[sigBytes.length] = SigHash.ALL.value;
   if (!TransactionSignature.isEncodingCanonical(encodedSig)) {
-    print(Utils.bytesToHex(sigBytes));
+    print(CryptoUtils.bytesToHex(sigBytes));
     fail("we must not generate non-canonical signatures");
   }
 }

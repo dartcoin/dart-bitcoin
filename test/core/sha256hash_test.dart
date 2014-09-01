@@ -18,7 +18,7 @@ var _testDoubleHash3 = "D61967F63C7DD183914A4AE452C9F6AD5D462CE3D277798075B10761
 void _testEqualsAndHashcode(Uint8List hash) {
   var hash2 = new Hash256(hash);
   expect(hash2.bytes, equals(hash));
-  expect(hash2.toString(), equalsIgnoringCase(Utils.bytesToHex(hash)));
+  expect(hash2.toString(), equalsIgnoringCase(CryptoUtils.bytesToHex(hash)));
   var hash3 = new Hash256(hash);
   expect(hash2 == hash3, isTrue);
   expect(hash2.hashCode == hash3.hashCode, isTrue);
@@ -31,7 +31,7 @@ void _testSingle(var input, var output) {
     input = new Uint8List.fromList(new Utf8Encoder().convert(input));
   }
   var hash = new Hash256(Utils.singleDigest(input));
-  var hashString = Utils.bytesToHex(hash.bytes);
+  var hashString = CryptoUtils.bytesToHex(hash.bytes);
   expect(hashString, equalsIgnoringCase(output));
 }
 
@@ -40,15 +40,15 @@ void _testDouble(var input, var output) {
     input = new Uint8List.fromList(new Utf8Encoder().convert(input));
   }
   var hash = new Hash256(Utils.doubleDigest(input));
-  var hashString = Utils.bytesToHex(hash.bytes);
+  var hashString = CryptoUtils.bytesToHex(hash.bytes);
   expect(hashString, equalsIgnoringCase(output));
 }
 
 void main() {
   group("core.Sha256Hash", () {
-    test("sha256hash_bytes",   () => _testEqualsAndHashcode(Utils.hexToBytes(_testDoubleHash3)));
+    test("sha256hash_bytes",   () => _testEqualsAndHashcode(CryptoUtils.hexToBytes(_testDoubleHash3)));
     test("sha256hash_single1", () => _testSingle(_testString1, _testHash1));
     test("sha256hash_single2", () => _testSingle(_testString2, _testHash2));
-    test("sha256hash_double1", () => _testDouble(Utils.hexToBytes(_testBytes3), _testDoubleHash3));
+    test("sha256hash_double1", () => _testDouble(CryptoUtils.hexToBytes(_testBytes3), _testDoubleHash3));
   });
 }

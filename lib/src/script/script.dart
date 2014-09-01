@@ -52,7 +52,7 @@ class Script {
       }
       // try data
       if(s.startsWith("[") && s.endsWith("]")) {
-        chunks.add(new ScriptChunk.data(Utils.hexToBytes(s.substring(1, s.length - 1))));
+        chunks.add(new ScriptChunk.data(CryptoUtils.hexToBytes(s.substring(1, s.length - 1))));
         continue;
       }
       throw new FormatException("The script string is invalid: $string");
@@ -283,11 +283,11 @@ class Script {
     StringBuffer sb = new StringBuffer()
       ..write("[");
     for(Uint8List elem in stack) {
-      sb..write("<" + Utils.bytesToHex(elem) + ">")
+      sb..write("<" + CryptoUtils.bytesToHex(elem) + ">")
         ..write(" ");
     }
     if(last != null) {
-      sb.write("<" + Utils.bytesToHex(last) + ">");
+      sb.write("<" + CryptoUtils.bytesToHex(last) + ">");
     }
     return (sb..write("]")).toString();
   }

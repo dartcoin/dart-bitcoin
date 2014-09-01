@@ -138,7 +138,7 @@ void _setup() {
 
 
 void _testBadEntropyLength() {
-  Uint8List entropy = Utils.hexToBytes("7f7f7f7f7f7f7f7f7f7f7f7f7f7f");
+  Uint8List entropy = CryptoUtils.hexToBytes("7f7f7f7f7f7f7f7f7f7f7f7f7f7f");
   expect(() => _mc.toMnemonic(entropy), throwsA(new isInstanceOf<MnemonicLengthException>()));
 }    
 
@@ -166,13 +166,13 @@ void _testVectors() {
     String vecCode = _vectors[ii+1];
     String vecSeed = _vectors[ii+2];
 
-    List<String> code = _mc.toMnemonic(Utils.hexToBytes(vecData));
+    List<String> code = _mc.toMneCryptoUtils.hexToBytes(Bytes(vecData));
     Uint8List seed = MnemonicCode.toSeed(code, "TREZOR");
     Uint8List entropy = _mc.toEntropy(_split(vecCode));
 
-    expect(Utils.bytesToHex(entropy), equals(vecData), reason: "incorrect entropy");
+    expect(CryptoUtils.bytesToHex(entropy), equals(vecData), reason: "incorrect entropy");
     expect(code.join(" "), equals(vecCode), reason: "incorrect mnemonic");
-    expect(Utils.bytesToHex(seed), equals(vecSeed), reason: "incorrect seed");
+    expect(CryptoUtils.bytesToHex(seed), equals(vecSeed), reason: "incorrect seed");
   }
 }
 

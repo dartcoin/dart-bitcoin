@@ -9,10 +9,10 @@ import "dart:typed_data";
 import "dart:io";
 
 
-final Uint8List _addrMessage = Utils.hexToBytes("f9beb4d96164647200000000000000001f000000" +
+final Uint8List _addrMessage = CryptoUtils.hexToBytes("f9beb4d96164647200000000000000001f000000" +
         "ed52399b01e215104d010000000000000000000000000000000000ffff0a000001208d");
 
-final Uint8List _txMessage = Utils.hexToBytes(
+final Uint8List _txMessage = CryptoUtils.hexToBytes(
         "F9 BE B4 D9 74 78 00 00  00 00 00 00 00 00 00 00" +
         "02 01 00 00 E2 93 CD BE  01 00 00 00 01 6D BD DB" +
         "08 5B 1D 8A F7 51 84 F0  BC 01 FA D5 8D 12 66 E9" +
@@ -67,8 +67,8 @@ void _testLazyParsing()  {
   
   tx.inputs;
   expect(tx.instanceReady, isTrue);
-  expect(Utils.bytesToHex(txm.serialize()), equals(Utils.bytesToHex(_txMessage)));
-  expect(Utils.bytesToHex(tx.serialize()), equals(Utils.bytesToHex(_txBytes)));
+  expect(CryptoUtils.bytesToHex(txm.serialize()), equals(CryptoUtils.bytesToHex(_txMessage)));
+  expect(CryptoUtils.bytesToHex(tx.serialize()), equals(CryptoUtils.bytesToHex(_txBytes)));
 }
 
 void _testTxVsTxmDeserializing() {
@@ -99,8 +99,8 @@ void _testCachedParsing(bool lazy)  {
   //child should remain cached.
   expect(tx.inputs[0].isCached, isTrue);
   
-  expect(Utils.bytesToHex(txm.serialize()), isNot(equals(Utils.bytesToHex(_txMessage))));
-  expect(Utils.bytesToHex(tx.serialize()), isNot(equals(Utils.bytesToHex(_txBytes))));
+  expect(CryptoUtils.bytesToHex(txm.serialize()), isNot(equals(CryptoUtils.bytesToHex(_txMessage))));
+  expect(CryptoUtils.bytesToHex(tx.serialize()), isNot(equals(CryptoUtils.bytesToHex(_txBytes))));
 
   //now try writing to a child to ensure uncaching is propagated up to parent but not to siblings
   txm = new Message.deserialize(_txMessage, lazy: lazy, retain: true, params: _mainParams);
@@ -119,8 +119,8 @@ void _testCachedParsing(bool lazy)  {
   //so should child
   expect(tx.inputs[0].isCached, isFalse);
 
-  expect(Utils.bytesToHex(txm.serialize()), isNot(equals(Utils.bytesToHex(_txMessage))));
-  expect(Utils.bytesToHex(tx.serialize()), isNot(equals(Utils.bytesToHex(_txBytes))));
+  expect(CryptoUtils.bytesToHex(txm.serialize()), isNot(equals(CryptoUtils.bytesToHex(_txMessage))));
+  expect(CryptoUtils.bytesToHex(tx.serialize()), isNot(equals(CryptoUtils.bytesToHex(_txBytes))));
 
   //deserialize/reserialize to check for equals.
   txm = new Message.deserialize(_txMessage, lazy: lazy, retain: true, params: _mainParams);
@@ -128,8 +128,8 @@ void _testCachedParsing(bool lazy)  {
   expect(tx, isNotNull);
   expect(tx.instanceReady, equals(!lazy));
   expect(tx.isCached, isTrue);
-  expect(Utils.bytesToHex(txm.serialize()), equals(Utils.bytesToHex(_txMessage)));
-  expect(Utils.bytesToHex(tx.serialize()), equals(Utils.bytesToHex(_txBytes)));
+  expect(CryptoUtils.bytesToHex(txm.serialize()), equals(CryptoUtils.bytesToHex(_txMessage)));
+  expect(CryptoUtils.bytesToHex(tx.serialize()), equals(CryptoUtils.bytesToHex(_txBytes)));
 
   //deserialize/reserialize to check for equals.  Set a field to it's existing value to trigger uncache
   txm = new Message.deserialize(_txMessage, params: _mainParams, lazy: lazy, retain: true);
@@ -139,8 +139,8 @@ void _testCachedParsing(bool lazy)  {
 
   tx.inputs[0].sequence = tx.inputs[0].sequence;
   
-  expect(Utils.bytesToHex(txm.serialize()), equals(Utils.bytesToHex(_txMessage)));
-  expect(Utils.bytesToHex(tx.serialize()), equals(Utils.bytesToHex(_txBytes)));
+  expect(CryptoUtils.bytesToHex(txm.serialize()), equals(CryptoUtils.bytesToHex(_txMessage)));
+  expect(CryptoUtils.bytesToHex(tx.serialize()), equals(CryptoUtils.bytesToHex(_txBytes)));
 }
 
 
@@ -150,7 +150,7 @@ void _testCachedParsing(bool lazy)  {
 
 void _testHeaders1() {
 
-  HeadersMessage hm = new Message.deserialize(Utils.hexToBytes("f9beb4d9686561" +
+  HeadersMessage hm = new Message.deserialize(CryptoUtils.hexToBytes("f9beb4d9686561" +
           "646572730000000000520000005d4fab8101010000006fe28c0ab6f1b372c1a6a246ae6" +
           "3f74f931e8365e15a089c68d6190000000000982051fd1e4ba744bbbe680e1fee14677b" +
           "a1a3c3540bf7b1cdb606e857233e0e61bc6649ffff001d01e3629900"), params: _mainParams);
@@ -164,7 +164,7 @@ void _testHeaders1() {
 
   expect(block.transactions, isNull);
 
-  expect(Utils.bytesToHex(block.merkleRoot.bytes), equals("0e3e2357e806b6cdb1f70b54c3a3a17b6714ee1f0e68bebb44a74b1efd512098"));
+  expect(CryptoUtils.bytesToHex(block.merkleRoot.bytes), equals("0e3e2357e806b6cdb1f70b54c3a3a17b6714ee1f0e68bebb44a74b1efd512098"));
 }
 
 
@@ -174,7 +174,7 @@ void _testHeaders1() {
  */
 void _testHeaders2() {
 
-  HeadersMessage hm = new Message.deserialize(Utils.hexToBytes("f9beb4d96865616465" +
+  HeadersMessage hm = new Message.deserialize(CryptoUtils.hexToBytes("f9beb4d96865616465" +
           "72730000000000e701000085acd4ea06010000006fe28c0ab6f1b372c1a6a246ae63f74f931e" +
           "8365e15a089c68d6190000000000982051fd1e4ba744bbbe680e1fee14677ba1a3c3540bf7b1c" +
           "db606e857233e0e61bc6649ffff001d01e3629900010000004860eb18bf1b1620e37e9490fc8a" +
@@ -215,7 +215,7 @@ void _testBitcoinPacketHeader() {
   expect(() => new Message.deserialize(new Uint8List(0), params: _mainParams), throwsA(new isInstanceOf<Object>("SerializationException")));
 
   // Message with a Message size which is 1 too big, in little endian format.
-  Uint8List wrongMessageLength = Utils.hexToBytes("000000000000000000000000010000020000000000");
+  Uint8List wrongMessageLength = CryptoUtils.hexToBytes("000000000000000000000000010000020000000000");
   expect(() => new Message.deserialize(wrongMessageLength, params: _mainParams), throwsA(new isInstanceOf<SerializationException>()));
 }
 

@@ -39,9 +39,9 @@ void _testKeyCrypterGood1() {
 
   // Decrypt.
   Uint8List reborn = keyCrypter.decrypt(encryptedPrivateKey, keyCrypter.deriveKey(_PASSWORD1));
-  print("Original: " + Utils.bytesToHex(_TEST_BYTES1));
-  print("Reborn  : " + Utils.bytesToHex(reborn));
-  expect(Utils.bytesToHex(reborn), equals(Utils.bytesToHex(_TEST_BYTES1)));
+  print("Original: " + CryptoUtils.bytesToHex(_TEST_BYTES1));
+  print("Reborn  : " + CryptoUtils.bytesToHex(reborn));
+  expect(CryptoUtils.bytesToHex(reborn), equals(CryptoUtils.bytesToHex(_TEST_BYTES1)));
 }
 
 /**
@@ -67,7 +67,7 @@ void _testKeyCrypterGood2() {
     expect(encryptedPrivateKey, isNotNull);
 
     Uint8List reconstructedPlainBytes = keyCrypter.decrypt(encryptedPrivateKey,keyCrypter.deriveKey(password));
-    expect(Utils.bytesToHex(reconstructedPlainBytes), equals(Utils.bytesToHex(Utils.stringToUTF8(plainText))));
+    expect(CryptoUtils.bytesToHex(reconstructedPlainBytes), equals(CryptoUtils.bytesToHex(Utils.stringToUTF8(plainText))));
     print('.');
   }
   print(" Done.");
@@ -97,13 +97,13 @@ void _testEncryptDecryptBytes1() {
     // Encrypt bytes.
     EncryptedPrivateKey encryptedPrivateKey = keyCrypter.encrypt(_TEST_BYTES1, keyCrypter.deriveKey(_PASSWORD1));
     expect(encryptedPrivateKey, isNotNull);
-    print("\nEncrypterDecrypterTest: cipherBytes = \nlength = ${encryptedPrivateKey.encryptedKey.length}\n---------------\n${Utils.bytesToHex(encryptedPrivateKey.encryptedKey)}\n---------------\n");
+    print("\nEncrypterDecrypterTest: cipherBytes = \nlength = ${encryptedPrivateKey.encryptedKey.length}\n---------------\n${CryptoUtils.bytesToHex(encryptedPrivateKey.encryptedKey)}\n---------------\n");
 
     Uint8List rebornPlainBytes = keyCrypter.decrypt(encryptedPrivateKey, keyCrypter.deriveKey(_PASSWORD1));
 
-    print("Original: " + Utils.bytesToHex(_TEST_BYTES1));
-    print("Reborn1 : " + Utils.bytesToHex(rebornPlainBytes));
-    expect(Utils.bytesToHex(rebornPlainBytes), equals(Utils.bytesToHex(_TEST_BYTES1)));
+    print("Original: " + CryptoUtils.bytesToHex(_TEST_BYTES1));
+    print("Reborn1 : " + CryptoUtils.bytesToHex(rebornPlainBytes));
+    expect(CryptoUtils.bytesToHex(rebornPlainBytes), equals(CryptoUtils.bytesToHex(_TEST_BYTES1)));
 }
 
 
@@ -123,9 +123,9 @@ void _testEncryptDecryptBytes2() {
 
         Uint8List rebornPlainBytes = keyCrypter.decrypt(encryptedPrivateKey, keyCrypter.deriveKey(_PASSWORD1));
 
-        print("Original: ($i) " + Utils.bytesToHex(plainBytes));
-        print("Reborn1 : ($i) " + Utils.bytesToHex(rebornPlainBytes));
-        expect(Utils.bytesToHex(rebornPlainBytes), equals(Utils.bytesToHex(plainBytes)));
+        print("Original: ($i) " + CryptoUtils.bytesToHex(plainBytes));
+        print("Reborn1 : ($i) " + CryptoUtils.bytesToHex(rebornPlainBytes));
+        expect(CryptoUtils.bytesToHex(rebornPlainBytes), equals(CryptoUtils.bytesToHex(plainBytes)));
     }
 }
 

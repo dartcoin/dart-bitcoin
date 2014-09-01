@@ -201,7 +201,7 @@ class KeyPair {
   String toString() {
     StringBuffer sb = new StringBuffer()
         ..write("pub:")
-        ..write(Utils.bytesToHex(_pub));
+        ..write(CryptoUtils.bytesToHex(_pub));
     if(isEncrypted) sb.write(" encrypted");
     return sb.toString();
   }
@@ -211,7 +211,7 @@ class KeyPair {
     StringBuffer sb = new StringBuffer()
         ..write(toString())
         ..write(" priv:")
-        ..write(Utils.bytesToHex(_priv.toByteArray()));
+        ..write(CryptoUtils.bytesToHex(_priv.toByteArray()));
     return sb.toString();
   }
 

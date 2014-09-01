@@ -2,7 +2,7 @@ library dartcoin.core;
 
 
 import "package:cryptoutils/cryptoutils.dart";
-export "package:cryptoutils/cryptoutils.dart" show Hash, Hash256, Hash160;
+export "package:cryptoutils/cryptoutils.dart";
 
 import "dart:collection";
 import "dart:convert";

@@ -7,14 +7,14 @@ import "package:dartcoin/core/core.dart";
 void _testPeerAddressRoundtrip() {
   // copied verbatim from https://en.bitcoin.it/wiki/Protocol_specification#Network_address
   String fromSpec = "010000000000000000000000000000000000ffff0a000001208d";
-  PeerAddress pa = new PeerAddress.deserialize(Utils.hexToBytes(fromSpec), lazy: false, params: NetworkParameters.MAIN_NET, protocolVersion: 0);
-  String reserialized = Utils.bytesToHex(pa.serialize());
+  PeerAddress pa = new PeerAddress.deserialize(CryptoUtils.hexToBytes(fromSpec), lazy: false, params: NetworkParameters.MAIN_NET, protocolVersion: 0);
+  String reserialized = CryptoUtils.bytesToHex(pa.serialize());
   expect(reserialized, equals(fromSpec));
 }
 
 void _testBitcoinSerialize() {
   PeerAddress pa = new PeerAddress("127.0.0.1", port: 8333, protocolVersion: 0);
-  expect(Utils.bytesToHex(pa.serialize()), equals("000000000000000000000000000000000000ffff7f000001208d"));
+  expect(CryptoUtils.bytesToHex(pa.serialize()), equals("000000000000000000000000000000000000ffff7f000001208d"));
 }
 
     

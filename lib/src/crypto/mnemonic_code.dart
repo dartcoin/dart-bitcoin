@@ -36,7 +36,7 @@ class MnemonicCode {
       throw new ArgumentError("The word list does not contain exactly 2048 words.");
     if(wordListDigest != null) {
       List<int> digest = md.close();
-      if(!Utils.equalLists(digest, Utils.hexToBytes(wordListDigest)))
+      if(!Utils.equalLists(digest, CryptoUtils.hexToBytes(wordListDigest)))
         throw new ArgumentError("Invalid wordlist digest");
     }
     
