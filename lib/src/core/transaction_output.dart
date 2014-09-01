@@ -88,12 +88,9 @@ class TransactionOutput extends Object with BitcoinSerialization {
   }
 
   @override
-  Uint8List _serialize() {
-    Uint8List encodedScript = _scriptPubKey.encode();
-    return new Uint8List.fromList(new List<int>()
-      ..addAll(Utils.uintToBytesLE(_value, 8))
-      ..addAll(new VarInt(encodedScript.length).serialize())
-      ..addAll(encodedScript));
+  void _serialize(ByteSink sink) {
+    _writeUintLE(sink, _value, 8);
+    _writeByteArray(sink, _scriptPubKey.encode());
   }
 
   @override

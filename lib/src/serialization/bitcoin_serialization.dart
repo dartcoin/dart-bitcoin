@@ -88,14 +88,26 @@ abstract class BitcoinSerialization implements BitcoinSerializable, TypedData {
         _performLazyDeserialization();
       return new Uint8List.view(_serializationBuffer, _serializationOffset, _serializationLength);
     }
-    Uint8List seri = _serialize();
+    ByteSink sink = new ByteSink();
+    _serialize(sink);
+    Uint8List seri = sink.toUint8List();
+    _serializationLength = seri.lengthInBytes;
     if (retainSerialization) {
       _serializationBuffer = seri.buffer;
       _serializationOffset = seri.offsetInBytes;
+      return new Uint8List.fromList(seri);
     }
-    _serializationLength = seri.lengthInBytes;
-    return new Uint8List.fromList(seri);
+    return seri;
   }
+
+  /**
+   * Override this method to perform the serialization of an object.
+   *
+   * Bytes should be added to the sink.
+   *
+   * Do not use this method inside _serialize() bodies, use _writeObject() instead.
+   */
+  void _serialize(ByteSink byteSink);
 
   bool get retainSerialization => _retainSerialization;
 
@@ -119,8 +131,11 @@ abstract class BitcoinSerialization implements BitcoinSerializable, TypedData {
       return _serializationLength;
     if (!_instanceReady) {
       _performLazyDeserialization();
-    } else
-      _serializationLength = _serialize().length;
+    } else {
+      ByteSink sink = new ByteSink();
+      _serialize(sink);
+      _serializationLength = sink.size;
+    }
     return _serializationLength;
   }
 
@@ -131,8 +146,6 @@ abstract class BitcoinSerialization implements BitcoinSerializable, TypedData {
   bool get instanceReady => _instanceReady;
 
   bool get isCached => _serializationBuffer != null;
-
-  Uint8List _serialize();
 
   /**
    * Deserialize the object using [bytes].
@@ -160,6 +173,7 @@ abstract class BitcoinSerialization implements BitcoinSerializable, TypedData {
   void _needInstance([bool clearCache = false]) {
     clearCache = clearCache != null ? clearCache : false;
     if(!_instanceReady) {
+      _performDeserialization();
     }
     if(clearCache) {
       _serializationBuffer = null;
@@ -266,6 +280,37 @@ abstract class BitcoinSerialization implements BitcoinSerializable, TypedData {
   int _readUintLE([int length = 4]) {
     int result = Utils.bytesToUintLE(_readBytes(length), length);
     return result;
+  }
+
+  void _writeObject(ByteSink sink, BitcoinSerializable obj) {
+    if(obj is BitcoinSerialization) {
+      if (obj.isCached) {
+        if (obj._serializationLength <= UNKNOWN_LENGTH)
+          obj._performLazyDeserialization();
+        sink.add(new Uint8List.view(obj._serializationBuffer, obj._serializationOffset, obj._serializationLength));
+      } else {
+        obj._serialize(sink);
+      }
+    } else {
+      sink.add(obj.serialize());
+    }
+  }
+
+  void _writeUintLE(ByteSink sink, int value, [int length = 4]) {
+    sink.add(Utils.uintToBytesLE(value, length));
+  }
+
+  void _writeVarInt(ByteSink sink, int value) {
+    _writeObject(sink, new VarInt(value));
+  }
+
+  void _writeString(ByteSink sink, String string) {
+    _writeObject(sink, new VarStr(string));
+  }
+
+  void _writeByteArray(ByteSink sink, Uint8List bytes) {
+    _writeObject(sink, new VarInt(bytes.length));
+    sink.add(bytes);
   }
 
 }

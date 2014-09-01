@@ -44,15 +44,19 @@ class HeadersMessage extends Message {
   }
 
   @override
-  Uint8List _serializePayload() {
-    List<int> result = new List<int>()
-      ..addAll(new VarInt(_headers.length).serialize());
+  void _serializePayload(ByteSink sink) {
+    _writeVarInt(sink, _headers.length);
     for(Block header in _headers) {
       if(header.isHeader)
-        result.addAll(header.serialize());
+        _writeObject(sink, header);
       else
-        result.addAll(header.cloneAsHeader().serialize());
+        _writeObject(sink, header.cloneAsHeader());
     }
-    return new Uint8List.fromList(result);
   }
 }
+
+
+
+
+
+

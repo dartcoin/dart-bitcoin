@@ -133,27 +133,26 @@ abstract class Message extends Object with BitcoinSerialization {
   void _deserializePayload();
 
   @override
-  Uint8List _serialize() {
+  void _serialize(ByteSink sink) {
     if(command.length > 12)
       throw new SerializationException("Command length should not be greater than 12.");
-    List<int> result = new List<int>();
     // the magic value
-    result.addAll(Utils.uintToBytesLE(params.magicValue, 4));
+    _writeUintLE(sink, params.magicValue);
     // the command code
-    result.addAll(_encodeCommand(command));
+    sink.add(_encodeCommand(command));
     // prepare payload
-    Uint8List payloadBytes = _serializePayload();
+    ByteSink payloadSink = new ByteSink();
+    _serializePayload(payloadSink);
     // the payload length
-    result.addAll(Utils.uintToBytesLE(payloadBytes.length, 4));
+    _writeUintLE(sink, payloadSink.size);
     // the checksum
-    _checksum = _calculateChecksum(payloadBytes);
-    result.addAll(_checksum);
+    _checksum = _calculateChecksum(payloadSink.toUint8List());
+    sink.add(_checksum);
     // the payload
-    result.addAll(payloadBytes);
-    return new Uint8List.fromList(result);
+    sink.add(payloadSink.toUint8List());
   }
   
-  Uint8List _serializePayload();
+  void _serializePayload(ByteSink sink);
   
   static String _parseCommand(Uint8List bytes) {
     int word = COMMAND_LENGTH;

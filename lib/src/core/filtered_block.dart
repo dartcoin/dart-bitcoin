@@ -85,20 +85,18 @@ class FilteredBlock extends Object with BitcoinSerialization {
    */
   Map<Sha256Hash, Transaction> get associatedTransactions {
     _needInstance();
-    return new UnmodifiableMapView(_txs);
+    return new UnmodifiableMapView(_txs);//TODO something changed in the collection package
   }
   
   // serialization
 
   @override
-  Uint8List _serialize() {
-    List<int> result = new List<int>();
+  void _serialize(ByteSink sink) {
     if(_header.isHeader)
-      result.addAll(_header.serialize());
+      _writeObject(sink, _header);
     else
-      result.addAll(_header.cloneAsHeader().serialize());
-    result.addAll(_merkle.serialize());
-    return new Uint8List.fromList(result);
+      _writeObject(sink, _header.cloneAsHeader());
+    _writeObject(sink, _merkle);
   }
 
   @override

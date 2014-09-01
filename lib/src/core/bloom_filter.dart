@@ -120,17 +120,13 @@ class BloomFilter extends Object with BitcoinSerialization {
     _nTweak = _readUintLE();
     _nFlags = _readUintLE(1);
   }
-  
-  /**
-   * Serializes this message to the provided stream. If you just want the raw bytes use bitcoinSerialize().
-   */
-  Uint8List _serialize() {
-    return new Uint8List.fromList(new List<int>()
-      ..addAll(new VarInt(_data.length).serialize())
-      ..addAll(_data)
-      ..addAll(Utils.uintToBytesLE(_hashFuncs, 4))
-      ..addAll(Utils.uintToBytesLE(_nTweak, 4))
-      ..add(_nFlags));
+
+  @override
+  void _serialize(ByteSink sink) {
+    _writeByteArray(sink, _data);
+    _writeUintLE(sink, _hashFuncs);
+    _writeUintLE(sink, _nTweak);
+    sink.add(_nFlags);
   }
   
   @override

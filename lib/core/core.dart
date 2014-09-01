@@ -45,6 +45,7 @@ part "../src/core/units.dart";
 part "../src/core/sha256hash.dart";
 
 // serialization
+part "../src/serialization/byte_sink.dart";
 part "../src/serialization/varint.dart";
 part "../src/serialization/varstr.dart";
 part "../src/serialization/bitcoin_serializable.dart";

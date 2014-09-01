@@ -28,5 +28,7 @@ class TransactionMessage extends Message {
   }
 
   @override
-  Uint8List _serializePayload() => _tx.serialize();
+  void _serializePayload(ByteSink sink) {
+    _writeObject(sink, _tx);
+  }
 }

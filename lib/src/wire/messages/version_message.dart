@@ -153,18 +153,17 @@ class VersionMessage extends Message {
   }
 
   @override
-  Uint8List _serializePayload() {
-    return new Uint8List.fromList(new List<int>()
-      ..addAll(Utils.uintToBytesLE(clientVersion, 4))
-      ..addAll(Utils.uBigIntToBytesLE(services, 8))
-      ..addAll(Utils.uintToBytesLE(time, 8))
-      ..addAll(myAddress.serialize())
+  void _serializePayload(ByteSink sink) {
+    _writeUintLE(sink, clientVersion);
+    sink.add(Utils.uBigIntToBytesLE(services, 8));
+    _writeUintLE(sink, time, 8);
+    _writeObject(sink, myAddress);
     // we are version >= 106
-      ..addAll(theirAddress.serialize())
-      ..addAll(Utils.uintToBytesLE(nonce, 8))
-      ..addAll(new VarStr(subVer).serialize())
-      ..addAll(Utils.uintToBytesLE(lastHeight, 4))
-      ..add(relayBeforeFilter ? 1 : 0));
+    _writeObject(sink, theirAddress);
+    _writeUintLE(sink, nonce, 8);
+    _writeString(sink, subVer);
+    _writeUintLE(sink, lastHeight);
+    sink.add(relayBeforeFilter ? 1 : 0);
   }
 }
 

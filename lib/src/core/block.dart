@@ -92,8 +92,14 @@ class Block extends Object with BitcoinSerialization {
   Sha256Hash _calculateHash() {
     if(isCached)
       return new Sha256Hash(Utils.reverseBytes(Utils.doubleDigest(new Uint8List.view(_serializationBuffer, _serializationOffset, HEADER_SIZE))));
+    return new Sha256Hash(Utils.reverseBytes(Utils.doubleDigest(_headerBytes)));
+  }
+
+  Uint8List get _headerBytes {
     _needInstance();
-    return new Sha256Hash(Utils.reverseBytes(Utils.doubleDigest(_serializeHeader())));
+    ByteSink sink = new ByteSink(HEADER_SIZE);
+    _serializeHeader(sink);
+    return sink.toUint8List();
   }
   
   Sha256Hash get previousBlock {
@@ -445,26 +451,25 @@ class Block extends Object with BitcoinSerialization {
   @override
   int get hashCode => hash.hashCode;
   
-  Uint8List _serializeHeader() {
-    return new Uint8List.fromList(new List<int>()
-      ..addAll(Utils.uintToBytesLE(_version, 4))
-      ..addAll(_previous.serialize())
-      ..addAll(merkleRoot.serialize()) // the getter is used intentionally here 
-      ..addAll(Utils.uintToBytesLE(_timestamp, 4))
-      ..addAll(Utils.uintToBytesLE(_difficultyTarget, 4))
-      ..addAll(Utils.uintToBytesLE(_nonce, 4)));
+  void _serializeHeader(ByteSink sink) {
+    _writeUintLE(sink, _version);
+    sink.add(_previous.serialize());
+    sink.add(merkleRoot.serialize());
+    _writeUintLE(sink, _timestamp);
+    _writeUintLE(sink, _difficultyTarget);
+    _writeUintLE(sink, _nonce);
   }
-  
-  Uint8List _serialize() {
-    List<int> result = new List();
-    result.addAll(_serializeHeader());
+
+  @override
+  void _serialize(ByteSink sink) {
+    _serializeHeader(sink);
     if(isHeader)
-      result.add(0);
+      sink.add(0);
     else {
-      result.addAll(new VarInt(_txs.length).serialize());
-      _txs.forEach((tx) => result.addAll(tx.serialize()));
+      _writeVarInt(sink, _txs.length);
+      for(Transaction tx in _txs)
+        _writeObject(sink, tx);
     }
-    return new Uint8List.fromList(result);
   }
 
   void _deserializeHeader() {

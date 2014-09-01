@@ -17,7 +17,8 @@ import "crypto/mnemonic_code_test.dart" as mnemonic_code;
 import "script/script_test.dart" as script;
 
 // serialization
-import "serialization/varint_test.dart" as varint; 
+import "serialization/byte_sink_test.dart" as byte_sink;
+import "serialization/varint_test.dart" as varint;
 
 // wire
 import "wire/bloom_filter_test.dart" as bloom_filter;
@@ -44,6 +45,7 @@ void main() {
   // script
   script.main();
   // serialization
+  byte_sink.main();
   varint.main();
   // wire
   bloom_filter.main();

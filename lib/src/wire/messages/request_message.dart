@@ -55,14 +55,12 @@ abstract class RequestMessage extends Message {
   }
 
   @override
-  Uint8List _serializePayload() {
-    List<int> result = new List<int>()
-      ..addAll(Utils.uintToBytesLE(protocolVersion, 4))
-      ..addAll(new VarInt(_locators.length).serialize());
+  void _serializePayload(ByteSink sink) {
+    _writeUintLE(sink, protocolVersion);
+    _writeVarInt(sink, _locators.length);
     for(Sha256Hash hash in _locators) {
-      result.addAll(hash.bytes);
+     sink.add(hash.serialize());
     }
-    result.addAll(_stop.bytes);
-    return new Uint8List.fromList(result);
+    sink.add(_stop.serialize());
   }
 }

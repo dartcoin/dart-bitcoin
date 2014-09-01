@@ -359,15 +359,15 @@ class Transaction extends Object with BitcoinSerialization {
   }
 
   @override
-  Uint8List _serialize() {
-    List<int> result = new List<int>()
-      ..addAll(Utils.uintToBytesLE(_version, 4))
-      ..addAll(new VarInt(_inputs.length).serialize());
-    _inputs.forEach((input) => result.addAll(input.serialize()));
-    result.addAll(new VarInt(_outputs.length).serialize());
-    _outputs.forEach((output) => result.addAll(output.serialize()));
-    result.addAll(Utils.uintToBytesLE(_lockTime, 4));
-    return new Uint8List.fromList(result);
+  void _serialize(ByteSink sink) {
+    _writeUintLE(sink, _version);
+    _writeVarInt(sink, _inputs.length);
+    for(TransactionInput input in _inputs)
+      _writeObject(sink, input);
+    _writeVarInt(sink, _outputs.length);
+    for(TransactionInput output in _outputs)
+      _writeObject(sink, output);
+    _writeUintLE(sink, _lockTime);
   }
 
   @override

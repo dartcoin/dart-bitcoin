@@ -59,10 +59,9 @@ class InventoryItem extends Object with BitcoinSerialization {
   }
 
   @override
-  Uint8List _serialize() {
-    return new Uint8List.fromList(new List<int>()
-      ..addAll(Utils.uintToBytesLE(_type.value, 4))
-      ..addAll(_hash.serialize()));
+  void _serialize(ByteSink sink) {
+    _writeUintLE(sink, _type.value);
+    sink.add(_hash.serialize());
   }
 
   @override

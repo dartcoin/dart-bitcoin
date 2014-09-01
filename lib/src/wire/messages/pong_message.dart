@@ -37,10 +37,11 @@ class PongMessage extends Message {
   }
 
   @override
-  Uint8List _serializePayload() {
+  void _serializePayload(ByteSink sink) {
     if(hasNonce)
-      return Utils.uintToBytesLE(_nonce, 8);
-    return Utils.uintToBytesLE(0, 8);
+      _writeUintLE(sink, _nonce, 8);
+    else
+      _writeUintLE(sink, 0, 8);
   }
   
 }

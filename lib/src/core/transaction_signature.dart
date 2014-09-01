@@ -10,7 +10,7 @@ class TransactionSignature extends ECDSASignature with BitcoinSerialization {
    * It is possible to either set the sigHashFlags byte itself or 
    * specify a SigHash value and the anyoneCanPay bool.
    * When nothing is specified, the default SigHash.ALL and !anyoneCanPay settings are used.
-   */
+   */ //TODO fix serialization. is not required here, so use BitcoinSerializable instead
   TransactionSignature(ECDSASignature signature, {SigHash mode, bool anyoneCanPay, int sigHashFlags}) : super(signature.r, signature.s) {
     if(sigHashFlags != null) {
       if(mode != null || anyoneCanPay != null)
@@ -104,10 +104,9 @@ class TransactionSignature extends ECDSASignature with BitcoinSerialization {
   }
 
   @override
-  Uint8List _serialize() {
-    return new Uint8List.fromList(new List<int>()
-      ..addAll(encodeToDER())
-      ..add(_sigHashFlags));
+  void _serialize(ByteSink sink) {
+    sink.add(encodeToDER());
+    sink.add(_sigHashFlags);
   }
 
   @override

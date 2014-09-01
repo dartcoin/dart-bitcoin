@@ -61,12 +61,15 @@ abstract class InventoryItemContainerMessage extends Message {
   }
 
   @override
-  Uint8List _serializePayload() {
-    List<int> result = new List<int>()
-      ..addAll(new VarInt(_items.length).serialize());
+  void _serializePayload(ByteSink sink) {
+    _writeVarInt(sink, _items.length);
     for(InventoryItem item in _items) {
-      result.addAll(item.serialize());
+      _writeObject(sink, item);
     }
-    return new Uint8List.fromList(result);
   }
 }
+
+
+
+
+

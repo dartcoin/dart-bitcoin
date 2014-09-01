@@ -158,20 +158,18 @@ class PeerAddress extends Object with BitcoinSerialization {
   }
 
   @override
-  Uint8List _serialize() {
-    List<int> result = new List<int>();
+  void _serialize(ByteSink sink) {
     if(protocolVersion >= 31402) {
       //TODO [bitcoinj]: this appears to be dynamic because the client only ever sends out it's own address
       //so assumes itself to be up.  For a fuller implementation this needs to be dynamic only if
       //the address refers to this client.
       int secs = new DateTime.now().millisecondsSinceEpoch ~/ 1000;
-      result.addAll(Utils.uintToBytesLE(secs, 4));
+      _writeUintLE(sink, secs);
     }
-    result..addAll(Utils.uBigIntToBytesLE(_services, 8))
-      ..addAll(_addr)
-      ..add(0xFF & _port >> 8)
-      ..add(0xFF & _port);
-    return new Uint8List.fromList(result);
+    sink.add(Utils.uBigIntToBytesLE(_services, 8));
+    sink.add(_addr);
+    sink.add(0xFF & _port >> 8);
+    sink.add(0xFF & _port);
   }
   
 }

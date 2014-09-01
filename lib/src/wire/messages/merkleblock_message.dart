@@ -28,5 +28,7 @@ class MerkleBlockMessage extends Message {
   }
 
   @override
-  Uint8List _serializePayload() => _block.serialize();
+  void _serializePayload(ByteSink sink) {
+    _writeObject(sink, _block);
+  }
 }

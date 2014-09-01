@@ -31,10 +31,7 @@ class FilterAddMessage extends Message {
   }
 
   @override
-  Uint8List _serializePayload() {
-    return new Uint8List.fromList(
-        new List<int>()
-        ..addAll(new VarInt(_data.length).serialize())
-        ..addAll(_data));
+  void _serializePayload(ByteSink sink) {
+    _writeByteArray(sink, _data);
   }
 }

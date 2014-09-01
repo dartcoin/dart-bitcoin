@@ -13,5 +13,5 @@ class VerackMessage extends Message {
   void _deserializePayload() {}
 
   @override
-  Uint8List _serializePayload() => new Uint8List(0);
+  void _serializePayload(ByteSink sink) {}
 }

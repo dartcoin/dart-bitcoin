@@ -53,11 +53,9 @@ class AddressMessage extends Message {
   }
 
   @override
-  Uint8List _serializePayload() {
-    List<int> result = new List<int>()
-      ..addAll(new VarInt(_addresses.length).serialize());
-    _addresses.forEach((a) => result.addAll(a.serialize()));
-    return new Uint8List.fromList(result);
+  void _serializePayload(ByteSink sink) {
+    _writeVarInt(sink, _addresses.length);
+    _addresses.forEach((a) => _writeObject(sink, a));
   }
   
 }

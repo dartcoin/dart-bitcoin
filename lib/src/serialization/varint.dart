@@ -1,5 +1,6 @@
 part of dartcoin.core;
 
+
 class VarInt extends Object with BitcoinSerialization {
   
   int _value;
@@ -49,20 +50,19 @@ class VarInt extends Object with BitcoinSerialization {
   }
 
   @override
-  Uint8List _serialize() {
-    List<int> result;
-    if(_value < 0xfd)
-      result =  [_value];
-    else if(_value <= 0xffff)
-      result = [0xfd, 0, 0];
-    else if(_value <= 0xffffffff)
-      result = [0xfe, 0, 0, 0, 0];
-    else
-      result = [0xff, 0, 0, 0, 0, 0, 0, 0, 0];
-    
-    result.replaceRange(1, result.length, Utils.uintToBytesLE(_value, result.length + 1));
-    // sublist is necessary due to doubtful implementation of replaceRange
-    return new Uint8List.fromList(result.sublist(0, size));
+  void _serialize(ByteSink sink) {
+    if(_value < 0xfd) {
+      sink.add(_value);
+    } else if(_value <= 0xffff) {
+      sink.add(0xfd);
+      _writeUintLE(sink, _value, 2);
+    } else if(_value <= 0xffffffff) {
+      sink.add(0xfe);
+      _writeUintLE(sink, _value, 4);
+    } else {
+      sink.add(0xff);
+      _writeUintLE(sink, _value, 8);
+    }
   }
 
   @override

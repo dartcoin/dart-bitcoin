@@ -50,11 +50,8 @@ class VarStr extends Object with BitcoinSerialization {
   }
 
   @override
-  Uint8List _serialize() {
-    List<int> contentBytes = new Utf8Encoder().convert(_content);
-    return new Uint8List.fromList(new List<int>()
-      ..addAll(new VarInt(contentBytes.length).serialize())
-      ..addAll(contentBytes));
+  void _serialize(ByteSink sink) {
+    _writeByteArray(sink, new Utf8Encoder().convert(_content));
   }
 
   @override

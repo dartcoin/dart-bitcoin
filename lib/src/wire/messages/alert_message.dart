@@ -81,15 +81,11 @@ class AlertMessage extends Message {
   }
 
   @override
-  Uint8List _serializePayload() {
-    if(_message != null && _signature != null) {
-      return new Uint8List.fromList(new List<int>()
-          ..addAll(new VarInt(_message.length).serialize())
-          ..addAll(_message)
-          ..addAll(new VarInt(_signature.length).serialize())
-          ..addAll(_signature));
-    }
-    throw new Exception("Cannot sign AlertMessages ourselves");
+  void _serializePayload(ByteSink sink) {
+    if(_message == null || _signature == null)
+      throw new Exception("Cannot sign AlertMessages ourselves");
+    _writeByteArray(sink, _message);
+    _writeByteArray(sink, _signature);
   }
   
   Uint8List _constructMessage() {

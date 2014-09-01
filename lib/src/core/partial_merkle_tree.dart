@@ -68,14 +68,11 @@ class PartialMerkleTree extends Object with BitcoinSerialization {
     }
 
     @override
-    Uint8List _serialize() {
-      List<int> result = new List<int>()
-        ..addAll(Utils.uintToBytesLE(_transactionCount, 4))
-        ..addAll(new VarInt(_hashes.length).serialize());
-      _hashes.forEach((hash) => result.addAll(hash.serialize()));
-      result..addAll(new VarInt(_matchedChildBits.length).serialize())
-        ..addAll(_matchedChildBits);
-      return new Uint8List.fromList(result);
+    void _serialize(ByteSink sink) {
+      _writeUintLE(sink, _transactionCount);
+      _writeVarInt(sink, _hashes.length);
+      _hashes.forEach((hash) => sink.add(hash.serialize()));
+      _writeByteArray(sink, _matchedChildBits);
     }
 
     @override
