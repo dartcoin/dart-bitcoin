@@ -357,7 +357,7 @@ class Utils {
     bool isNegative = value < BigInteger.ZERO;
     if (isNegative)
       value = value.negate_op();
-    Uint8List array = value.toByteArray();
+    List<int> array = value.toByteArray();
     int length = array.length;
     if ((array[0] & 0x80) == 0x80)
       length++;
@@ -374,7 +374,7 @@ class Utils {
         result = new Uint8List(length);
         result.setRange(1, array.length + 1, array);
       } else {
-        result = array;
+        result = new Uint8List.fromList(array);
       }
       if (isNegative)
         result[0] |= 0x80;

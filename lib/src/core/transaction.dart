@@ -365,7 +365,7 @@ class Transaction extends Object with BitcoinSerialization {
     for(TransactionInput input in _inputs)
       _writeObject(sink, input);
     _writeVarInt(sink, _outputs.length);
-    for(TransactionInput output in _outputs)
+    for(TransactionOutput output in _outputs)
       _writeObject(sink, output);
     _writeUintLE(sink, _lockTime);
   }

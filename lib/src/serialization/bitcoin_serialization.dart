@@ -324,7 +324,7 @@ abstract class BitcoinSerialization implements BitcoinSerializable, TypedData {
    * In the Bitcoin protocol, hashes are serialized in little endian.
    */
   void _writeSHA256(ByteSink sink, Hash256 hash) {
-    sink.add(Utils.reverseBytes(hash.bytes));
+    sink.add(Utils.reverseBytes(hash));
   }
 
 }

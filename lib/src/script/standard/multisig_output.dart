@@ -20,7 +20,7 @@ class MultiSigOutputScript extends Script {
     pubkeys.forEach((pk) => builder.data(pk.publicKey));
     builder.smallNum(pubkeys.length)
       .op(ScriptOpCodes.OP_CHECKMULTISIG);
-    return builder.build();
+    return new MultiSigOutputScript.convert(builder.build(), true);
   }
   
   MultiSigOutputScript.convert(Script script, [bool skipCheck = false]) : super(script.bytes) {

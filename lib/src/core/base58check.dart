@@ -2,6 +2,8 @@ part of dartcoin.core;
 
 /**
  * Used for encoding en decoding bytestrings to the Base58Check encoding that Bitcoin uses.
+ *
+ * TODO remove this class because the dart:cryptoutils implementation is used now.
  * 
  * More info can be found in the Bitcoin wiki: https://en.bitcoin.it/wiki/Base58Check_encoding
  */
@@ -14,6 +16,9 @@ class Base58Check {
   static String encode(Uint8List bytes) {
     if(bytes.length == 0)
       return "";
+
+    // copy bytes because we are going to change it
+    bytes = new Uint8List.fromList(bytes);
     
     // count number of leading zeros
     int leadingZeroes = 0;

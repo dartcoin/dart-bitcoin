@@ -13,6 +13,8 @@ import "dart:convert";
 void _testEncode() {
     Uint8List testbytes = new Uint8List.fromList(new Utf8Encoder().convert("Hello World"));
     expect(Base58Check.encode(testbytes), equals("JxF12TrwUP45BMd"));
+    Uint8List testBytesAgain = new Uint8List.fromList(new Utf8Encoder().convert("Hello World"));
+    expect(testbytes, equals(testBytesAgain));
     
     BigInteger bi = new BigInteger(3471844090);
     expect(Base58Check.encode(new Uint8List.fromList(bi.toByteArray())), equals("16Ho7Hs"));

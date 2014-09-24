@@ -5,7 +5,9 @@ class Address {
   static const int LENGTH = 20; // bytes (= 160 bits)
   
   int _version;
-  Uint8List _bytes;
+  Hash160 _bytes;
+
+  static const String BASE58_ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
   
   /**
    * Create a new address object.
@@ -14,28 +16,28 @@ class Address {
    * 
    * If [String], the checksum will be verified.
    * 
-   * If [Uint8List] of size 20, the bytes are used as the [hash160].
+   * If [Hash160] or [Uint8List] of size 20, the bytes are used as the [hash160].
    * If [Uint8List] of size 25, [version] and [hash160] will be extracted and the checksum verified.
    */
   Address(dynamic address, [NetworkParameters params, int version]) {
     if(address is String) {
       if(version != null)
         throw new ArgumentError("Version should not be passed when address is a String");
-      address = Base58Check.decodeChecked(address);
-      if(address.length != 21)
+      Base58CheckPayload payload = new Base58CheckDecoder(BASE58_ALPHABET, Utils.singleDigest).convert(address);
+      if(payload.payload.length != 21)
         throw new FormatException("The Base58 address should be exactly 25 bytes long. (21-byte payload)");
-      _version = address[0];
-      _bytes = address.sublist(1, 21);
+      _version = payload.version;
+      _bytes = new Hash160(payload.payload);
       if(params != null && !_isAcceptableVersion(params, _version))
         throw new WrongNetworkException(_version, params.acceptableAddressHeaders);
       return;
     }
-    if(address is Uint8List) {
+    if(address is Uint8List || address is Hash160) {
       if(address.length != 20)
         throw new ArgumentError("To create an address from a hash160 payload, input needs to be exactly 20 bytes.");
       if(params == null && version == null)
         params = NetworkParameters.MAIN_NET;
-      _bytes = address;
+      _bytes = new Hash160(address);
       _version = (version != null) ? version : params.addressHeader;
       if(params != null && !_isAcceptableVersion(params, _version))
         throw new WrongNetworkException(_version, params.acceptableAddressHeaders);
@@ -54,18 +56,13 @@ class Address {
   
   int get version => _version;
   
-  Uint8List get hash160 => new Uint8List.fromList(_bytes);
+  Hash160 get hash160 => _bytes;
   
   /**
    * Returns the base58 string representation of this address.
    */
-  String get address {
-    List<int> bytes = new List<int>()
-      ..add(_version)
-      ..addAll(_bytes);
-    bytes.addAll(Utils.doubleDigest(new Uint8List.fromList(bytes)).sublist(0, 4));
-    return Base58Check.encode(new Uint8List.fromList(bytes));
-  }
+  String get address => new Base58CheckEncoder(BASE58_ALPHABET, Utils.singleDigest)
+      .convert(new Base58CheckPayload(_version, _bytes));
   
   /**
    * Finds the [NetworkParameters] that correspond to the version byte of this [Address].

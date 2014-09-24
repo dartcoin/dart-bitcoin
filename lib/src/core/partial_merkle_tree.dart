@@ -159,7 +159,7 @@ class PartialMerkleTree extends Object with BitcoinSerialization {
         }
         if (height == 0 && parentOfMatch) // in case of height 0, we have a matched txid
           matchedHashes.add(_hashes[used.hashesUsed]);
-        return _hashes[used.hashesUsed++].bytes;
+        return _hashes[used.hashesUsed++];
       } else {
         // otherwise, descend into the subtrees to extract matched txids and hashes
         Uint8List left = _recursiveExtractHashes(height - 1, pos * 2, used, matchedHashes), right;

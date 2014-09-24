@@ -18,7 +18,7 @@ var _testDoubleHash3 = "D61967F63C7DD183914A4AE452C9F6AD5D462CE3D277798075B10761
 
 void _testEqualsAndHashcode(Uint8List hash) {
   var hash2 = new Hash256(hash);
-  expect(hash2.bytes, equals(hash));
+  expect(hash2, equals(hash));
   expect(hash2.toString(), equalsIgnoringCase(CryptoUtils.bytesToHex(hash)));
   var hash3 = new Hash256(hash);
   expect(hash2 == hash3, isTrue);
@@ -32,7 +32,7 @@ void _testSingle(var input, var output) {
     input = new Uint8List.fromList(new Utf8Encoder().convert(input));
   }
   var hash = new Hash256(Utils.singleDigest(input));
-  var hashString = CryptoUtils.bytesToHex(hash.bytes);
+  var hashString = CryptoUtils.bytesToHex(hash);
   expect(hashString, equalsIgnoringCase(output));
 }
 
@@ -41,7 +41,7 @@ void _testDouble(var input, var output) {
     input = new Uint8List.fromList(new Utf8Encoder().convert(input));
   }
   var hash = new Hash256(Utils.doubleDigest(input));
-  var hashString = CryptoUtils.bytesToHex(hash.bytes);
+  var hashString = CryptoUtils.bytesToHex(hash);
   expect(hashString, equalsIgnoringCase(output));
 }
 
