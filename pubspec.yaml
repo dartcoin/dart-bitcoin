@@ -7,7 +7,7 @@ dependencies:
   bignum: '>=0.0.4'
   cipher:
     path: /home/steven/git/cipher
-  cryptoutils: '>=0.1.6'
+  cryptoutils: '>=0.1.8'
   collection: any
   crypto: any
   json: any
