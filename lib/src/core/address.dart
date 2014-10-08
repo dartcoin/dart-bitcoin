@@ -24,8 +24,9 @@ class Address {
       if(version != null)
         throw new ArgumentError("Version should not be passed when address is a String");
       Base58CheckPayload payload = new Base58CheckDecoder(BASE58_ALPHABET, Utils.singleDigest).convert(address);
-      if(payload.payload.length != 21)
-        throw new FormatException("The Base58 address should be exactly 25 bytes long. (21-byte payload)");
+      if(payload.payload.length != 20)
+        throw new FormatException(
+            "The Base58 address should be exactly 25 bytes long: a 21-byte payload and a 4-byte checksum. (Was ${payload.payload.length}");
       _version = payload.version;
       _bytes = new Hash160(payload.payload);
       if(params != null && !_isAcceptableVersion(params, _version))
@@ -62,7 +63,7 @@ class Address {
    * Returns the base58 string representation of this address.
    */
   String get address => new Base58CheckEncoder(BASE58_ALPHABET, Utils.singleDigest)
-      .convert(new Base58CheckPayload(_version, _bytes));
+      .convert(new Base58CheckPayload(_version, _bytes.asBytes()));
   
   /**
    * Finds the [NetworkParameters] that correspond to the version byte of this [Address].
@@ -102,12 +103,11 @@ class Address {
   @override
   bool operator ==(Address other) {
     if(other is! Address) return false;
-    return _version == other._version && 
-        Utils.equalLists(_bytes, other._bytes);
+    return _version == other._version && _bytes == other._bytes;
   }
   
   @override
-  int get hashCode => _version.hashCode ^ Utils.listHashCode(_bytes);
+  int get hashCode => _version.hashCode ^ Utils.listHashCode(_bytes.asBytes());
   
   /**
    * Validates the byte string. The last four bytes have to match the first four

@@ -8,14 +8,14 @@ class PayToScriptHashOutputScript extends PayToAddressOutputScript {
    * If [encoded] is set to false, the script will be built using chunks. This improves
    * performance when the script is intended for execution.
    */
-  factory PayToScriptHashOutputScript(Uint8List scriptHash, [bool encoded = true]) {
-    if(scriptHash == null || scriptHash.length != 20)
+  factory PayToScriptHashOutputScript(Hash160 scriptHash, [bool encoded = true]) {
+    if(scriptHash == null || scriptHash.lengthInBytes != 20)
       throw new ScriptException("The script hash must be of size 20!");
-    return new ScriptBuilder(encoded)
+    return new PayToScriptHashOutputScript.convert(new ScriptBuilder(encoded)
       .op(ScriptOpCodes.OP_HASH160)
-      .data(scriptHash)
+      .data(scriptHash.asBytes())
       .op(ScriptOpCodes.OP_EQUAL)
-      .build();
+      .build(), true);
   }
   
   PayToScriptHashOutputScript.convert(Script script, [bool skipCheck = false]) : super._super(script.bytes) {

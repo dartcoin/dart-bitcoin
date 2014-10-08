@@ -10,7 +10,6 @@ import "package:bignum/bignum.dart";
 import "dart:math";
 import "dart:typed_data";
 import "dart:io";
-import "dart:async";
 import 'dart:convert';
 import "package:cipher/cipher.dart";
 
@@ -84,12 +83,12 @@ void _testSignatures() {
   BigInteger privkey = new BigInteger.fromBytes(1, CryptoUtils.hexToBytes("180cb41c7c600be951b5d3d0a7334acc7506173875834f7a6c4c786a28fcbb19"));
   KeyPair key = new KeyPair.private(privkey);
   ECDSASignature output = key.sign(Hash256.ZERO_HASH);
-  expect(key.verify(Hash256.ZERO_HASH, output), isTrue);
+  expect(key.verify(Hash256.ZERO_HASH.asBytes(), output), isTrue);
 
   // Test interop with a signature from elsewhere.
   Uint8List sig = CryptoUtils.hexToBytes("3046022100dffbc26774fc841bbe1c1362fd643609c6e42dcb274763476d87af2c0597e89e022100c59e3c13b96b316cae9fa0ab0260612c7a133a6fe2b3445b6bf80b3123bf274d");
 
-  expect(key.verify(Hash256.ZERO_HASH, new ECDSASignature.fromDER(sig)), isTrue);
+  expect(key.verify(Hash256.ZERO_HASH.asBytes(), new ECDSASignature.fromDER(sig)), isTrue);
 }
 
 void _testSignatureDEREncoding() {

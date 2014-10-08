@@ -15,9 +15,9 @@ class PayToPubKeyInputScript extends Script {
       signature = signature.encodeToDER();
     if (!(signature is Uint8List)) 
       throw new ArgumentError("The value for signature can be either a TransactionSignature or a Uint8List.");
-    return new ScriptBuilder(encoded)
+    return new PayToPubKeyInputScript.convert(new ScriptBuilder(encoded)
       .data(signature)
-      .build();
+      .build(), true);
   }
 
   PayToPubKeyInputScript.convert(Script script, [bool skipCheck = false]): super(script.bytes) {

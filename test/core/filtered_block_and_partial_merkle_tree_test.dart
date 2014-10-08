@@ -5,8 +5,6 @@ import "package:cryptoutils/cryptoutils.dart";
 
 import "package:dartcoin/core/core.dart";
 
-import "package:bignum/bignum.dart";
-import "dart:typed_data";
 
 
 // Simple deserialization sanity check

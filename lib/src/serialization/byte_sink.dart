@@ -129,7 +129,7 @@ class ByteSink implements Sink {
   ByteData toByteData() {
     if (_buffer == null)
       throw new StateError("This sick has already been closed.");
-    new ByteData.view(_buffer.buffer, 0, _count);
+    return new ByteData.view(_buffer.buffer, 0, _count);
   }
 
   /**

@@ -13,10 +13,10 @@ class PayToPubKeyOutputScript extends Script {
   factory PayToPubKeyOutputScript(dynamic pubKey, [bool encoded = true]) {
     if(pubKey is KeyPair) pubKey = pubKey.publicKey;
     if(!(pubKey is Uint8List)) throw new ArgumentError("The public key can be either of type Uint8List or KeyPair.");
-    return new ScriptBuilder(encoded)
+    return new PayToPubKeyOutputScript.convert(new ScriptBuilder(encoded)
       .data(pubKey)
       .op(ScriptOpCodes.OP_CHECKSIG)
-      .build();
+      .build(), true);
   }
   
   PayToPubKeyOutputScript.convert(Script script, [bool skipCheck = false]) : super(script.bytes) {

@@ -18,10 +18,10 @@ class PayToPubKeyHashInputScript extends Script {
       pubKey = pubKey.publicKey;
     if(!(signature is Uint8List && pubKey is Uint8List))
       throw new ArgumentError("Unsupported input types. Read documentation.");
-    return new ScriptBuilder(encoded)
+    return new PayToPubKeyHashInputScript.convert(new ScriptBuilder(encoded)
       .data(signature)
       .data(pubKey)
-      .build();
+      .build(), true);
   }
   
   PayToPubKeyHashInputScript.convert(Script script, [bool skipCheck = false]) : super(script.bytes) {

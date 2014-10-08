@@ -10,14 +10,14 @@ class PayToPubKeyHashOutputScript extends PayToAddressOutputScript {
    * If [encoded] is set to false, the script will be built using chunks. This improves
    * performance when the script is intended for execution.
    */
-  factory PayToPubKeyHashOutputScript(Uint8List pubkeyHash, [bool encoded = true]) {
-    return new ScriptBuilder(encoded)
+  factory PayToPubKeyHashOutputScript(Hash160 pubkeyHash, [bool encoded = true]) {
+    return new PayToPubKeyHashOutputScript.convert(new ScriptBuilder(encoded)
       .op(ScriptOpCodes.OP_DUP)
       .op(ScriptOpCodes.OP_HASH160)
-      .data(pubkeyHash)
+      .data(pubkeyHash.asBytes())
       .op(ScriptOpCodes.OP_EQUALVERIFY)
       .op(ScriptOpCodes.OP_CHECKSIG)
-      .build();
+      .build(), true);
   }
   
   /**
@@ -31,7 +31,7 @@ class PayToPubKeyHashOutputScript extends PayToAddressOutputScript {
       throw new ScriptException("Given script is not an instance of this script type.");
   }
   
-  Uint8List get pubkeyHash => new Uint8List.fromList(bytes.getRange(3,  23));
+  Uint8List get pubkeyHash => new Uint8List.fromList(bytes.sublist(3,  23));
 
   Address getAddress([NetworkParameters params = NetworkParameters.MAIN_NET]) =>
       new Address(pubkeyHash, params, params.addressHeader);

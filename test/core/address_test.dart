@@ -27,10 +27,10 @@ void _stringification() {
 
 void _decoding() {
   Address a = new Address("n4eA2nbYqErp7H6jebchxAN59DmNpksexv", _testParams);
-  expect(CryptoUtils.bytesToHex(a.hash160), equals("fda79a24e50ff70ff42f7d89585da5bd19d9e5cc"));
+  expect(CryptoUtils.bytesToHex(a.hash160.asBytes()), equals("fda79a24e50ff70ff42f7d89585da5bd19d9e5cc"));
 
   Address b = new Address("17kzeh4N8g49GFvdDzSf8PjaPfyoD1MndL", _mainParams);
-  expect(CryptoUtils.bytesToHex(b.hash160), equals("4a22c3c4cbb31e4d03b15550636762bda0baf85a"));
+  expect(CryptoUtils.bytesToHex(b.hash160.asBytes()), equals("4a22c3c4cbb31e4d03b15550636762bda0baf85a"));
 }
 
 void _errorPaths() {

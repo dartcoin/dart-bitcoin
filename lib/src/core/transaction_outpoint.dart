@@ -85,13 +85,13 @@ class TransactionOutPoint extends Object with BitcoinSerialization {
   }
 
   @override
-  int _deserialize() {
+  void _deserialize() {
     _txid = _readSHA256();
     _index = _readUintLE();
   }
 
   @override
-  void deserializeLazy() {
+  void _deserializeLazy() {
     _serializationCursor += 32 + 4;
   }
 }

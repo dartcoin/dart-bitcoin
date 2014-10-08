@@ -575,10 +575,10 @@ class ScriptExecutor {
     
     TransactionSignature sig = new TransactionSignature.deserialize(sigBytes, length: sigBytes.length, requireCanonical: false);
     Hash256 hash = txContainingThis.hashForSignature(index, connectedScript, sig.sigHashFlags);
-    sigValid = KeyPair.verifySignatureForPubkey(hash, sig, pubKey);
+    sigValid = KeyPair.verifySignatureForPubkey(hash.asBytes(), sig, pubKey);
 
     if (opcode == ScriptOpCodes.OP_CHECKSIG)
-      stack.add(sigValid ? (new Uint8List.fromList(1)..[0]=1) : new Uint8List(1));
+      stack.add(sigValid ? (new Uint8List(1)..[0]=1) : new Uint8List(1));
     else if (opcode == ScriptOpCodes.OP_CHECKSIGVERIFY)
       if (!sigValid)
         throw new ScriptException("Script failed OP_CHECKSIGVERIFY", script, opcode);
@@ -634,7 +634,7 @@ class ScriptExecutor {
       // more expensive than hashing, its not a big deal.
       TransactionSignature sig = new TransactionSignature.deserialize(sigs.first, length: sigs.first.length, requireCanonical: false);
       Hash256 hash = txContainingThis.hashForSignature(index, connectedScript, sig.sigHashFlags);
-      if (KeyPair.verifySignatureForPubkey(hash, sig, pubKey))
+      if (KeyPair.verifySignatureForPubkey(hash.asBytes(), sig, pubKey))
         sigs.removeFirst();
 
       if (sigs.length > pubkeys.length) {

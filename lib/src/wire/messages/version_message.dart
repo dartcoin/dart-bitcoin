@@ -130,7 +130,7 @@ class VersionMessage extends Message {
   }
 
   @override
-  int _deserializePayload() {
+  void _deserializePayload() {
     clientVersion = _readUintLE();
     services = Utils.bytesToUBigIntLE(_readBytes(8));//_readUintLE(8);
     time = _readUintLE(8);

@@ -11,7 +11,6 @@ import "package:crypto/crypto.dart" hide CryptoUtils, Hash;
 import "package:bignum/bignum.dart";
 import "package:collection/equality.dart";
 import "package:collection/algorithms.dart" show binarySearch;
-import 'package:collection/wrappers.dart';
 
 // cherry picking cipher dependencies
 import "package:cipher/api.dart";

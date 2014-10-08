@@ -111,7 +111,7 @@ class KeyPair {
     BigInteger pk;
     do {
       entropy = new Uint8List.fromList(new List<int>()
-        ..addAll((entropy != null) ? entropy : [])
+        ..addAll(entropy != null ? entropy : [])
         ..addAll(new List.filled(50, 0).map((e) => rand.nextInt(255))));
       entropy = Utils.doubleDigest(entropy);
       pk = new BigInteger.fromBytes(1, entropy.sublist(0, EC_PARAMS.n.bitLength() ~/ 8));
@@ -274,7 +274,7 @@ class KeyPair {
     }
 
     ECDSASigner signer = _createSigner(new ECPrivateKey(privateKeyForSigning, EC_PARAMS));
-    ECSignature ecSig = signer.generateSignature(input);
+    ECSignature ecSig = signer.generateSignature(input.asBytes());
     final ECDSASignature signature = new ECDSASignature(ecSig.r, ecSig.s);
     signature.ensureCanonical();
     return signature;
@@ -444,7 +444,7 @@ class KeyPair {
     //   1.4. If nR != point at infinity, then do another iteration of Step 1 (callers responsibility).
     if(!(R * n).isInfinity) return null;
     //   1.5. Compute e from M using Steps 2 and 3 of ECDSA signature verification.
-    BigInteger e = new BigInteger.fromBytes(1, message);
+    BigInteger e = message.asBigInteger();
     //   1.6. For k from 1 to 2 do the following.   (loop is outside this function via iterating recId)
     //   1.6.1. Compute a candidate public key as:
     //               Q = mi(r) * (sR - eG)

@@ -255,7 +255,7 @@ class Block extends Object with BitcoinSerialization {
     // first add all tx hashes to the tree
     List<Uint8List> tree = new List<Uint8List>();
     for(Transaction tx in _txs) {
-      tree.add(tx.hash);
+      tree.add(tx.hash.asBytes());
     }
     // then complete the tree
     _buildMerkleTree(tree);
