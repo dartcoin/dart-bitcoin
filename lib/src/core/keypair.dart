@@ -28,63 +28,29 @@ class KeyPair {
   KeyCrypter _keyCrypter;
 
   /**
-   * Create a keypair from a private or public key.
-   * 
-   * If [key] is of type [BigInteger], a private key is created.
-   * If [key] if of type [Uint8List], a public key is created.
-   * 
-   * To use other parameter types for keys, use the separate constructors
-   * [new KeyPair.public] and [new KeyPair.private].
-   */
-  factory KeyPair([dynamic key, bool compressed = false]) {
-    if(key == null)
-      return new KeyPair.generate();
-    if(key is Uint8List)
-      return new KeyPair.public(key);
-    if(key is BigInteger)
-      return new KeyPair.private(key, compressed: compressed);
-  }
-
-  /**
    * Create a new public key.
-   *
-   * Pass either a [Uint8List] or [BigInteger] to use as a public key.
    */
-  factory KeyPair.public(dynamic publicKey) {
-     publicKey = _castPublic(publicKey);
+  factory KeyPair.public(Uint8List publicKey) {
      if(publicKey is! Uint8List)
-      throw new ArgumentError("Public key must be either of type BigInteger or Uint8List");
+      throw new ArgumentError("Public key must be of type Uint8List");
     return new KeyPair._internal(null, publicKey);
-  }
-
-  static dynamic _castPublic(dynamic key) {
-    if(key is BigInteger)
-      return Utils.bigIntegerToBytes(key, 65);
-    return key;
   }
 
   /**
    * Create a new private key.
    *
    * Pass either a [Uint8List] or [BigInteger] to use as a private key.
-   * Same parameter types accepted for the optional public key.
    */
-  factory KeyPair.private(dynamic privateKey, {dynamic publicKey, bool compressed: true}) {
-    privateKey = _castPrivate(privateKey);
+  factory KeyPair.private(dynamic privateKey, {Uint8List publicKey, bool compressed: true}) {
+    if(privateKey is Uint8List)
+      privateKey = new BigInteger.fromBytes(1, privateKey);
     if(privateKey is! BigInteger)
       throw new ArgumentError("Private key must be either of type BigInteger or Uint8List");
-    publicKey = _castPublic(publicKey);
     if(publicKey != null && publicKey is! Uint8List)
-      throw new ArgumentError("Public key must be either of type BigInteger or Uint8List");
+      throw new ArgumentError("Public key must be of type Uint8List");
     if(publicKey == null)
       publicKey = publicKeyFromPrivateKey(privateKey, compressed);
     return new KeyPair._internal(privateKey, publicKey);
-  }
-
-  static dynamic _castPrivate(dynamic key) {
-    if(key is Uint8List)
-      return new BigInteger.fromBytes(1, key);
-    return key;
   }
 
   /**
@@ -181,7 +147,7 @@ class KeyPair {
    *
    * Use [isEncrypted] to check if it does have an encrypted key.
    */
-  bool get hasPrivKey => _priv != null;
+  bool get hasPrivateKey => _priv != null;
 
   bool get isEncrypted => _encryptedPrivateKey != null && _keyCrypter != null;
 
@@ -207,7 +173,7 @@ class KeyPair {
   }
 
   String toStringWithPrivateKey() {
-    if(!hasPrivKey) return toString();
+    if(!hasPrivateKey) return toString();
     StringBuffer sb = new StringBuffer()
         ..write(toString())
         ..write(" priv:")
@@ -242,7 +208,7 @@ class KeyPair {
 
   /**
    * Signs the given hash and returns the R and S components as BigIntegers. In the Bitcoin protocol, they are
-   * usually encoded using DER format, so you want {@link com.google.bitcoin.core.ECKey.ECDSASignature#encodeToDER()}
+   * usually encoded using DER format, so you want [ECDSASignature#encodeToDER()]
    * instead. However sometimes the independent components can be useful, for instance, if you're doing to do further
    * EC maths on them.
   *
@@ -267,7 +233,7 @@ class KeyPair {
         throw new Exception("Could not decrypt bytes");
     } else {
       // No decryption of private key required.
-      if(!hasPrivKey)
+      if(!hasPrivateKey)
         throw new Exception("This KeyPair does not have the private key necessary for signing.");
       else
         privateKeyForSigning = _priv;
@@ -275,7 +241,7 @@ class KeyPair {
 
     ECDSASigner signer = _createSigner(new ECPrivateKey(privateKeyForSigning, EC_PARAMS));
     ECSignature ecSig = signer.generateSignature(input.asBytes());
-    final ECDSASignature signature = new ECDSASignature(ecSig.r, ecSig.s);
+    ECDSASignature signature = new ECDSASignature(ecSig.r, ecSig.s);
     signature.ensureCanonical();
     return signature;
   }
@@ -526,7 +492,7 @@ class KeyPair {
    */
   static bool encryptionIsReversible(KeyPair originalKey, KeyPair encryptedKey,
                                      KeyCrypter keyCrypter, KeyParameter aesKey) {
-    if(originalKey == null || ! originalKey.hasPrivKey)
+    if(originalKey == null || ! originalKey.hasPrivateKey)
       throw new ArgumentError("The original key provided is not a private key");
     try {
       KeyPair rebornUnencryptedKey = encryptedKey.decrypt(keyCrypter, aesKey);
@@ -620,7 +586,7 @@ class KeyPair {
    */
   //TODO complete when cipher supports encoding curves to ASN1 primitives
   Uint8List toASN1() {
-    if(!hasPrivKey)
+    if(!hasPrivateKey)
       throw new Exception("KeyPair has no private key!");
     ASN1Sequence seq = new ASN1Sequence()
       ..add(new ASN1Integer(1))

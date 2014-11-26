@@ -1,3 +1,3 @@
 library dartcoin;
 
-export "core/core.dart";
+export 'core.dart';
