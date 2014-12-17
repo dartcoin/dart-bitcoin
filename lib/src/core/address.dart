@@ -33,12 +33,15 @@ class Address {
         throw new WrongNetworkException(_version, params.acceptableAddressHeaders);
       return;
     }
-    if(address is Uint8List || address is Hash160) {
-      if(address.length != 20)
+    if(address is Uint8List) {
+      if (address.length != 20)
         throw new ArgumentError("To create an address from a hash160 payload, input needs to be exactly 20 bytes.");
+      address = new Hash160(address);
+    }
+    if(address is Hash160) {
       if(params == null && version == null)
         params = NetworkParameters.MAIN_NET;
-      _bytes = new Hash160(address);
+      _bytes = address;
       _version = (version != null) ? version : params.addressHeader;
       if(params != null && !_isAcceptableVersion(params, _version))
         throw new WrongNetworkException(_version, params.acceptableAddressHeaders);

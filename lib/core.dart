@@ -40,92 +40,92 @@ import "package:asn1lib/asn1lib.dart";
 
 
 // utils
-part "../src/core/utils.dart";
-part "../src/core/units.dart";
+part "src/core/utils.dart";
+part "src/core/units.dart";
 
 // serialization
-part "../src/serialization/byte_sink.dart";
-part "../src/serialization/varint.dart";
-part "../src/serialization/varstr.dart";
-part "../src/serialization/bitcoin_serializable.dart";
-part "../src/serialization/bitcoin_serialization.dart";
-part "../src/serialization/serialization_exception.dart";
+part "src/serialization/byte_sink.dart";
+part "src/serialization/varint.dart";
+part "src/serialization/varstr.dart";
+part "src/serialization/bitcoin_serializable.dart";
+part "src/serialization/bitcoin_serialization.dart";
+part "src/serialization/serialization_exception.dart";
 
 // addresses and private keys
-part "../src/core/address.dart";
-part "../src/core/base58check.dart";
-part "../src/core/keypair.dart";
-part "../src/core/transaction_signature.dart";
+part "src/core/address.dart";
+part "src/core/base58check.dart";
+part "src/core/keypair.dart";
+part "src/core/transaction_signature.dart";
 // private key security
-part "../src/crypto/key_crypter.dart";
-part "../src/crypto/key_crypter_exception.dart";
-part "../src/crypto/key_crypter_scrypt.dart";
-part "../src/crypto/encrypted_private_key.dart";
+part "src/crypto/key_crypter.dart";
+part "src/crypto/key_crypter_exception.dart";
+part "src/crypto/key_crypter_scrypt.dart";
+part "src/crypto/encrypted_private_key.dart";
 
-part "../src/crypto/mnemonic_code.dart";
-part "../src/crypto/mnemonic_exception.dart";
+part "src/crypto/mnemonic_code.dart";
+part "src/crypto/mnemonic_exception.dart";
 
 // network settings
-part "../src/params/network_parameters.dart";
-part "../src/params/main_net.dart";
-part "../src/params/test_net.dart";
-part "../src/params/unit_test.dart";
+part "src/params/network_parameters.dart";
+part "src/params/main_net.dart";
+part "src/params/test_net.dart";
+part "src/params/unit_test.dart";
 
 // transactions
-part "../src/core/transaction.dart";
-part "../src/core/transaction_input.dart";
-part "../src/core/transaction_outpoint.dart";
-part "../src/core/transaction_output.dart";
+part "src/core/transaction.dart";
+part "src/core/transaction_input.dart";
+part "src/core/transaction_outpoint.dart";
+part "src/core/transaction_output.dart";
 
 // blocks
-part "../src/core/block.dart";
-part "../src/core/verification_exception.dart";
+part "src/core/block.dart";
+part "src/core/verification_exception.dart";
 
 // bloom filters
-part "../src/core/bloom_filter.dart";
-part "../src/core/filtered_block.dart";
-part "../src/core/partial_merkle_tree.dart";
+part "src/core/bloom_filter.dart";
+part "src/core/filtered_block.dart";
+part "src/core/partial_merkle_tree.dart";
 
 // scripts
-part "../src/script/script.dart";
-part "../src/script/script_chunk.dart";
-part "../src/script/script_op_codes.dart";
-part "../src/script/script_executor.dart";
-part "../src/script/script_builder.dart";
-part "../src/script/script_exception.dart";
-part "../src/script/standard/pay_to_address_output.dart";
-part "../src/script/standard/pay_to_pubkey_hash_output.dart";
-part "../src/script/standard/pay_to_pubkey_hash_input.dart";
-part "../src/script/standard/pay_to_pubkey_output.dart";
-part "../src/script/standard/pay_to_pubkey_input.dart";
-part "../src/script/standard/pay_to_script_hash_output.dart";
-part "../src/script/standard/multisig_output.dart";
-part "../src/script/standard/multisig_input.dart";
+part "src/script/script.dart";
+part "src/script/script_chunk.dart";
+part "src/script/script_op_codes.dart";
+part "src/script/script_executor.dart";
+part "src/script/script_builder.dart";
+part "src/script/script_exception.dart";
+part "src/script/standard/pay_to_address_output.dart";
+part "src/script/standard/pay_to_pubkey_hash_output.dart";
+part "src/script/standard/pay_to_pubkey_hash_input.dart";
+part "src/script/standard/pay_to_pubkey_output.dart";
+part "src/script/standard/pay_to_pubkey_input.dart";
+part "src/script/standard/pay_to_script_hash_output.dart";
+part "src/script/standard/multisig_output.dart";
+part "src/script/standard/multisig_input.dart";
 
 // wire
-part "../src/wire/inventory_item.dart";
-part "../src/wire/message.dart";
-part "../src/wire/peer_address.dart";
+part "src/wire/inventory_item.dart";
+part "src/wire/message.dart";
+part "src/wire/peer_address.dart";
 // messages
-part "../src/wire/messages/version_message.dart";
-part "../src/wire/messages/verack_message.dart";
-part "../src/wire/messages/address_message.dart";
-part "../src/wire/messages/inventory_item_container_message.dart";
-part "../src/wire/messages/inventory_message.dart";
-part "../src/wire/messages/getdata_message.dart";
-part "../src/wire/messages/notfound_message.dart";
-part "../src/wire/messages/request_message.dart";
-part "../src/wire/messages/getblocks_message.dart";
-part "../src/wire/messages/getheaders_message.dart";
-part "../src/wire/messages/transaction_message.dart";
-part "../src/wire/messages/block_message.dart";
-part "../src/wire/messages/headers_message.dart";
-part "../src/wire/messages/getaddress_message.dart";
-part "../src/wire/messages/mempool_message.dart";
-part "../src/wire/messages/ping_message.dart";
-part "../src/wire/messages/pong_message.dart";
-part "../src/wire/messages/alert_message.dart";
-part "../src/wire/messages/filterload_message.dart";
-part "../src/wire/messages/filteradd_message.dart";
-part "../src/wire/messages/filterclear_message.dart";
-part "../src/wire/messages/merkleblock_message.dart";
+part "src/wire/messages/version_message.dart";
+part "src/wire/messages/verack_message.dart";
+part "src/wire/messages/address_message.dart";
+part "src/wire/messages/inventory_item_container_message.dart";
+part "src/wire/messages/inventory_message.dart";
+part "src/wire/messages/getdata_message.dart";
+part "src/wire/messages/notfound_message.dart";
+part "src/wire/messages/request_message.dart";
+part "src/wire/messages/getblocks_message.dart";
+part "src/wire/messages/getheaders_message.dart";
+part "src/wire/messages/transaction_message.dart";
+part "src/wire/messages/block_message.dart";
+part "src/wire/messages/headers_message.dart";
+part "src/wire/messages/getaddress_message.dart";
+part "src/wire/messages/mempool_message.dart";
+part "src/wire/messages/ping_message.dart";
+part "src/wire/messages/pong_message.dart";
+part "src/wire/messages/alert_message.dart";
+part "src/wire/messages/filterload_message.dart";
+part "src/wire/messages/filteradd_message.dart";
+part "src/wire/messages/filterclear_message.dart";
+part "src/wire/messages/merkleblock_message.dart";
