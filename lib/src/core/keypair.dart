@@ -239,7 +239,7 @@ class KeyPair {
         privateKeyForSigning = _priv;
     }
 
-    ECDSASigner signer = _createSigner(new ECPrivateKey(privateKeyForSigning, EC_PARAMS));
+    ECDSASigner signer = _createSigner(new ECPrivateKey(privateKeyForSigning, EC_PARAMS), true);
     ECSignature ecSig = signer.generateSignature(input.asBytes());
     ECDSASignature signature = new ECDSASignature(ecSig.r, ecSig.s);
     signature.ensureCanonical();
@@ -257,7 +257,7 @@ class KeyPair {
   }
 
   static bool verifySignatureForPubkey(Uint8List data, ECDSASignature signature, Uint8List pubkey) {
-    ECDSASigner signer = _createSigner(new ECPublicKey(EC_PARAMS.curve.decodePoint(pubkey), EC_PARAMS));
+    ECDSASigner signer = _createSigner(new ECPublicKey(EC_PARAMS.curve.decodePoint(pubkey), EC_PARAMS), false);
     ECSignature ecSig = new ECSignature(signature.r, signature.s);
     return signer.verifySignature(data, ecSig);
   }
@@ -341,18 +341,12 @@ class KeyPair {
     return Utils.equalLists(key._pub, _pub);
   }
 
-  static ECDSASigner _createSigner(dynamic key) {
-    var params;
-    if(key is ECPublicKey)
-      params = new PublicKeyParameter(key);
-    else if(key is ECPrivateKey)
-      params = new PrivateKeyParameter(key);
-    else throw new ArgumentError("Something went wrong");
-
+  static ECDSASigner _createSigner(dynamic key, bool forSigning) {
+    var params = forSigning ? new PrivateKeyParameter(key) : new PublicKeyParameter(key);
     Mac signerMac = new HMac(new SHA256Digest(), 64);
     // = new Mac("SHA-256/HMAC")
     return new ECDSASigner(null, signerMac)
-      ..init(params is PrivateKeyParameter, params);
+      ..init(forSigning, params);
   }
 
 
