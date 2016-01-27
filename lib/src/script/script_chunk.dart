@@ -1,4 +1,4 @@
-part of dartcoin.core;
+part of dartcoin.script;
 
 class ScriptChunk {
   bool _isOpCode;
@@ -25,7 +25,7 @@ class ScriptChunk {
   
   bool get isOpCode => _isOpCode;
   
-  Uint8List get bytes => new Uint8List.fromList(_data);
+  Uint8List get bytes => serialize();
   
   int get startLocationInProgram => _startLocationInProgram;
   
@@ -44,9 +44,9 @@ class ScriptChunk {
   @override
   bool operator ==(ScriptChunk other) {
     if(other is! ScriptChunk) return false;
-    return _isOpCode == other._isOpCode && Utils.equalLists(_data, other._data);
+    return _isOpCode == other._isOpCode && utils.equalLists(_data, other._data);
   }
   
   @override
-  int get hashCode => (_isOpCode ? 0xffff : 0) ^ Utils.listHashCode(_data);
+  int get hashCode => (_isOpCode ? 0xffff : 0) ^ utils.listHashCode(_data);
 }

@@ -1,3 +1,4 @@
+
 part of dartcoin.core;
 
 class _TestNetParams extends NetworkParameters {
@@ -22,5 +23,5 @@ class _TestNetParams extends NetworkParameters {
     return _genesis;
   }
   
-  BigInteger get proofOfWorkLimit => Utils.decodeCompactBits(0x1d00ffff);
+  BigInteger get proofOfWorkLimit => utils.decodeCompactBits(0x1d00ffff);
 }

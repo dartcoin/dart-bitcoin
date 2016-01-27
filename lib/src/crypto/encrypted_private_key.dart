@@ -36,7 +36,7 @@ class EncryptedPrivateKey {
   }
 
   @override
-  int get hashCode => Utils.listHashCode(_encryptedKey) ^ Utils.listHashCode(_iv);
+  int get hashCode => utils.listHashCode(_encryptedKey) ^ utils.listHashCode(_iv);
 
   @override
   String toString() => "EncryptedPrivateKey [initialisationVector=$_iv, encryptedPrivateBytes=$_encryptedKey]";

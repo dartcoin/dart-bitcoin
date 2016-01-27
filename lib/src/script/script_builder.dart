@@ -1,55 +1,40 @@
-part of dartcoin.core;
+part of dartcoin.script;
 
 class ScriptBuilder {
-  
-  final bool encoded;
-  // this parameter is either List<int> or List<ScriptChunk>
-  var _data;
+  List<ScriptChunk> _chunks;
   
   /**
    * Initialize a new [ScriptBuilder].
-   * 
-   * Use [encoded] to specify if the output script should be generated from a
-   * serialization or from a list of [ScriptChunk]s.
-   * For serializing and transmitting the script, set [encoded] to true, while
-   * for executing the script, set [encoded] to false.
    */
-  ScriptBuilder([bool this.encoded = true]) {
-    if(encoded)
-      _data = new List<int>();
-    else
-      _data = new List<ScriptChunk>();
+  ScriptBuilder() {
+    _chunks = new List<ScriptChunk>();
   }
   
   ScriptBuilder op(int opcode) {
-    if(encoded)
-      _data.add(opcode & 0xff);
-    else
-      _data.add(new ScriptChunk.opCode(opcode & 0xff));
+    _chunks.add(new ScriptChunk.opCode(opcode & 0xff));
     return this;
   }
   
   ScriptBuilder data(Uint8List data) {
-    if(encoded)
-      _data.addAll(Script.encodeData(data));
-    else
-      _data.add(new ScriptChunk.data(data));
+    _chunks.add(new ScriptChunk.data(data));
     return this;
   }
   
   ScriptBuilder smallNum(int num) {
-    if(encoded)
-      _data.add(Script.encodeToOpN(num));
-    else
-      _data.add(new ScriptChunk.opCode(Script.encodeToOpN(num)));
+    _chunks.add(new ScriptChunk.opCode(Script.encodeToOpN(num)));
     return this;
   }
   
-  Script build() {
-    if(encoded) 
-      return new Script(new Uint8List.fromList(_data));
-    else
-      return new Script(new List.from(_data));
+  Script build([bool encoded = false]) {
+    return new Script(encoded ? buildBytes() : new List.from(_chunks));
+  }
+
+  Uint8List buildBytes() {
+    ByteSink sink = new ByteSink();
+    for(ScriptChunk chunk in _chunks) {
+      sink.add(chunk.bytes);
+    }
+    return sink.toUint8List();
   }
   
 }

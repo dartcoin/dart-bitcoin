@@ -69,7 +69,7 @@ void _sValue() {
   final int ITERATIONS = 10;
   final KeyPair key = new KeyPair();
   for (int i = 0; i < ITERATIONS; i++) {
-    final Hash256 hash = new Hash256(Utils.singleDigest(new Uint8List.fromList([i])));
+    final Hash256 hash = new Hash256(crypto.singleDigest(new Uint8List.fromList([i])));
     ECDSASignature signature = key.sign(hash);
     var a = (signature.s / KeyPair.HALF_CURVE_ORDER).toString();
     expect(signature.s <= KeyPair.HALF_CURVE_ORDER, isTrue);
@@ -213,7 +213,7 @@ void _verifyMessage() {
 void _keyRecovery() {
   KeyPair key = new KeyPair();
   String message = "Hello World!";
-  Hash256 hash = new Hash256(Utils.singleDigest(Utils.stringToUTF8(message)));
+  Hash256 hash = new Hash256(crypto.singleDigest(Utils.stringToUTF8(message)));
   ECDSASignature sig = key.sign(hash);
   key = new KeyPair.public(key.publicKey);
   bool found = false;
@@ -337,7 +337,7 @@ void _keyRecoveryWithEncryptedKey() {
   KeyPair encryptedKey = unencryptedKey.encrypt(_keyCrypter, aesKey);
 
   String message = "Goodbye Jupiter!";
-  Hash256 hash = new Hash256(Utils.singleDigest(Utils.stringToUTF8(message)));
+  Hash256 hash = new Hash256(crypto.singleDigest(Utils.stringToUTF8(message)));
   ECDSASignature sig = encryptedKey.sign(hash, aesKey);
   unencryptedKey = new KeyPair.public(unencryptedKey.publicKey);
   bool found = false;

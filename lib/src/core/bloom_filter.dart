@@ -136,7 +136,7 @@ class BloomFilter extends Object with BitcoinSerialization {
   }
 
   static int _rotateLeft32 (int x, int r) {
-    return (x << r) | Utils.lsr(x, 32 - r);
+    return (x << r) | utils.lsr(x, 32 - r);
   }
   
   int _hash(int hashNum, Uint8List object) {
@@ -176,11 +176,11 @@ class BloomFilter extends Object with BitcoinSerialization {
 
     // finalization
     h1 ^= object.length;
-    h1 ^= Utils.lsr(h1, 16);
+    h1 ^= utils.lsr(h1, 16);
     h1 *= 0x85ebca6b;
-    h1 ^= Utils.lsr(h1, 13);
+    h1 ^= utils.lsr(h1, 13);
     h1 *= 0xc2b2ae35;
-    h1 ^= Utils.lsr(h1, 16);
+    h1 ^= utils.lsr(h1, 16);
     
     return ((h1 & 0xFFFFFFFF) % (_data.length * 8));
   }
@@ -192,7 +192,7 @@ class BloomFilter extends Object with BitcoinSerialization {
   bool contains(Uint8List object) {
     _needInstance();
     for (int i = 0; i < _hashFuncs; i++) {
-      if (!Utils.checkBitLE(_data, _hash(i, object)))
+      if (!utils.checkBitLE(_data, _hash(i, object)))
         return false;
     }
     return true;
@@ -204,7 +204,7 @@ class BloomFilter extends Object with BitcoinSerialization {
   void insert(Uint8List object) {
     _needInstance(true);
     for(int i = 0; i < _hashFuncs; i++)
-      Utils.setBitLE(_data, _hash(i, object));
+      utils.setBitLE(_data, _hash(i, object));
   }
 
   /**
@@ -259,13 +259,13 @@ class BloomFilter extends Object with BitcoinSerialization {
     other._needInstance();
     return other._hashFuncs == this._hashFuncs &&
            other._nTweak == this._nTweak &&
-           Utils.equalLists(other._data, this._data);
+           utils.equalLists(other._data, this._data);
   }
 
   @override
   int get hashCode {
     _needInstance();
-    return _hashFuncs ^ _nTweak ^ Utils.listHashCode(_data);
+    return _hashFuncs ^ _nTweak ^ utils.listHashCode(_data);
   }
 }
 

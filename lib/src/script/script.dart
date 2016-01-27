@@ -1,4 +1,4 @@
-part of dartcoin.core;
+part of dartcoin.script;
 
 class Script {
   
@@ -40,7 +40,7 @@ class Script {
           continue;
         }
 //        else
-//          Script.writeBytes(out, Utils.reverseBytes(Utils.encodeMPI(BigInteger.valueOf(val), false)));
+//          Script.writeBytes(out, utils.reverseBytes(utils.encodeMPI(BigInteger.valueOf(val), false)));
       } catch (e) {}
       // try opcode
       if(s.startsWith("OP_"))
@@ -78,12 +78,12 @@ class Script {
   operator ==(Script other) {
     if(other is! Script) return false;
     if(identical(this, other)) return true;
-    return Utils.equalLists(bytes, other.bytes);
+    return utils.equalLists(bytes, other.bytes);
   }
   
   @override
   int get hashCode {
-    return Utils.listHashCode(bytes);
+    return utils.listHashCode(bytes);
   }
   
   String toString() {
@@ -156,10 +156,10 @@ class Script {
       result.add(data.length);
     } else if (data.length <= 0xffff) {
       result.add(ScriptOpCodes.OP_PUSHDATA2);
-      result.addAll(Utils.uintToBytesLE(data.length, 2));
+      result.addAll(utils.uintToBytesLE(data.length, 2));
     } else {
       result.add(ScriptOpCodes.OP_PUSHDATA4);
-      result.addAll(Utils.uintToBytesLE(data.length, 4));
+      result.addAll(utils.uintToBytesLE(data.length, 4));
     }
     result.addAll(data);
     return new Uint8List.fromList(result);

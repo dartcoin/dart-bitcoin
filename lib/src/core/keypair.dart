@@ -79,7 +79,7 @@ class KeyPair {
       entropy = new Uint8List.fromList(new List<int>()
         ..addAll(entropy != null ? entropy : [])
         ..addAll(new List.filled(50, 0).map((e) => rand.nextInt(255))));
-      entropy = Utils.doubleDigest(entropy);
+      entropy = crypto.doubleDigest(entropy);
       pk = new BigInteger.fromBytes(1, entropy.sublist(0, EC_PARAMS.n.bitLength() ~/ 8));
     } while (pk == BigInteger.ZERO || pk >= EC_PARAMS.n);
     return new KeyPair._internal(pk, publicKeyFromPrivateKey(pk, true));
@@ -104,7 +104,7 @@ class KeyPair {
 
   Hash160 get pubKeyHash {
     if(_pubKeyHash == null) 
-      _pubKeyHash = new Hash160(Utils.sha256hash160(_pub));
+      _pubKeyHash = new Hash160(crypto.sha256hash160(_pub));
     return _pubKeyHash;
   }
 
@@ -139,7 +139,7 @@ class KeyPair {
   Uint8List get privateKeyBytes {
     if(_priv == null)
       return null;
-    return Utils.bigIntegerToBytes(_priv, 32);
+    return utils.bigIntegerToBytes(_priv, 32);
   }
 
   /**
@@ -198,7 +198,7 @@ class KeyPair {
 
   bool operator ==(KeyPair other) {
     if(other is! KeyPair) return false;
-    return Utils.equalLists(_pub, other._pub);
+    return utils.equalLists(_pub, other._pub);
   }
 
   int get hashCode {
@@ -229,7 +229,7 @@ class KeyPair {
       privateKeyForSigning = new BigInteger.fromBytes(1,
           keyCrypter.decrypt(_encryptedPrivateKey, aesKey));
       // Check encryption was correct.
-      if(!Utils.equalLists(_pub, publicKeyFromPrivateKey(privateKeyForSigning, isCompressed))) 
+      if(!utils.equalLists(_pub, publicKeyFromPrivateKey(privateKeyForSigning, isCompressed)))
         throw new Exception("Could not decrypt bytes");
     } else {
       // No decryption of private key required.
@@ -269,14 +269,14 @@ class KeyPair {
   String signMessage(String message, [KeyParameter aesKey]) {
     if(_priv == null) 
       throw new StateError("This ECKey does not have the private key necessary for signing.");
-    Uint8List data = Utils.formatMessageForSigning(message);
-    Hash256 hash = new Hash256(Utils.doubleDigest(data));
+    Uint8List data = utils.formatMessageForSigning(message);
+    Hash256 hash = new Hash256(crypto.doubleDigest(data));
     ECDSASignature sig = sign(hash, aesKey);
     // Now we have to work backwards to figure out the recId needed to recover the signature.
     int recId = -1;
     for (int i = 0; i < 4; i++) {
       KeyPair k = recoverFromSignature(i, sig, hash, isCompressed);
-      if(k != null && Utils.equalLists(k._pub, _pub)) {
+      if(k != null && utils.equalLists(k._pub, _pub)) {
         recId = i;
         break;
       }
@@ -287,8 +287,8 @@ class KeyPair {
     Uint8List sigData = new Uint8List(65);
     // 1 header + 32 bytes for R + 32 bytes for S
     sigData[0] = headerByte;
-    sigData.setRange(1, 1 + 32, Utils.bigIntegerToBytes(sig.r, 32));
-    sigData.setRange(33, 33 + 32, Utils.bigIntegerToBytes(sig.s, 32));
+    sigData.setRange(1, 1 + 32, utils.bigIntegerToBytes(sig.r, 32));
+    sigData.setRange(33, 33 + 32, utils.bigIntegerToBytes(sig.s, 32));
     return CryptoUtils.bytesToBase64(sigData);
   }
 
@@ -316,10 +316,10 @@ class KeyPair {
     BigInteger r = new BigInteger.fromBytes(1, new List.from(signatureEncoded.getRange( 1, 33)));
     BigInteger s = new BigInteger.fromBytes(1, new List.from(signatureEncoded.getRange(33, 65)));
     ECDSASignature sig = new ECDSASignature(r, s);
-    Uint8List messageBytes = Utils.formatMessageForSigning(message);
+    Uint8List messageBytes = utils.formatMessageForSigning(message);
     // Note that the C++ code doesn't actually seem to specify any character encoding. Presumably it's whatever
     // JSON-SPIRIT hands back. Assume UTF-8 for now.
-    Hash256 messageHash = new Hash256(Utils.doubleDigest(messageBytes));
+    Hash256 messageHash = new Hash256(crypto.doubleDigest(messageBytes));
     bool compressed = false;
     if(header >= 31) {
       compressed = true;
@@ -338,7 +338,7 @@ class KeyPair {
    */
   bool verifyMessage(String message, String signatureBase64) {
     KeyPair key = KeyPair.signedMessageToKey(message, signatureBase64);
-    return Utils.equalLists(key._pub, _pub);
+    return utils.equalLists(key._pub, _pub);
   }
 
   static ECDSASigner _createSigner(dynamic key, bool forSigning) {
@@ -466,7 +466,7 @@ class KeyPair {
     }
     Uint8List unencryptedPrivateKey = keyCrypter.decrypt(encryptedPrivateKey, decryptionKey);
     KeyPair key = new KeyPair.private(new BigInteger.fromBytes(1, unencryptedPrivateKey), compressed: isCompressed);
-    if(!Utils.equalLists(key._pub, _pub))
+    if(!utils.equalLists(key._pub, _pub))
       throw new ArgumentError("Provided AES key is wrong");
     return key;
   }
@@ -491,7 +491,7 @@ class KeyPair {
     try {
       KeyPair rebornUnencryptedKey = encryptedKey.decrypt(keyCrypter, aesKey);
       if (rebornUnencryptedKey == null || rebornUnencryptedKey.privateKeyBytes == null)return false;
-      return Utils.equalLists(originalKey.privateKeyBytes, rebornUnencryptedKey.privateKeyBytes);
+      return utils.equalLists(originalKey.privateKeyBytes, rebornUnencryptedKey.privateKeyBytes);
     } on KeyCrypterException {
       return false;
     }

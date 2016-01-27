@@ -1,4 +1,10 @@
-part of dartcoin.core;
+
+library dartcoin.utils.byte_sink;
+
+import "dart:math";
+import "dart:typed_data";
+
+import "package:cryptoutils/cryptoutils.dart";
 
 
 /**

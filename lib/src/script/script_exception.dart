@@ -1,6 +1,6 @@
-part of dartcoin.core;
+part of dartcoin.script;
 
-class ScriptException extends VerificationException {
+class ScriptException extends VerificationException {//TODO
 
   final Script script;
   final int opcode;

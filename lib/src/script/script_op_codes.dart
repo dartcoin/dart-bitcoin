@@ -1,4 +1,4 @@
-part of dartcoin.core;
+part of dartcoin.script;
 
 class ScriptOpCodes {
 

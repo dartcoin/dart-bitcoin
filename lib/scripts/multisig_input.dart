@@ -1,4 +1,12 @@
-part of dartcoin.core;
+library dartcoin.scripts.input.multisig;
+
+import "dart:typed_data";
+
+import "package:cryptoutils/cryptoutils.dart";
+import "package:pointycastle/api.dart";
+
+import "package:dartcoin/core.dart";
+import "package:dartcoin/script.dart";
 
 class MultiSigInputScript extends Script {
   
@@ -8,6 +16,11 @@ class MultiSigInputScript extends Script {
    */
   factory MultiSigInputScript(List<TransactionSignature> signatures, [bool encoded = true]) {
     return new MultiSigInputScript.fromEncodedSignatures(new List.from(signatures.map((s) => s.serialize())), encoded);
+  }
+
+  MultiSigInputScript.convert(Script script, [bool skipCheck = false]) : super(script.bytes) {
+    if(!skipCheck && !matchesType(script))
+      throw new ScriptException("Given script is not an instance of this script type.");
   }
   
   /**
@@ -19,10 +32,10 @@ class MultiSigInputScript extends Script {
   factory MultiSigInputScript.fromEncodedSignatures(List<Uint8List> signatures, [bool encoded = true]) {
     if(signatures.length <= 0 || signatures.length > 16)
       throw new ScriptException("A minimum of 1 and a maximum of 16 signatures should be given.");
-    ScriptBuilder builder = new ScriptBuilder(encoded)
+    ScriptBuilder builder = new ScriptBuilder()
       ..smallNum(0); // Work around a bug in CHECKMULTISIG that is now a required part of the protocol.
     signatures.forEach((s) => builder.data(s));
-    return builder.build();
+    new MultiSigInputScript.convert(builder.build(encoded), true);
   }
   
   /**

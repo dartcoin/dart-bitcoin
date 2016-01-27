@@ -132,7 +132,7 @@ class VersionMessage extends Message {
   @override
   void _deserializePayload() {
     clientVersion = _readUintLE();
-    services = Utils.bytesToUBigIntLE(_readBytes(8));//_readUintLE(8);
+    services = utils.bytesToUBigIntLE(_readBytes(8));//_readUintLE(8);
     time = _readUintLE(8);
     // for PeerAddresses in the version message, the protocolVersion must be hard coded to 0
     myAddress = _readObject(new PeerAddress._newInstance().._protocolVersion = 0);
@@ -155,7 +155,7 @@ class VersionMessage extends Message {
   @override
   void _serializePayload(ByteSink sink) {
     _writeUintLE(sink, clientVersion);
-    sink.add(Utils.uBigIntToBytesLE(services, 8));
+    sink.add(utils.uBigIntToBytesLE(services, 8));
     _writeUintLE(sink, time, 8);
     _writeObject(sink, myAddress);
     // we are version >= 106

@@ -23,7 +23,7 @@ class Address {
     if(address is String) {
       if(version != null)
         throw new ArgumentError("Version should not be passed when address is a String");
-      Base58CheckPayload payload = new Base58CheckDecoder(BASE58_ALPHABET, Utils.singleDigest).convert(address);
+      Base58CheckPayload payload = new Base58CheckDecoder(BASE58_ALPHABET, crypto.singleDigest).convert(address);
       if(payload.payload.length != 20)
         throw new FormatException(
             "The Base58 address should be exactly 25 bytes long: a 21-byte payload and a 4-byte checksum. (Was ${payload.payload.length}");
@@ -65,7 +65,7 @@ class Address {
   /**
    * Returns the base58 string representation of this address.
    */
-  String get address => new Base58CheckEncoder(BASE58_ALPHABET, Utils.singleDigest)
+  String get address => new Base58CheckEncoder(BASE58_ALPHABET, crypto.singleDigest)
       .convert(new Base58CheckPayload(_version, _bytes.asBytes()));
   
   /**
@@ -110,7 +110,7 @@ class Address {
   }
   
   @override
-  int get hashCode => _version.hashCode ^ Utils.listHashCode(_bytes.asBytes());
+  int get hashCode => _version.hashCode ^ utils.listHashCode(_bytes.asBytes());
   
   /**
    * Validates the byte string. The last four bytes have to match the first four
@@ -119,7 +119,7 @@ class Address {
   static bool _validateChecksum(Uint8List bytes) {
     List<int> payload = bytes.sublist(0, bytes.length - 4);
     List<int> checksum = bytes.sublist(bytes.length - 4);
-    return Utils.equalLists(checksum, Utils.doubleDigest(payload).sublist(0, 4));
+    return utils.equalLists(checksum, crypto.doubleDigest(payload).sublist(0, 4));
   }
   
   static bool _isAcceptableVersion(NetworkParameters params, int version) => 

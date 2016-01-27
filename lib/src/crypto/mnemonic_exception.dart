@@ -1,4 +1,5 @@
-part of dartcoin.core;
+
+library dartcoin.src.crypto.mnemonic_exception;
 
 class MnemonicException implements Exception {
   
@@ -6,23 +7,12 @@ class MnemonicException implements Exception {
 
   MnemonicException([this.message]);
 
+  MnemonicException.word(String badWord)
+      : this("Bad word in the mnemonic: $badWord");
+
+  MnemonicException.checksum() : this("Invalid mnemonic checksum");
+
   @override
-  String toString() => "MnemonicException:$message";
+  String toString() => "MnemonicException: $message";
   
-}
-
-class MnemonicWordException extends MnemonicException {
-  String _badWord;
-  MnemonicWordException(String badWord) : super("Bad word in the mnemonic: $badWord") {
-    _badWord = badWord;
-  }
-  String get badWord => _badWord;
-}
-
-class MnemonicLengthException extends MnemonicException {
-  MnemonicLengthException([String message]) : super(message);
-}
-
-class MnemonicChecksumException extends MnemonicException {
-  MnemonicChecksumException() : super("Invalid mnemonic checksum");
 }

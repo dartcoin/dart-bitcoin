@@ -1,3 +1,4 @@
+
 part of dartcoin.core;
 
 abstract class NetworkParameters {

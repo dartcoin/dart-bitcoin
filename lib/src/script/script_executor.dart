@@ -1,4 +1,4 @@
-part of dartcoin.core;
+part of dartcoin.script;
 
 /**
  * Usability class with functionality for executing Bitcoin scripts.
@@ -93,7 +93,7 @@ class ScriptExecutor {
             break;
           
           case ScriptOpCodes.OP_1NEGATE:
-            stack.add(Utils.reverseBytes(Utils.encodeMPI(BigInteger.ONE.negate_op(), false)));
+            stack.add(utils.reverseBytes(utils.encodeMPI(BigInteger.ONE.negate_op(), false)));
             break;
 
           case ScriptOpCodes.OP_1:
@@ -112,7 +112,7 @@ class ScriptExecutor {
           case ScriptOpCodes.OP_14:
           case ScriptOpCodes.OP_15:
           case ScriptOpCodes.OP_16:
-            stack.add(Utils.reverseBytes(Utils.encodeMPI(new BigInteger(Script.decodeFromOpN(opcode)), false)));
+            stack.add(utils.reverseBytes(utils.encodeMPI(new BigInteger(Script.decodeFromOpN(opcode)), false)));
             break;
           
           case ScriptOpCodes.OP_NOP:
@@ -211,7 +211,7 @@ class ScriptExecutor {
             break;
 
           case ScriptOpCodes.OP_DEPTH:
-            stack.add(Utils.reverseBytes(Utils.encodeMPI(new BigInteger(stack.length), false)));
+            stack.add(utils.reverseBytes(utils.encodeMPI(new BigInteger(stack.length), false)));
             break;
           
           case ScriptOpCodes.OP_DROP:
@@ -299,7 +299,7 @@ class ScriptExecutor {
           case ScriptOpCodes.OP_SIZE:
             if (stack.length < 1)
               throw new ScriptException("Attempted OP_SIZE on an empty stack", script, opcode);
-            stack.add(Utils.reverseBytes(Utils.encodeMPI(new BigInteger(stack.last.length), false)));
+            stack.add(utils.reverseBytes(utils.encodeMPI(new BigInteger(stack.last.length), false)));
             break;
             
           case ScriptOpCodes.OP_INVERT:
@@ -311,14 +311,14 @@ class ScriptExecutor {
           case ScriptOpCodes.OP_EQUAL:
             if (stack.length < 2)
               throw new ScriptException("Attempted OP_EQUAL on a stack with size < 2", script, opcode);
-            stack.add(Utils.equalLists(stack.removeLast(), stack.removeLast()) ? 
+            stack.add(utils.equalLists(stack.removeLast(), stack.removeLast()) ?
                 (new Uint8List(1)..[0]=1) : new Uint8List(1));
             break;
             
           case ScriptOpCodes.OP_EQUALVERIFY:
             if (stack.length < 2)
               throw new ScriptException("Attempted OP_EQUALVERIFY on a stack with size < 2", script, opcode);
-            if (!Utils.equalLists(stack.removeLast(), stack.removeLast()))
+            if (!utils.equalLists(stack.removeLast(), stack.removeLast()))
               throw new ScriptException("OP_EQUALVERIFY: non-equal data", script, opcode);
             break;
             
@@ -361,7 +361,7 @@ class ScriptExecutor {
                 throw new ScriptException("Unreacheable.", script, opcode);
             }
             
-            stack.add(Utils.reverseBytes(Utils.encodeMPI(new BigInteger(numericOPnum), false)));
+            stack.add(utils.reverseBytes(utils.encodeMPI(new BigInteger(numericOPnum), false)));
             break;
             
           case ScriptOpCodes.OP_2MUL:
@@ -457,7 +457,7 @@ class ScriptExecutor {
                 throw new ScriptException("Opcode switched at runtime?", script, opcode);
             }
             
-            stack.add(Utils.reverseBytes(Utils.encodeMPI(new BigInteger(numericOPresult), false)));
+            stack.add(utils.reverseBytes(utils.encodeMPI(new BigInteger(numericOPresult), false)));
             break;
             
           case ScriptOpCodes.OP_MUL:
@@ -484,39 +484,39 @@ class ScriptExecutor {
             int OPWITHINnum2 = castToBigInteger(stack.removeLast()).intValue();
             int OPWITHINnum1 = castToBigInteger(stack.removeLast()).intValue();
             if (OPWITHINnum2 <= OPWITHINnum1 && OPWITHINnum1 < OPWITHINnum3)
-              stack.add(Utils.reverseBytes(Utils.encodeMPI(BigInteger.ONE, false)));
+              stack.add(utils.reverseBytes(utils.encodeMPI(BigInteger.ONE, false)));
             else
-              stack.add(Utils.reverseBytes(Utils.encodeMPI(BigInteger.ZERO, false)));
+              stack.add(utils.reverseBytes(utils.encodeMPI(BigInteger.ZERO, false)));
             break;
               
           case ScriptOpCodes.OP_RIPEMD160:
             if (stack.length < 1)
               throw new ScriptException("Attempted OP_RIPEMD160 on an empty stack", script, opcode);
-            stack.add(Utils.ripemd160Digest(stack.removeLast()));
+            stack.add(crypto.ripemd160Digest(stack.removeLast()));
             break;
               
           case ScriptOpCodes.OP_SHA1:
             if (stack.length < 1)
               throw new ScriptException("Attempted OP_SHA1 on an empty stack", script, opcode);
-            stack.add(Utils.sha1Digest(stack.removeLast()));
+            stack.add(crypto.sha1Digest(stack.removeLast()));
             break;
               
           case ScriptOpCodes.OP_SHA256:
             if (stack.length < 1)
               throw new ScriptException("Attempted OP_SHA256 on an empty stack", script, opcode);
-            stack.add(Utils.singleDigest(stack.removeLast()));
+            stack.add(crypto.singleDigest(stack.removeLast()));
             break;
             
           case ScriptOpCodes.OP_HASH160:
             if (stack.length < 1)
               throw new ScriptException("Attempted OP_HASH160 on an empty stack", script, opcode);
-            stack.add(Utils.sha256hash160(stack.removeLast()));
+            stack.add(crypto.sha256hash160(stack.removeLast()));
             break;
             
           case ScriptOpCodes.OP_HASH256:
             if (stack.length < 1)
               throw new ScriptException("Attempted OP_SHA256 on an empty stack", script, opcode);
-            stack.add(Utils.doubleDigest(stack.removeLast()));
+            stack.add(crypto.doubleDigest(stack.removeLast()));
             break;
               
           case ScriptOpCodes.OP_CODESEPARATOR:
@@ -716,7 +716,7 @@ class ScriptExecutor {
   static BigInteger castToBigInteger(Uint8List data) {
     if(data.length > 4)
       throw new ScriptException("Script attempted to use an integer larger than 4 bytes");
-    return Utils.decodeMPI(Utils.reverseBytes(data), false);
+    return utils.decodeMPI(utils.reverseBytes(data), false);
   }
 
 }

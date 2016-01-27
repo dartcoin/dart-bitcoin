@@ -150,7 +150,7 @@ class PartialMerkleTree extends Object with BitcoinSerialization {
         // overflowed the bits array - failure
         throw new VerificationException("CPartialMerkleTree overflowed its bits array");
       }
-      bool parentOfMatch = Utils.checkBitLE(_matchedChildBits, used.bitsUsed++);
+      bool parentOfMatch = utils.checkBitLE(_matchedChildBits, used.bitsUsed++);
       if (height == 0 || !parentOfMatch) {
         // if at height 0, or nothing interesting below, use stored hash and do not descend
         if (used.hashesUsed >= _hashes.length) {
@@ -168,8 +168,8 @@ class PartialMerkleTree extends Object with BitcoinSerialization {
         else
           right = left;
         // and combine them before returning
-        return Utils.reverseBytes(Utils.doubleDigestTwoInputs(
-            Utils.reverseBytes(left), Utils.reverseBytes(right)));
+        return utils.reverseBytes(crypto.doubleDigestTwoInputs(
+            utils.reverseBytes(left), utils.reverseBytes(right)));
       }
     }
 }

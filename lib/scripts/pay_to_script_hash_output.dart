@@ -1,4 +1,13 @@
-part of dartcoin.core;
+library dartcoin.scripts.output.pay_to_script_hash;
+
+import "dart:typed_data";
+
+import "package:cryptoutils/cryptoutils.dart";
+
+import "package:dartcoin/core.dart";
+import "package:dartcoin/script.dart";
+
+import "pay_to_address_output.dart";
 
 class PayToScriptHashOutputScript extends PayToAddressOutputScript {
   
@@ -11,14 +20,15 @@ class PayToScriptHashOutputScript extends PayToAddressOutputScript {
   factory PayToScriptHashOutputScript(Hash160 scriptHash, [bool encoded = true]) {
     if(scriptHash == null || scriptHash.lengthInBytes != 20)
       throw new ScriptException("The script hash must be of size 20!");
-    return new PayToScriptHashOutputScript.convert(new ScriptBuilder(encoded)
+    return new PayToScriptHashOutputScript.convert(new ScriptBuilder()
       .op(ScriptOpCodes.OP_HASH160)
       .data(scriptHash.asBytes())
       .op(ScriptOpCodes.OP_EQUAL)
-      .build(), true);
+      .build(encoded), true);
   }
   
-  PayToScriptHashOutputScript.convert(Script script, [bool skipCheck = false]) : super._super(script.bytes) {
+  PayToScriptHashOutputScript.convert(Script script, [bool skipCheck = false])
+      : super.fromBytesUnchecked(script.bytes) {
     if(!skipCheck && !matchesType(script)) 
       throw new ScriptException("Given script is not an instance of this script type.");
   }

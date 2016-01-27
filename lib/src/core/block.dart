@@ -1,4 +1,4 @@
-part of dartcoin.core;
+wpart of dartcoin.core;
 
 class Block extends Object with BitcoinSerialization {
   
@@ -91,8 +91,8 @@ class Block extends Object with BitcoinSerialization {
 
   Hash256 _calculateHash() {
     if(isCached)
-      return new Hash256(Utils.reverseBytes(Utils.doubleDigest(new Uint8List.view(_serializationBuffer, _serializationOffset, HEADER_SIZE))));
-    return new Hash256(Utils.reverseBytes(Utils.doubleDigest(_headerBytes)));
+      return new Hash256(utils.reverseBytes(crypto.doubleDigest(new Uint8List.view(_serializationBuffer, _serializationOffset, HEADER_SIZE))));
+    return new Hash256(utils.reverseBytes(crypto.doubleDigest(_headerBytes)));
   }
 
   Uint8List get _headerBytes {
@@ -152,7 +152,7 @@ class Block extends Object with BitcoinSerialization {
     return _difficultyTarget;
   }
   
-  BigInteger get difficultyTargetAsInteger => Utils.decodeCompactBits(difficultyTarget);
+  BigInteger get difficultyTargetAsInteger => utils.decodeCompactBits(difficultyTarget);
   
   void set difficultyTarget(int difficultyTarget) {
     _needInstance(true);
@@ -217,7 +217,7 @@ class Block extends Object with BitcoinSerialization {
     if(isCached) {
       Uint8List headerBytes = serialize().sublist(0, HEADER_SIZE);
       Uint8List cloneBytes = new Uint8List(HEADER_SIZE + 1);
-      Utils.arrayCopy(headerBytes, 0, cloneBytes, 0, HEADER_SIZE);
+      utils.arrayCopy(headerBytes, 0, cloneBytes, 0, HEADER_SIZE);
       return new Block.deserialize(cloneBytes, length: HEADER_SIZE + 1);
     }
     _needInstance(true);
@@ -301,9 +301,9 @@ class Block extends Object with BitcoinSerialization {
         // The right hand node can be the same as the left hand, in the case where we don't have enough
         // transactions.
         int right = min(left + 1, levelSize - 1);
-        Uint8List leftHash  = Utils.reverseBytes(tree[levelOffset + left]);
-        Uint8List rightHash = Utils.reverseBytes(tree[levelOffset + right]);
-        tree.add(Utils.reverseBytes(Utils.doubleDigestTwoInputs(leftHash, rightHash)));
+        Uint8List leftHash  = utils.reverseBytes(tree[levelOffset + left]);
+        Uint8List rightHash = utils.reverseBytes(tree[levelOffset + right]);
+        tree.add(utils.reverseBytes(crypto.doubleDigestTwoInputs(leftHash, rightHash)));
       }
       // Move to the next level.
       levelOffset += levelSize;

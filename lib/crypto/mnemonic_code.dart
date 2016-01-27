@@ -1,4 +1,23 @@
-part of dartcoin.core;
+
+
+library dartcoin.crypto.mnemonic_code;
+
+import "dart:convert";
+import "dart:typed_data";
+
+import "package:collection/algorithms.dart" show binarySearch;
+import "package:crypto/crypto.dart" hide CryptoUtils;//TODO crypto
+import "package:cryptoutils/cryptoutils.dart";
+import "package:pointycastle/api.dart";
+import "package:pointycastle/digests/sha512.dart";
+import "package:pointycastle/key_derivators/api.dart";
+import "package:pointycastle/key_derivators/pbkdf2.dart";
+import "package:pointycastle/macs/hmac.dart";
+
+import "package:dartcoin/src/crypto.dart" as crypto;
+import "package:dartcoin/src/utils.dart" as utils;
+import "package:dartcoin/src/crypto/mnemonic_exception.dart";
+export "package:dartcoin/src/crypto/mnemonic_exception.dart";
 
 /**
  * A MnemonicCode object may be used to convert between binary seed values and
@@ -19,10 +38,10 @@ class MnemonicCode {
    * 
    * If [wordListDigest] is not [null], the SHA-256 digest of the [wordList] will be checked.
    * If [wordListDigest] is omitted, [BIP39_ENGLISH_SHA256] will be used.
-   * So [null] should be passed explicitely to avoid the digest check.
+   * So [null] should be passed explicitly to avoid the digest check.
    */
   MnemonicCode(Iterable<String> wordList, [String wordListDigest = BIP39_ENGLISH_SHA256]) {
-    if(wordList is List && wordList.length != 2048)
+    if(wordList.length != 2048)
       throw new ArgumentError("The word list does not contain exactly 2048 words.");
     
     _wordList = new List<String>();
@@ -32,11 +51,9 @@ class MnemonicCode {
       md.add(encoder.convert(word));
       _wordList.add(word);
     }
-    if(wordList is! List && _wordList.length != 2048)
-      throw new ArgumentError("The word list does not contain exactly 2048 words.");
     if(wordListDigest != null) {
       List<int> digest = md.close();
-      if(!Utils.equalLists(digest, CryptoUtils.hexToBytes(wordListDigest)))
+      if(!utils.equalLists(digest, CryptoUtils.hexToBytes(wordListDigest)))
         throw new ArgumentError("Invalid wordlist digest");
     }
     
@@ -54,8 +71,8 @@ class MnemonicCode {
     // used as a pseudo-random function. Desired length of the
     // derived key is 512 bits (= 64 bytes).
     //
-    Uint8List pass = Utils.stringToUTF8(words.join(" "));
-    Uint8List salt = Utils.stringToUTF8("mnemonic" + passphrase);
+    Uint8List pass = utils.stringToUTF8(words.join(" "));
+    Uint8List salt = utils.stringToUTF8("mnemonic" + passphrase);
     
     KeyDerivator deriv = new PBKDF2KeyDerivator(new HMac(new SHA512Digest(), 128));
     deriv.init(new Pbkdf2Parameters(salt, _PBKDF2_ROUNDS, 64));
@@ -68,7 +85,7 @@ class MnemonicCode {
    */
   Uint8List toEntropy(List<String> words) {
     if (words.length % 3 > 0)
-        throw new MnemonicLengthException("Word list size must be multiple of three words.");
+        throw new MnemonicException("Word list size must be multiple of three words.");
 
     // Look up all the words in the list and construct the
     // concatenation of the original entropy and the checksum.
@@ -81,7 +98,7 @@ class MnemonicCode {
       
       int ndx = binarySearch(_wordList, word);
       if (ndx < 0)
-        throw new MnemonicWordException(word);
+        throw new MnemonicException.word(word);
 
       // Set the next 11 bits to the value of the index.
       for (int ii = 0; ii < 11; ++ii)
@@ -100,13 +117,13 @@ class MnemonicCode {
           entropy[ii] |= 1 << (7 - jj);
 
     // Take the digest of the entropy.
-    Uint8List hash = Utils.singleDigest(entropy);
+    Uint8List hash = crypto.singleDigest(entropy);
     List<bool> hashBits = _bytesToBits(hash);
 
     // Check all the checksum bits.
     for (int i = 0; i < checksumLengthBits; ++i)
       if (concatBits[entropyLengthBits + i] != hashBits[i])
-        throw new MnemonicChecksumException();
+        throw new MnemonicException.checksum();
 
     return entropy;
   }
@@ -116,12 +133,12 @@ class MnemonicCode {
    */
   List<String> toMnemonic(Uint8List entropy) {
     if (entropy.length % 4 > 0)
-      throw new MnemonicLengthException("entropy length not multiple of 32 bits");
+      throw new MnemonicException("entropy length not multiple of 32 bits");
 
     // We take initial entropy of ENT bits and compute its
     // checksum by taking first ENT / 32 bits of its SHA256 hash.
 
-    Uint8List hash = Utils.singleDigest(entropy);
+    Uint8List hash = crypto.singleDigest(entropy);
     List<bool> hashBits = _bytesToBits(hash);
     
     List<bool> entropyBits = _bytesToBits(entropy);

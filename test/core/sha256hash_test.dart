@@ -24,7 +24,7 @@ void _testEqualsAndHashcode(Uint8List hashBytes) {
   var hash3 = new Hash256(hashBytes);
   expect(hash == hash3, isTrue);
   expect(hash.hashCode == hash3.hashCode, isTrue);
-  var hash4 = new Hash256(Utils.singleDigest(new Uint8List(2)));
+  var hash4 = new Hash256(crypto.singleDigest(new Uint8List(2)));
   expect(hash4 == hash, isFalse);
 }
 
@@ -32,7 +32,7 @@ void _testSingle(var input, var output) {
   if(input is String) {
     input = new Uint8List.fromList(new Utf8Encoder().convert(input));
   }
-  var hash = new Hash256(Utils.singleDigest(input));
+  var hash = new Hash256(crypto.singleDigest(input));
   var hashString = hash.toHex();
   expect(hashString, equalsIgnoringCase(output));
 }
@@ -41,7 +41,7 @@ void _testDouble(var input, var output) {
   if(input is String) {
     input = new Uint8List.fromList(new Utf8Encoder().convert(input));
   }
-  var hash = new Hash256(Utils.doubleDigest(input));
+  var hash = new Hash256(crypto.doubleDigest(input));
   var hashString = hash.toHex();
   expect(hashString, equalsIgnoringCase(output));
 }

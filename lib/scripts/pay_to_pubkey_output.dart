@@ -1,4 +1,9 @@
-part of dartcoin.core;
+library dartcoin.scripts.output.pay_to_pubkey;
+
+import "dart:typed_data";
+
+import "package:dartcoin/core.dart";
+import "package:dartcoin/script.dart";
 
 class PayToPubKeyOutputScript extends Script {
   
@@ -13,10 +18,10 @@ class PayToPubKeyOutputScript extends Script {
   factory PayToPubKeyOutputScript(dynamic pubKey, [bool encoded = true]) {
     if(pubKey is KeyPair) pubKey = pubKey.publicKey;
     if(!(pubKey is Uint8List)) throw new ArgumentError("The public key can be either of type Uint8List or KeyPair.");
-    return new PayToPubKeyOutputScript.convert(new ScriptBuilder(encoded)
+    return new PayToPubKeyOutputScript.convert(new ScriptBuilder()
       .data(pubKey)
       .op(ScriptOpCodes.OP_CHECKSIG)
-      .build(), true);
+      .build(encoded), true);
   }
   
   PayToPubKeyOutputScript.convert(Script script, [bool skipCheck = false]) : super(script.bytes) {
@@ -26,7 +31,7 @@ class PayToPubKeyOutputScript extends Script {
   
   KeyPair get pubKey => new KeyPair.public(chunks[0].bytes);
   
-  Address getAddress([NetworkParameters params]) => new KeyPair.public(pubKey).getAddress(params);
+  Address getAddress([NetworkParameters params]) => pubKey.getAddress(params);
   
   static bool matchesType(Script script) {
     return script.chunks.length == 2 && 

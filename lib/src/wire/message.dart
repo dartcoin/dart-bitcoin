@@ -64,11 +64,11 @@ abstract class Message extends Object with BitcoinSerialization {
     Uint8List checksum = _calculateChecksum(payloadBytes);
     Uint8List bytes = new Uint8List.fromList(new List<int>()
     // the magic value
-    ..addAll(Utils.uintToBytesLE(params.magicValue, 4))
+    ..addAll(utils.uintToBytesLE(params.magicValue, 4))
     // the command code
     ..addAll(_encodeCommand(command))
     // the payload length
-    ..addAll(Utils.uintToBytesLE(payloadBytes.length, 4))
+    ..addAll(utils.uintToBytesLE(payloadBytes.length, 4))
     // the checksum
     ..addAll(checksum)
     // the payload
@@ -90,7 +90,7 @@ abstract class Message extends Object with BitcoinSerialization {
   }
   
   static Uint8List _calculateChecksum(Uint8List payload) => 
-      Utils.doubleDigest(payload).sublist(0, 4);
+      crypto.doubleDigest(payload).sublist(0, 4);
   
   Uint8List get payload => serialize().sublist(HEADER_LENGTH);
   
@@ -109,7 +109,7 @@ abstract class Message extends Object with BitcoinSerialization {
       throw new SerializationException("Incorrect payload length");
     // hacky method to get the payload back:
     Uint8List payload = new Uint8List.view(_serializationBuffer, _serializationOffset + HEADER_LENGTH, payloadLength);
-    if(!Utils.equalLists(sum, _calculateChecksum(payload)))
+    if(!utils.equalLists(sum, _calculateChecksum(payload)))
       throw new SerializationException("Incorrect checksum provided in serialized message");
   }
 

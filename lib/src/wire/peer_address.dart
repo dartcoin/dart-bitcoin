@@ -148,7 +148,7 @@ class PeerAddress extends Object with BitcoinSerialization {
   void _deserialize() {
     if(protocolVersion >= 31402)
       _time = _readUintLE();
-    _services = Utils.bytesToUBigIntLE(_readBytes(8));//_readUintLE(8); // does this work in javascript?
+    _services = utils.bytesToUBigIntLE(_readBytes(8));//_readUintLE(8); // does this work in javascript?
     _addr = _readBytes(16);
     _port = (0xff & _readUintLE(1)) << 8 | (0xff & _readUintLE(1));
   }
@@ -167,7 +167,7 @@ class PeerAddress extends Object with BitcoinSerialization {
       int secs = new DateTime.now().millisecondsSinceEpoch ~/ 1000;
       _writeUintLE(sink, secs);
     }
-    sink.add(Utils.uBigIntToBytesLE(_services, 8));
+    sink.add(utils.uBigIntToBytesLE(_services, 8));
     sink.add(_addr);
     sink.add(0xFF & _port >> 8);
     sink.add(0xFF & _port);

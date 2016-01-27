@@ -80,7 +80,7 @@ class Transaction extends Object with BitcoinSerialization {
   }
 
   Hash256 _calculateHash() {
-    return new Hash256(Utils.reverseBytes(Utils.doubleDigest(serialize())));
+    return new Hash256(utils.reverseBytes(crypto.doubleDigest(serialize())));
   }
 
   Hash256 get txid => hash;
@@ -345,7 +345,7 @@ class Transaction extends Object with BitcoinSerialization {
       ..add(0x000000ff & sigHashFlags));
     // Note that this is NOT reversed to ensure it will be signed correctly. If it were to be printed out
     // however then we would expect that it is IS reversed.
-    Hash256 hash = new Hash256(Utils.doubleDigest(toHash));
+    Hash256 hash = new Hash256(crypto.doubleDigest(toHash));
 
     // Put the transaction back to how we found it.
     _needInstance(true); // uncache

@@ -1,4 +1,13 @@
-part of dartcoin.core;
+library dartcoin.scripts.output.pay_to_pubkey_hash;
+
+import "dart:typed_data";
+
+import "package:cryptoutils/cryptoutils.dart";
+
+import "package:dartcoin/core.dart";
+import "package:dartcoin/script.dart";
+
+import "package:dartcoin/scripts/pay_to_address_output.dart";
 
 class PayToPubKeyHashOutputScript extends PayToAddressOutputScript {
   
@@ -11,13 +20,13 @@ class PayToPubKeyHashOutputScript extends PayToAddressOutputScript {
    * performance when the script is intended for execution.
    */
   factory PayToPubKeyHashOutputScript(Hash160 pubkeyHash, [bool encoded = true]) {
-    return new PayToPubKeyHashOutputScript.convert(new ScriptBuilder(encoded)
+    return new PayToPubKeyHashOutputScript.convert(new ScriptBuilder()
       .op(ScriptOpCodes.OP_DUP)
       .op(ScriptOpCodes.OP_HASH160)
       .data(pubkeyHash.asBytes())
       .op(ScriptOpCodes.OP_EQUALVERIFY)
       .op(ScriptOpCodes.OP_CHECKSIG)
-      .build(), true);
+      .build(encoded), true);
   }
   
   /**
@@ -26,7 +35,8 @@ class PayToPubKeyHashOutputScript extends PayToAddressOutputScript {
   factory PayToPubKeyHashOutputScript.withAddress(Address address, [bool encoded = true]) =>
     new PayToPubKeyHashOutputScript(address.hash160, encoded);
   
-  PayToPubKeyHashOutputScript.convert(Script script, [bool skipCheck = false]) : super._super(script.bytes) {
+  PayToPubKeyHashOutputScript.convert(Script script, [bool skipCheck = false])
+      : super.fromBytesUnchecked(script.bytes) {
     if(!skipCheck && !matchesType(script)) 
       throw new ScriptException("Given script is not an instance of this script type.");
   }

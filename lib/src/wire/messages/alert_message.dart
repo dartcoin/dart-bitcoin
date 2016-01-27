@@ -42,7 +42,7 @@ class AlertMessage extends Message {
   Uint8List get signature => _signature;
   
   bool get isSignatureValid =>
-    KeyPair.verifySignatureForPubkey(Utils.doubleDigest(message),
+    KeyPair.verifySignatureForPubkey(crypto.doubleDigest(message),
         new ECDSASignature.fromDER(signature), params.alertSigningKey);
 
   @override
@@ -90,16 +90,16 @@ class AlertMessage extends Message {
   
   Uint8List _constructMessage() {
     List<int> result = new List<int>()
-      ..addAll(Utils.uintToBytesLE(version, 4))
-      ..addAll(Utils.uintToBytesLE(relayUntil.millisecondsSinceEpoch ~/ 1000, 8))
-      ..addAll(Utils.uintToBytesLE(expiration.millisecondsSinceEpoch ~/ 1000, 8))
-      ..addAll(Utils.uintToBytesLE(id, 4))
-      ..addAll(Utils.uintToBytesLE(cancel, 4))
+      ..addAll(utils.uintToBytesLE(version, 4))
+      ..addAll(utils.uintToBytesLE(relayUntil.millisecondsSinceEpoch ~/ 1000, 8))
+      ..addAll(utils.uintToBytesLE(expiration.millisecondsSinceEpoch ~/ 1000, 8))
+      ..addAll(utils.uintToBytesLE(id, 4))
+      ..addAll(utils.uintToBytesLE(cancel, 4))
     //COMPLETE how to encode the sets?
-      ..addAll(Utils.uintToBytesLE(minVer, 4))
-      ..addAll(Utils.uintToBytesLE(maxVer, 4))
+      ..addAll(utils.uintToBytesLE(minVer, 4))
+      ..addAll(utils.uintToBytesLE(maxVer, 4))
     //another set
-      ..addAll(Utils.uintToBytesLE(priority, 4))
+      ..addAll(utils.uintToBytesLE(priority, 4))
       ..addAll(new VarStr(comment).serialize())
       ..addAll(new VarStr(statusBar).serialize())
       ..addAll(new VarStr(reserved).serialize());

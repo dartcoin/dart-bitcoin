@@ -1,4 +1,9 @@
-part of dartcoin.core;
+library dartcoin.scripts.input.pay_to_pubkey_hash;
+
+import "dart:typed_data";
+
+import "package:dartcoin/core.dart";
+import "package:dartcoin/script.dart";
 
 class PayToPubKeyHashInputScript extends Script {
   
@@ -18,10 +23,10 @@ class PayToPubKeyHashInputScript extends Script {
       pubKey = pubKey.publicKey;
     if(!(signature is Uint8List && pubKey is Uint8List))
       throw new ArgumentError("Unsupported input types. Read documentation.");
-    return new PayToPubKeyHashInputScript.convert(new ScriptBuilder(encoded)
+    return new PayToPubKeyHashInputScript.convert(new ScriptBuilder()
       .data(signature)
       .data(pubKey)
-      .build(), true);
+      .build(encoded), true);
   }
   
   PayToPubKeyHashInputScript.convert(Script script, [bool skipCheck = false]) : super(script.bytes) {

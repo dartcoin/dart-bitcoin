@@ -1,4 +1,9 @@
-part of dartcoin.core;
+library dartcoin.scripts.output.multisig;
+
+
+import "package:dartcoin/core.dart";
+import "package:dartcoin/script.dart";
+
 
 class MultiSigOutputScript extends Script {
 
@@ -15,12 +20,12 @@ class MultiSigOutputScript extends Script {
     if(threshold <= 0 || threshold > pubkeys.length) throw new ScriptException("Invalid threshold value.");
     if(pubkeys.length > 16) throw new ScriptException("Maximum 16 public keys.");
     
-    ScriptBuilder builder = new ScriptBuilder(encoded)
+    ScriptBuilder builder = new ScriptBuilder()
       .smallNum(threshold);
     pubkeys.forEach((pk) => builder.data(pk.publicKey));
     builder.smallNum(pubkeys.length)
       .op(ScriptOpCodes.OP_CHECKMULTISIG);
-    return new MultiSigOutputScript.convert(builder.build(), true);
+    return new MultiSigOutputScript.convert(builder.build(encoded), true);
   }
   
   MultiSigOutputScript.convert(Script script, [bool skipCheck = false]) : super(script.bytes) {

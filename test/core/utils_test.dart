@@ -12,31 +12,31 @@ import "dart:io";
 void _testSingleDigest() {
   var _testString1 = new Uint8List.fromList(new Utf8Encoder().convert("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"));
   var _testHash1 = CryptoUtils.hexToBytes("475dbd9278ce464097f8dd241b088ac96615bfdea9e496bc05828aca94aabfca");
-  expect(Utils.singleDigest(_testString1), equals(_testHash1));
+  expect(crypto.singleDigest(_testString1), equals(_testHash1));
 }
 
 void _testDoubleDigest() {
   var _testBytes3 = CryptoUtils.hexToBytes("00010966776006953D5567439E5E39F86A0D273BEE");
   var _testDoubleHash3 = CryptoUtils.hexToBytes("D61967F63C7DD183914A4AE452C9F6AD5D462CE3D277798075B107615C1A8A30");
-  expect(Utils.doubleDigest(_testBytes3), equals(_testDoubleHash3));
+  expect(crypto.doubleDigest(_testBytes3), equals(_testDoubleHash3));
 }
 
 void _ripemd160() {
   var bytes = CryptoUtils.hexToBytes("600FFE422B4E00731A59557A5CCA46CC183944191006324A447BDB2D98D4B408");
   var hash = CryptoUtils.hexToBytes("010966776006953D5567439E5E39F86A0D273BEE");
-  expect(Utils.ripemd160Digest(bytes), equals(hash));
+  expect(crypto.ripemd160Digest(bytes), equals(hash));
 }
 
 void _sha1digest() {
   var message = new Uint8List.fromList(new Utf8Encoder().convert("test-dartcoin"));
   var hash = CryptoUtils.hexToBytes("7db8dc1e20c72e5f7db948bcacec8c1503fbbe1c");
-  expect(Utils.sha1Digest(message), equals(hash));
+  expect(crypto.sha1Digest(message), equals(hash));
 }
 
 void _sha256hash160() {
   var input = CryptoUtils.hexToBytes("0450863AD64A87AE8A2FE83C1AF1A8403CB53F53E486D8511DAD8A04887E5B23522CD470243453A299FA9E77237716103ABC11A1DF38855ED6F2EE187E9C582BA6");
   var hash = CryptoUtils.hexToBytes("010966776006953D5567439E5E39F86A0D273BEE");
-  expect(Utils.sha256hash160(input), equals(hash));
+  expect(crypto.sha256hash160(input), equals(hash));
 }
 
 void _hexToBytes() {
