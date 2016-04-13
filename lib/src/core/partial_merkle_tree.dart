@@ -26,74 +26,39 @@ part of dartcoin.core;
  *  - Uint8List     flag bits, packed per 8 in a byte, least significant bit first (<= 2*N-1 bits)
  * The size constraints follow from this.</pre></p>
  */
-class PartialMerkleTree extends Object with BitcoinSerialization {
+class PartialMerkleTree extends BitcoinSerializable {
     // the total number of transactions in the block
-    int _transactionCount;
+    int transactionCount;
 
     // node-is-parent-of-matched-txid bits
-    Uint8List _matchedChildBits;
+    Uint8List matchedChildBits;
 
     // txids and internal hashes
-    List<Hash256> _hashes;
+    List<Hash256> hashes;
     
-    PartialMerkleTree( { int transactionCount,
-                         Uint8List matchedChildBits,
-                         List<Hash256> hashes,
-                         NetworkParameters params: NetworkParameters.MAIN_NET}) {
-      _transactionCount = transactionCount;
-      _matchedChildBits = matchedChildBits;
-      _hashes = hashes;
-      this.params = params;
-    }
-    
-    // required for serialization
-    PartialMerkleTree._newInstance();
-    
-    factory PartialMerkleTree.deserialize(Uint8List bytes, {int length, bool lazy, bool retain, NetworkParameters params}) => 
-            new BitcoinSerialization.deserialize(new PartialMerkleTree._newInstance(), bytes, length: length, lazy: lazy, retain: retain, params: params);
-    
-    int get transactionCount {
-      _needInstance();
-      return _transactionCount;
-    }
-    
-    Uint8List get matchedChildBits {
-      _needInstance();
-      return _matchedChildBits;
-    }
-    
-    List<Hash256> get hashes {
-      _needInstance();
-      return new UnmodifiableListView(_hashes);
+    PartialMerkleTree( { int this.transactionCount,
+                         Uint8List this.matchedChildBits,
+                         List<Hash256> this.hashes});
+
+    /// Create an empty instance.
+    PartialMerkleTree.empty();
+
+    void bitcoinSerialize(bytes.Buffer buffer, int pver) {
+      writeUintLE(buffer, transactionCount);
+      writeVarInt(buffer, hashes.length);
+      for(Hash256 hash in hashes)
+        writeSHA256(buffer, hash);
+      writeByteArray(buffer, matchedChildBits);
     }
 
-    @override
-    void _serialize(ByteSink sink) {
-      _writeUintLE(sink, _transactionCount);
-      _writeVarInt(sink, _hashes.length);
-      for(Hash256 hash in _hashes)
-        _writeSHA256(sink, hash);
-      _writeByteArray(sink, _matchedChildBits);
-    }
-
-    @override
-    void _deserialize() {
-      _transactionCount = _readUintLE();
-      int nbHashes = _readVarInt();
-      _hashes = new List<Hash256>(nbHashes);
+    void bitcoinDeserialize(bytes.Reader reader, int pver) {
+      transactionCount = readUintLE(reader);
+      int nbHashes = readVarInt(reader);
+      hashes = new List<Hash256>(nbHashes);
       for(int i = 0 ; i < nbHashes ; i++) {
-        _hashes[i] = _readSHA256();
+        hashes[i] = readSHA256(reader);
       }
-      _matchedChildBits = _readByteArray();
-    }
-
-    @override
-    void _deserializeLazy() {
-      _serializationCursor += 4;
-      int nbHashes = _readVarInt();
-      _serializationCursor += Hash256.LENGTH * nbHashes;
-      int nbBytes = _readVarInt();
-      _serializationCursor += nbBytes;
+      matchedChildBits = readByteArray(reader);
     }
     
     /**
@@ -108,32 +73,31 @@ class PartialMerkleTree extends Object with BitcoinSerialization {
      * @return the merkle root of this merkle tree
      */
     Hash256 getTxnHashAndMerkleRoot(List<Hash256> matchedHashes) {
-      _needInstance();
       matchedHashes.clear();
       
       // An empty set will not work
-      if (_transactionCount == 0)
+      if (transactionCount == 0)
         throw new VerificationException("Got a CPartialMerkleTree with 0 transactions");
       // check for excessively high numbers of transactions
-      if (_transactionCount > Block.MAX_BLOCK_SIZE ~/ 60) // 60 is the lower bound for the size of a serialized CTransaction
+      if (transactionCount > Block.MAX_BLOCK_SIZE ~/ 60) // 60 is the lower bound for the size of a serialized CTransaction
         throw new VerificationException("Got a CPartialMerkleTree with more transactions than is possible");
       // there can never be more hashes provided than one for every txid
-      if (_hashes.length > _transactionCount)
+      if (hashes.length > transactionCount)
         throw new VerificationException("Got a CPartialMerkleTree with more hashes than transactions");
       // there must be at least one bit per node in the partial tree, and at least one node per hash
-      if (_matchedChildBits.length * 8 < _hashes.length)
+      if (matchedChildBits.length * 8 < hashes.length)
         throw new VerificationException("Got a CPartialMerkleTree with fewer matched bits than hashes");
       // calculate height of tree
       int height = 0;
-      while (_getTreeWidth(height, _transactionCount) > 1)
+      while (_getTreeWidth(height, transactionCount) > 1)
         height++;
       // traverse the partial tree
       _ValuesUsedForPMT used = new _ValuesUsedForPMT();
       Hash256 merkleRoot = new Hash256(_recursiveExtractHashes(height, 0, used, matchedHashes));
       // verify that all bits were consumed (except for the padding caused by serializing it as a byte sequence)
-      if ((used.bitsUsed + 7) ~/ 8 != _matchedChildBits.length ||
+      if ((used.bitsUsed + 7) ~/ 8 != matchedChildBits.length ||
           // verify that all hashes were consumed
-          used.hashesUsed != _hashes.length)
+          used.hashesUsed != hashes.length)
         throw new VerificationException("Got a CPartialMerkleTree that didn't need all the data it provided");
       
       return merkleRoot;
@@ -145,25 +109,24 @@ class PartialMerkleTree extends Object with BitcoinSerialization {
     // recursive function that traverses tree nodes, consuming the bits and hashes produced by TraverseAndBuild.
     // it returns the hash of the respective node.
     Uint8List _recursiveExtractHashes(int height, int pos, _ValuesUsedForPMT used, List<Hash256> matchedHashes) {
-      _needInstance();
-      if (used.bitsUsed >= _matchedChildBits.length * 8) {
+      if (used.bitsUsed >= matchedChildBits.length * 8) {
         // overflowed the bits array - failure
         throw new VerificationException("CPartialMerkleTree overflowed its bits array");
       }
-      bool parentOfMatch = utils.checkBitLE(_matchedChildBits, used.bitsUsed++);
+      bool parentOfMatch = utils.checkBitLE(matchedChildBits, used.bitsUsed++);
       if (height == 0 || !parentOfMatch) {
         // if at height 0, or nothing interesting below, use stored hash and do not descend
-        if (used.hashesUsed >= _hashes.length) {
+        if (used.hashesUsed >= hashes.length) {
           // overflowed the hash array - failure
           throw new VerificationException("CPartialMerkleTree overflowed its hash array");
         }
         if (height == 0 && parentOfMatch) // in case of height 0, we have a matched txid
-          matchedHashes.add(_hashes[used.hashesUsed]);
-        return _hashes[used.hashesUsed++].asBytes();
+          matchedHashes.add(hashes[used.hashesUsed]);
+        return hashes[used.hashesUsed++].asBytes();
       } else {
         // otherwise, descend into the subtrees to extract matched txids and hashes
         Uint8List left = _recursiveExtractHashes(height - 1, pos * 2, used, matchedHashes), right;
-        if (pos * 2 + 1 < _getTreeWidth(height - 1, _transactionCount))
+        if (pos * 2 + 1 < _getTreeWidth(height - 1, transactionCount))
           right = _recursiveExtractHashes(height - 1, pos * 2 + 1, used, matchedHashes);
         else
           right = left;

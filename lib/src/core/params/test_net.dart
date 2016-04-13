@@ -15,9 +15,9 @@ class _TestNetParams extends NetworkParameters {
   Block get genesisBlock {
     if(_genesis == null) {
       Block genesis = NetworkParameters._createGenesis(this)
-        .._timestamp = 1296688602
-        .._nonce = 414098458
-        .._difficultyTarget = 0x1d00ffff;
+        ..timestamp = 1296688602
+        ..nonce = 414098458
+        ..difficultyTarget = 0x1d00ffff;
       _genesis = genesis;
     }
     return _genesis;

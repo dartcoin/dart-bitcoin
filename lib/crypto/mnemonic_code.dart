@@ -2,13 +2,13 @@
 
 library dartcoin.crypto.mnemonic_code;
 
-import "dart:convert";
+import "dart:convert" show UTF8;
 import "dart:typed_data";
 
 import "package:collection/algorithms.dart" show binarySearch;
-import "package:crypto/crypto.dart" hide CryptoUtils;//TODO crypto
 import "package:cryptoutils/cryptoutils.dart";
 import "package:pointycastle/api.dart";
+import "package:pointycastle/digests/sha256.dart";
 import "package:pointycastle/digests/sha512.dart";
 import "package:pointycastle/key_derivators/api.dart";
 import "package:pointycastle/key_derivators/pbkdf2.dart";
@@ -16,8 +16,6 @@ import "package:pointycastle/macs/hmac.dart";
 
 import "package:dartcoin/src/crypto.dart" as crypto;
 import "package:dartcoin/src/utils.dart" as utils;
-import "package:dartcoin/src/crypto/mnemonic_exception.dart";
-export "package:dartcoin/src/crypto/mnemonic_exception.dart";
 
 /**
  * A MnemonicCode object may be used to convert between binary seed values and
@@ -45,14 +43,15 @@ class MnemonicCode {
       throw new ArgumentError("The word list does not contain exactly 2048 words.");
     
     _wordList = new List<String>();
-    SHA256 md = new SHA256();
-    Utf8Encoder encoder = new Utf8Encoder();
+    SHA256Digest md = new SHA256Digest();
     for(String word in wordList) {
-      md.add(encoder.convert(word));
+      List<int> wordBytes = UTF8.encode(word);
+      md.update(wordBytes, 0, wordBytes.length);
       _wordList.add(word);
     }
     if(wordListDigest != null) {
-      List<int> digest = md.close();
+      Uint8List digest = new Uint8List(md.digestSize);
+      md.doFinal(digest, 0);
       if(!utils.equalLists(digest, CryptoUtils.hexToBytes(wordListDigest)))
         throw new ArgumentError("Invalid wordlist digest");
     }
@@ -184,4 +183,20 @@ class MnemonicCode {
     return bits;
   }
   
+}
+
+class MnemonicException implements Exception {
+
+  final String message;
+
+  MnemonicException([this.message]);
+
+  MnemonicException.word(String badWord)
+      : this("Bad word in the mnemonic: $badWord");
+
+  MnemonicException.checksum() : this("Invalid mnemonic checksum");
+
+  @override
+  String toString() => "MnemonicException: $message";
+
 }

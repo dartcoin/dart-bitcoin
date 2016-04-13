@@ -1,13 +1,12 @@
-part of dartcoin.core;
+part of dartcoin.wire;
 
 class GetBlocksMessage extends RequestMessage {
+
+  @override
+  String get command => Message.CMD_GETBLOCKS;
   
-  GetBlocksMessage(List<Hash256> locators, [Hash256 stop, NetworkParameters params]) : super("getblocks", locators, stop, params);
+  GetBlocksMessage(List<Hash256> locators, [Hash256 stop]) : super(locators, stop);
   
-  // required for serialization
-  GetBlocksMessage._newInstance() : super._newInstance("getblocks");
-  
-  factory GetBlocksMessage.deserialize(Uint8List bytes, {int length, bool lazy, bool retain, NetworkParameters params, int protocolVersion}) => 
-      new BitcoinSerialization.deserialize(new GetBlocksMessage._newInstance(), bytes, length: length, lazy: lazy, retain: retain, params: params, protocolVersion: protocolVersion);
-  
+  /// Create an empty instance.
+  GetBlocksMessage.empty() : super.empty();
 }

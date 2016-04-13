@@ -1,56 +1,44 @@
-part of dartcoin.core;
+part of dartcoin.wire;
 
 class HeadersMessage extends Message {
+
+  @override
+  String get command => Message.CMD_HEADERS;
   
   List<Block> _headers;
   
-  HeadersMessage(List<Block> headers, [NetworkParameters params]) : super("headers", params) {
-    _headers = headers;
-    for(Block header in _headers)
-      header._parent = this;
-  }
+  HeadersMessage(List<Block> this._headers);
   
-  // required for serialization
-  HeadersMessage._newInstance() : super("headers", null);
+  /// Create an empty instance.
+  HeadersMessage.empty();
 
-  factory HeadersMessage.deserialize(Uint8List bytes, {int length, bool lazy, bool retain, NetworkParameters params, int protocolVersion}) => 
-      new BitcoinSerialization.deserialize(new HeadersMessage._newInstance(), bytes, length: length, lazy: lazy, retain: retain, params: params, protocolVersion: protocolVersion);
-  
-  List<Block> get headers { 
-    _needInstance();
-    return new UnmodifiableListView(_headers);
-  }
-  
   void addHeader(Block header) {
-    _needInstance(true);
     _headers.add(header);
-    header._parent = this;
   }
   
   void removeHeader(Block header) {
-    _needInstance(true);
     _headers.remove(header);
-    header._parent = null;
   }
   
   @override
-  void _deserializePayload() {
-    int nbHeaders = _readVarInt();
+  void bitcoinDeserialize(bytes.Reader reader, int pver) {
+    int nbHeaders = readVarInt(reader);
     List<Block> headers = new List<Block>(nbHeaders);
     for(int i = 0 ; i < nbHeaders ; i++) {
-      headers[i] = _readObject(new Block._newInstance(), length: Block.HEADER_SIZE + 1);
+      headers[i] = readObject(reader, new Block.empty(), pver);
     }
     _headers = headers;
   }
 
   @override
-  void _serializePayload(ByteSink sink) {
-    _writeVarInt(sink, _headers.length);
+  void bitcoinSerialize(bytes.Buffer buffer, int pver) {
+    writeVarInt(buffer, _headers.length);
     for(Block header in _headers) {
-      if(header.isHeader)
-        _writeObject(sink, header);
-      else
-        _writeObject(sink, header.cloneAsHeader());
+      if(header.isHeader) {
+        writeObject(buffer, header, pver);
+      } else {
+        writeObject(buffer, header.cloneAsHeader(), pver);
+      }
     }
   }
 }

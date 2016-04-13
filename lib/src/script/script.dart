@@ -228,8 +228,9 @@ class Script {
   void correctlySpends(Transaction txContainingThis, int scriptSigIndex, Script scriptPubKey, bool enforceP2SH) {
     // Clone the transaction because executing the script involves editing it, and if we die, we'll leave
     // the tx half broken (also it's not so thread safe to work on it directly.
-    txContainingThis = new Transaction.deserialize(
-        txContainingThis.serialize(), length: txContainingThis.serializationLength, lazy: false, params: txContainingThis.params);
+    var oldTx = txContainingThis;
+    txContainingThis = new Transaction.empty();
+    txContainingThis.bitcoinDeserialize(new Reader(oldTx.bitcoinSerializedBytes(0)), 0);
     if (bytes.length > 10000 || scriptPubKey.bytes.length > 10000)
       throw new ScriptException("Script larger than 10,000 bytes");
     

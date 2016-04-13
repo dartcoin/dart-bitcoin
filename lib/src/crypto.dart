@@ -6,29 +6,42 @@ import "dart:typed_data";
 import "package:pointycastle/digests/ripemd160.dart";
 import "package:pointycastle/digests/sha256.dart";
 import "package:pointycastle/digests/sha1.dart";
-
-// cherry picking cipher dependencies
-import "package:cipher/api.dart";
-import "package:cipher/api/ecc.dart";
-import "package:cipher/block/aes_fast.dart";
-import "package:cipher/digests/sha512.dart";//
-import "package:cipher/ecc/ecc_base.dart";
-import "package:cipher/ecc/ecc_fp.dart" as fp;
-import "package:cipher/key_derivators/pbkdf2.dart";//
-import "package:cipher/key_derivators/scrypt.dart";
-import "package:cipher/macs/hmac.dart";//
-import "package:cipher/modes/cbc.dart";
-import "package:cipher/paddings/padded_block_cipher.dart";
-import "package:cipher/paddings/pkcs7.dart";
-import "package:cipher/params/asymmetric_key_parameter.dart";
-import "package:cipher/params/key_derivators/pbkdf2_parameters.dart";
-import "package:cipher/params/key_derivators/scrypt_parameters.dart";
-import "package:cipher/params/key_parameter.dart";
-import "package:cipher/params/padded_block_cipher_parameters.dart";
-import "package:cipher/params/parameters_with_iv.dart";
-import "package:cipher/signers/ecdsa_signer.dart";
+import "package:pointycastle/src/impl/base_digest.dart";
 
 import "package:dartcoin/src/utils.dart" as utils;
+
+
+class DoubleSHA256Digest extends BaseDigest {//TODO pointycastle registry
+
+    SHA256Digest _internal = new SHA256Digest();
+
+    DoubleSHA256Digest();
+
+    @override
+    String get algorithmName => "SHA-256d";
+
+    @override
+    int get digestSize => _internal.digestSize;
+
+    @override
+    void reset() => _internal.reset();
+
+    @override
+    void updateByte(int inp) => _internal.updateByte(inp);
+
+    @override
+    void update(Uint8List inp, int inpOff, int len) =>
+        _internal.update(inp, inpOff, len);
+
+    @override
+    int doFinal(Uint8List out, int outOff) {
+        Uint8List firstSum = new Uint8List(digestSize);
+        _internal.doFinal(firstSum, 0);
+        SHA256Digest secondDigest = new SHA256Digest();
+        secondDigest.update(firstSum, 0, firstSum.length);
+        return secondDigest.doFinal(out, outOff);
+    }
+}
 
 
 /**
@@ -41,7 +54,7 @@ Uint8List singleDigest(Uint8List input) =>
  * Calculates the double-round SHA-256 hash of the input data.
  */
 Uint8List doubleDigest(Uint8List input) =>
-    new SHA256Digest().process(new SHA256Digest().process(input));
+    new DoubleSHA256Digest().process(input);
 
 /**
  * Calculates the double-round SHA-256 hash of the input data concatenated together.

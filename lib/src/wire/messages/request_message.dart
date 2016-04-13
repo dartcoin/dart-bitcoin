@@ -1,66 +1,44 @@
-part of dartcoin.core;
+part of dartcoin.wire;
 
 abstract class RequestMessage extends Message {
   
-  List<Hash256> _locators;
-  Hash256 _stop;
+  List<Hash256> locators;
+  Hash256 stop;
+  int protocolVersion;
   
-  RequestMessage(String command, List<Hash256> locators,
-      [Hash256 stop, NetworkParameters params, int protocolVersion = NetworkParameters.PROTOCOL_VERSION]) : super(command, params) {
-    if(stop == null) {
-      stop = Hash256.ZERO_HASH;
-    }
-    _locators = locators;
-    _stop = stop;
-    this.protocolVersion = protocolVersion;
-  }
-  
-  List<Hash256> get locators {
-    _needInstance();
-    return new UnmodifiableListView(_locators);
-  }
-
-  Hash256 get stop {
-    _needInstance();
-    return _stop;
-  }
-  
-  void set stop(Hash256 stop) {
-    _needInstance(true);
-    _stop = stop;
+  RequestMessage(List<Hash256> this.locators, [Hash256 this.stop]) {
+    stop = stop ?? Hash256.ZERO_HASH;
   }
   
   void addLocator(Hash256 locator) {
-    _needInstance(true);
-    _locators.add(locator);
+    locators.add(locator);
   }
   
   void removeLocator(Hash256 locator) {
-    _needInstance(true);
-    _locators.remove(locator);
+    locators.remove(locator);
   }
-  
-  // required for serialization
-  RequestMessage._newInstance(String command) : super(command, null);
+
+  /// Create an empty instance.
+  RequestMessage.empty();
   
   @override
-  void _deserializePayload() {
-    protocolVersion = _readUintLE();
-    int nbLocators = _readVarInt();
-    _locators = new List<Hash256>(nbLocators);
+  void bitcoinDeserialize(bytes.Reader reader, int pver) {
+    protocolVersion = readUintLE(reader);
+    int nbLocators = readVarInt(reader);
+    locators = new List<Hash256>(nbLocators);
     for(int i = 0 ; i < nbLocators ; i++) {
-      _locators.add(_readSHA256());
+      locators.add(readSHA256(reader));
     }
-    _stop = _readSHA256();
+    stop = readSHA256(reader);
   }
 
   @override
-  void _serializePayload(ByteSink sink) {
-    _writeUintLE(sink, protocolVersion);
-    _writeVarInt(sink, _locators.length);
-    for(Hash256 hash in _locators) {
-      _writeSHA256(sink, hash);
+  void bitcoinSerialize(bytes.Buffer buffer, int pver) {
+    writeUintLE(buffer, protocolVersion);
+    writeVarInt(buffer, locators.length);
+    for(Hash256 hash in locators) {
+      writeSHA256(buffer, hash);
     }
-    _writeSHA256(sink, _stop);
+    writeSHA256(buffer, stop);
   }
 }

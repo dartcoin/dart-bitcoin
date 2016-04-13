@@ -573,7 +573,7 @@ class ScriptExecutor {
 
     bool sigValid = false;
     
-    TransactionSignature sig = new TransactionSignature.deserialize(sigBytes, length: sigBytes.length, requireCanonical: false);
+    TransactionSignature sig = new TransactionSignature.deserialize(sigBytes, requireCanonical: false);
     Hash256 hash = txContainingThis.hashForSignature(index, connectedScript, sig.sigHashFlags);
     sigValid = KeyPair.verifySignatureForPubkey(hash.asBytes(), sig, pubKey);
 
@@ -632,7 +632,7 @@ class ScriptExecutor {
       Uint8List pubKey = pubkeys.removeFirst();
       // We could reasonably move this out of the loop, but because signature verification is significantly
       // more expensive than hashing, its not a big deal.
-      TransactionSignature sig = new TransactionSignature.deserialize(sigs.first, length: sigs.first.length, requireCanonical: false);
+      TransactionSignature sig = new TransactionSignature.deserialize(sigs.first, requireCanonical: false);
       Hash256 hash = txContainingThis.hashForSignature(index, connectedScript, sig.sigHashFlags);
       if (KeyPair.verifySignatureForPubkey(hash.asBytes(), sig, pubKey))
         sigs.removeFirst();

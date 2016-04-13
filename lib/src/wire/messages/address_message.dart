@@ -1,61 +1,48 @@
-part of dartcoin.core;
+part of dartcoin.wire;
 
 class AddressMessage extends Message {
 
+  @override
+  String get command => Message.CMD_ADDR;
+
   static const int MAX_ADDRESSES = 1024;
   
-  List<PeerAddress> _addresses;
+  List<PeerAddress> addresses;
   
   /**
    * Create a new address message with the given list of addresses.
    */
-  AddressMessage(List<PeerAddress> addresses, [NetworkParameters params = NetworkParameters.MAIN_NET, int protocolVersion = NetworkParameters.PROTOCOL_VERSION]) : 
-      super("addr", params) {
-    _addresses = addresses != null ? addresses : new List<PeerAddress>();
-    for(PeerAddress pa in _addresses)
-      pa._parent = this;
-    this.protocolVersion = protocolVersion;
+  AddressMessage([List<PeerAddress> this.addresses]) {
+    addresses = addresses ?? new List<PeerAddress>();
   }
   
-  // required for serialization
-  AddressMessage._newInstance() : super("addr", null);
+  /// Create an empty instance.
+  AddressMessage.empty();
   
-  factory AddressMessage.deserialize(Uint8List bytes, {int length, bool lazy, bool retain, NetworkParameters params, int protocolVersion}) => 
-          new BitcoinSerialization.deserialize(new AddressMessage._newInstance(), bytes, length: length, lazy: lazy, retain: retain, params: params, protocolVersion: protocolVersion);
-  
-  List<PeerAddress> get addresses {
-    _needInstance();
-    return new UnmodifiableListView(_addresses);
-  }
-  
-  void addAddress(PeerAddress address) {
-    _needInstance(true);
-    _addresses.add(address);
-    address._parent = this;
+  void addAddress(PeerAddress address) {//TODO look at peeraddress btcd
+    addresses.add(address);
   }
   
   void removeAddress(PeerAddress address) {
-    _needInstance(true);
-    _addresses.remove(address);
-    address._parent = null;
+    addresses.remove(address);
   }
 
   @override
-  void _deserializePayload() {
-    int nbAddrs = _readVarInt();
+  void bitcoinDeserialize(bytes.Reader reader, int pver) {
+    int nbAddrs = readVarInt(reader);
     if(nbAddrs > MAX_ADDRESSES)
       throw new SerializationException("Too many addresses in AddressMessage");
-    List<PeerAddress> addresses = new List<PeerAddress>(nbAddrs);
+    List<PeerAddress> newAddresses = new List<PeerAddress>(nbAddrs);
     for(int i = 0 ; i < nbAddrs ; i++) {
-      addresses[i] = _readObject(new PeerAddress._newInstance());
+      newAddresses[i] = readObject(reader, new PeerAddress.empty(), pver);
     }
-    _addresses = addresses;
+    addresses = newAddresses;
   }
 
   @override
-  void _serializePayload(ByteSink sink) {
-    _writeVarInt(sink, _addresses.length);
-    _addresses.forEach((a) => _writeObject(sink, a));
+  void bitcoinSerialize(bytes.Buffer buffer, int pver) {
+    writeVarInt(buffer, addresses.length);
+    addresses.forEach((a) => writeObject(buffer, a, pver));
   }
   
 }

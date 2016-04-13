@@ -1,34 +1,24 @@
-part of dartcoin.core;
+part of dartcoin.wire;
 
 class MerkleBlockMessage extends Message {
+
+  @override
+  String get command => Message.CMD_MERKLEBLOCK;
   
-  FilteredBlock _block;
+  FilteredBlock block;
   
-  MerkleBlockMessage(FilteredBlock block, [NetworkParameters params]) : super("merkleblock", params != null ? params : block.params) {
-    if(block == null)
-      throw new ArgumentError("block should not be null");
-    _block = block;
-    _block._parent = this;
-  }
+  MerkleBlockMessage(FilteredBlock this.block);
   
-  // required for serialization
-  MerkleBlockMessage._newInstance() : super("merkleblock", null);
-  
-  factory MerkleBlockMessage.deserialize(Uint8List bytes, {int length, bool lazy, bool retain, NetworkParameters params, int protocolVersion}) => 
-          new BitcoinSerialization.deserialize(new MerkleBlockMessage._newInstance(), bytes, length: length, lazy: lazy, retain: retain, params: params, protocolVersion: protocolVersion);
-  
-  FilteredBlock get block {
-    _needInstance();
-    return _block;
-  }
+  /// Create an empty instance.
+  MerkleBlockMessage.empty();
   
   @override
-  void _deserializePayload() {
-    _block = _readObject(new FilteredBlock._newInstance());
+  void bitcoinDeserialize(bytes.Reader reader, int pver) {
+    block = readObject(reader, new FilteredBlock.empty(), pver);
   }
 
   @override
-  void _serializePayload(ByteSink sink) {
-    _writeObject(sink, _block);
+  void bitcoinSerialize(bytes.Buffer buffer, int pver) {
+    writeObject(buffer, block, pver);
   }
 }

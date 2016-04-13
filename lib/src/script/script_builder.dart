@@ -30,11 +30,11 @@ class ScriptBuilder {
   }
 
   Uint8List buildBytes() {
-    ByteSink sink = new ByteSink();
+    Buffer buffer = new Buffer();
     for(ScriptChunk chunk in _chunks) {
-      sink.add(chunk.bytes);
+      buffer.add(chunk.bytes);
     }
-    return sink.toUint8List();
+    return buffer.asBytes();
   }
   
 }

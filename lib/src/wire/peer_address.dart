@@ -1,13 +1,14 @@
-part of dartcoin.core;
+part of dartcoin.wire;
 
-class PeerAddress extends Object with BitcoinSerialization {
+class PeerAddress extends BitcoinSerializable {
   
   static const int SERIALIZATION_SIZE = 30;
-  
-  Uint8List _addr;
-  int _port;
-  BigInteger _services;
-  int _time;
+
+  Uint8List address;
+  int port;
+  BigInteger services;
+  int time;
+
   
   /**
    * 
@@ -17,30 +18,21 @@ class PeerAddress extends Object with BitcoinSerialization {
   PeerAddress(
       dynamic address, 
       {
-       int port,
-       int protocolVersion: NetworkParameters.PROTOCOL_VERSION,
-       NetworkParameters params: NetworkParameters.MAIN_NET,
-       BigInteger services, 
-       int time
+       int this.port,
+       BigInteger this.services,
+       int this.time
       }) {
-    _addr = _formatAddress(address);
-    _port = (port != null) ? port : params.port;
-    _services = (services != null) ? services : BigInteger.ZERO;
-    _time = time;
-    this.protocolVersion = protocolVersion != null ? protocolVersion : NetworkParameters.PROTOCOL_VERSION;
-    this.params = params;
-    _serializationLength = this.protocolVersion > 31402 ? SERIALIZATION_SIZE : SERIALIZATION_SIZE - 4;
+    this.address = _formatAddress(address);
+    services = services ?? BigInteger.ZERO;
   }
   
-  factory PeerAddress.localhost({NetworkParameters params: NetworkParameters.MAIN_NET, BigInteger services, int protocolVersion}) =>
-    new PeerAddress("127.0.0.1", params: params, protocolVersion: protocolVersion);
+  factory PeerAddress.localhost({BigInteger services}) =>
+    new PeerAddress("127.0.0.1", services: services);
 
-  // required for serialization
-  PeerAddress._newInstance();
-  
-  factory PeerAddress.deserialize(Uint8List bytes, {int length, bool lazy, bool retain, NetworkParameters params, int protocolVersion, BitcoinSerialization parent}) =>  
-      new BitcoinSerialization.deserialize(new PeerAddress._newInstance(), bytes, length: length, lazy: lazy, retain: retain, params: params, protocolVersion: protocolVersion, parent: parent);
-  
+  /// Create an empty instance.
+  PeerAddress.empty();
+
+
   static Uint8List _formatAddress(dynamic address) {
     if(address == null)
       throw new ArgumentError("The address argument should not be null");
@@ -67,110 +59,45 @@ class PeerAddress extends Object with BitcoinSerialization {
     return address;
   }
   
-  Uint8List get address {
-    _needInstance();
-    return _addr;
-  }
-  
-  void set address(Uint8List address) {
-    _needInstance(true);
-    _addr = address;
-  }
-  
-  int get port {
-    _needInstance();
-    return _port;
-  }
-  
-  void set port(int port) {
-    _needInstance(true);
-    _port = port;
-  }
-  
-  BigInteger get services {
-    _needInstance();
-    return _services;
-  }
-  
-  void set services(BigInteger services) {
-    _needInstance(true);
-    _services = services;
-  }
-  
-  int get time {
-    _needInstance();
-    return _time;
-  }
-  
-  void set time(int time) {
-    _needInstance(true);
-    _time = time;
-  }
-  
-  /**
-   * Version messages need [PeerAddress]es with [protocolVerion] = 0.
-   * (Timestamp should nog be encoded in it (length 26 bytes).
-   * 
-   * We use this method on the [VersionMessage] constructor instead of checking it
-   * when serializing, because the constructor will be used significantly less frequently
-   * than the serialize method.
-   */
-  PeerAddress get _forVersionMessage {
-    if(protocolVersion == 0) return this;
-    _needInstance();
-    return new PeerAddress(_addr, port: _port, protocolVersion: 0, params: params, services: _services, time: _time);
-  }
-  
   @override
   String toString() {
-    _needInstance();
-    return "[${_addr}]:$_port";
+    return "[${address}]:$port";
   }
   
   @override
   bool operator ==(PeerAddress other) {
     if(!(other is PeerAddress)) return false;
-    _needInstance();
-    other._needInstance();
-    return _addr == other._addr &&
-        _port == other._port &&
-        _services == other._services &&
-        _time == other._time;
+    return address == other.address &&
+        port == other.port &&
+        services == other.services &&
+        time == other.time;
   }
   
   @override
   int get hashCode {
-    _needInstance();
-    return _addr.hashCode ^ port.hashCode ^ time.hashCode ^ _services.hashCode;
+    return address.hashCode ^ port.hashCode ^ time.hashCode ^ services.hashCode;
   }
 
-  @override
-  void _deserialize() {
-    if(protocolVersion >= 31402)
-      _time = _readUintLE();
-    _services = utils.bytesToUBigIntLE(_readBytes(8));//_readUintLE(8); // does this work in javascript?
-    _addr = _readBytes(16);
-    _port = (0xff & _readUintLE(1)) << 8 | (0xff & _readUintLE(1));
+  void bitcoinDeserialize(bytes.Reader reader, int pver) {
+    if(pver >= 31402)
+      time = readUintLE(reader);
+    services = utils.bytesToUBigIntLE(readBytes(reader, 8));
+    address = readBytes(reader, 16);
+    port = (0xff & readUintLE(reader, 1)) << 8 | (0xff & readUintLE(reader, 1));
   }
 
-  @override
-  void _deserializeLazy() {
-    _serializationCursor += protocolVersion > 31402 ? SERIALIZATION_SIZE : SERIALIZATION_SIZE - 4;
-  }
-
-  @override
-  void _serialize(ByteSink sink) {
-    if(protocolVersion >= 31402) {
-      //TODO [bitcoinj]: this appears to be dynamic because the client only ever sends out it's own address
-      //so assumes itself to be up.  For a fuller implementation this needs to be dynamic only if
-      //the address refers to this client.
+  void bitcoinSerialize(bytes.Buffer buffer, int pver) {
+    if(pver >= 31402) {
+      // This appears to be dynamic because the client only ever sends out it's
+      // own address so assumes itself to be up.  For a fuller implementation
+      // this needs to be dynamic only if the address refers to this client.
       int secs = new DateTime.now().millisecondsSinceEpoch ~/ 1000;
-      _writeUintLE(sink, secs);
+      writeUintLE(buffer, secs);
     }
-    sink.add(utils.uBigIntToBytesLE(_services, 8));
-    sink.add(_addr);
-    sink.add(0xFF & _port >> 8);
-    sink.add(0xFF & _port);
+    writeBytes(buffer, utils.uBigIntToBytesLE(services, 8));
+    writeBytes(buffer, address);
+    writeBytes(buffer, [0xFF & port >> 8]);
+    writeBytes(buffer, [0xFF & port]);
   }
   
 }

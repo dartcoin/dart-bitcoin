@@ -1,20 +1,18 @@
-part of dartcoin.core;
+part of dartcoin.wire;
 
 class GetAddressMessage extends Message {
-  
-  GetAddressMessage([NetworkParameters params]) : super("getaddr", params) {
-    _serializationLength = Message.HEADER_LENGTH;
-  }
-  
-  // required for serialization
-  GetAddressMessage._newInstance() : super("getaddr", null);
-  
-  factory GetAddressMessage.deserialize(Uint8List bytes, {bool lazy, bool retain, NetworkParameters params, int protocolVersion}) => 
-          new BitcoinSerialization.deserialize(new GetAddressMessage._newInstance(), bytes, length: Message.HEADER_LENGTH, lazy: lazy, retain: retain, params: params, protocolVersion: protocolVersion);
-  
-  @override
-  void _deserializePayload() {}
 
   @override
-  void _serializePayload(ByteSink sink) {}
+  String get command => Message.CMD_GETADDR;
+  
+  GetAddressMessage();
+  
+  /// Create an empty instance.
+  GetAddressMessage.empty();
+
+  @override
+  void bitcoinDeserialize(bytes.Reader reader, int pver) {}
+
+  @override
+  void bitcoinSerialize(bytes.Buffer buffer, int pver) {}
 }

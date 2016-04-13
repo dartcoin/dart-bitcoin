@@ -1,6 +1,9 @@
-part of dartcoin.core;
+part of dartcoin.wire;
 
 class VersionMessage extends Message {
+
+  @override
+  String get command => Message.CMD_VERSION;
   
   static final BigInteger SERVICE_NODE_NETWORK = BigInteger.ONE;
   
@@ -30,36 +33,20 @@ class VersionMessage extends Message {
                    int this.clientVersion: NetworkParameters.PROTOCOL_VERSION,
                    BigInteger this.services,
                    int this.time: 0,
-                   PeerAddress myAddress,
-                   PeerAddress theirAddress,
+                   PeerAddress this.myAddress,
+                   PeerAddress this.theirAddress,
                    int this.nonce,
-                   String this.subVer,
-                   NetworkParameters params: NetworkParameters.MAIN_NET }) : super("version", params) {
-    if(services == null) services = BigInteger.ZERO;
-    if(nonce == null) nonce = new Random().nextInt(0xffffffff);
-    if(subVer == null) subVer = LIBRARY_SUBVER;
+                   String this.subVer}) {
+    services = services ?? BigInteger.ZERO;
+    nonce = nonce ?? new Random().nextInt(0xffffffff);
+    subVer = subVer ?? LIBRARY_SUBVER;
     // make sure a PeerAddress instance with protocolVersion = 0 is used
-    if(myAddress != null) this.myAddress = myAddress._forVersionMessage;
-    else this.myAddress = new PeerAddress.localhost(params: params, services: services, protocolVersion: 0);
-    if(theirAddress != null) this.theirAddress = theirAddress._forVersionMessage; 
-    else this.theirAddress = new PeerAddress.localhost(params: params, services: services, protocolVersion: 0);
-    
-    this.params = params;
-    // we don't need to set PeerAddress's parent to this because no lazy serialization is supported
+    myAddress = myAddress ?? new PeerAddress.localhost(services: services);
+    theirAddress = theirAddress ?? new PeerAddress.localhost(services: services);
   }
   
-  // required for serialization
-  VersionMessage._newInstance() : super("version", null) { _lazySerialization = false; }
-  
-  /**
-   * 
-   * 
-   * No lazy deserialization is supported for this kind of message. 
-   */
-  factory VersionMessage.deserialize(Uint8List bytes, {int length, bool retain, NetworkParameters params, int protocolVersion}) => 
-          new BitcoinSerialization.deserialize(new VersionMessage._newInstance(), bytes, length: length, lazy: false, retain: retain, params: params, protocolVersion: protocolVersion);
-  
-  Uint8List get checksum => Message._calculateChecksum(payload);
+  /// Create an empty instance.
+  VersionMessage.empty();
   
   /**
    * Appends the given user-agent information to the subVer field. The subVer is composed of a series of
@@ -130,40 +117,43 @@ class VersionMessage extends Message {
   }
 
   @override
-  void _deserializePayload() {
-    clientVersion = _readUintLE();
-    services = utils.bytesToUBigIntLE(_readBytes(8));//_readUintLE(8);
-    time = _readUintLE(8);
+  void bitcoinDeserialize(bytes.Reader reader, int pver) {
+    clientVersion = readUintLE(reader);
+    services = utils.bytesToUBigIntLE(readBytes(reader, 8));//_readUintLE(8);
+    time = readUintLE(reader, 8);
     // for PeerAddresses in the version message, the protocolVersion must be hard coded to 0
-    myAddress = _readObject(new PeerAddress._newInstance().._protocolVersion = 0);
+    myAddress = readObject(reader, new PeerAddress.empty(), 0);
     if(clientVersion < 106) return;
     // only when protocolVersion >= 106
-    theirAddress = _readObject(new PeerAddress._newInstance().._protocolVersion = 0);
-    nonce = _readUintLE(8);
+    theirAddress = readObject(reader, new PeerAddress.empty(), 0);
+    nonce = readUintLE(reader, 8);
     // initialize default values for flags that may be missing from old nodes
     subVer = "";
     lastHeight = 0;
     relayBeforeFilter = true;
-    if(_deserializationBytesAvailable() <= 0) return;
-    subVer = _readVarStr();
-    if(_deserializationBytesAvailable() <= 0) return;
-    lastHeight = _readUintLE();
-    if(_deserializationBytesAvailable() <= 0) return;
-    relayBeforeFilter = _readUintLE(1) != 0;
+    if(reader.remainingLength > 0) {
+      subVer = readVarStr(reader);
+    }
+    if(reader.remainingLength > 0) {
+      lastHeight = readUintLE(reader);
+    }
+    if(reader.remainingLength > 0) {
+      relayBeforeFilter = readUintLE(reader, 1) != 0;
+    }
   }
 
   @override
-  void _serializePayload(ByteSink sink) {
-    _writeUintLE(sink, clientVersion);
-    sink.add(utils.uBigIntToBytesLE(services, 8));
-    _writeUintLE(sink, time, 8);
-    _writeObject(sink, myAddress);
+  void bitcoinSerialize(bytes.Buffer buffer, int pver) {
+    writeUintLE(buffer, clientVersion);
+    writeBytes(buffer, utils.uBigIntToBytesLE(services, 8));
+    writeUintLE(buffer, time, 8);
+    writeObject(buffer, myAddress, 0);
     // we are version >= 106
-    _writeObject(sink, theirAddress);
-    _writeUintLE(sink, nonce, 8);
-    _writeString(sink, subVer);
-    _writeUintLE(sink, lastHeight);
-    sink.add(relayBeforeFilter ? 1 : 0);
+    writeObject(buffer, theirAddress, 0);
+    writeUintLE(buffer, nonce, 8);
+    writeVarStr(buffer, subVer);
+    writeUintLE(buffer, lastHeight);
+    writeBytes(buffer, [relayBeforeFilter ? 1 : 0]);
   }
 }
 

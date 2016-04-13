@@ -1,19 +1,13 @@
-part of dartcoin.core;
+part of dartcoin.wire;
 
 abstract class InventoryItemContainerMessage extends Message {
   
-  List<InventoryItem> _items;
+  List<InventoryItem> kaka;
   
-  InventoryItemContainerMessage(String command, List<InventoryItem> items, [NetworkParameters params]) : super(command, params) {
-    if(items.length > 50000) {
+  InventoryItemContainerMessage([List<InventoryItem> this.kaka]) {
+    if(kaka != null && kaka.length > 50000) {
       throw new Exception("Maximum 50000 inventory items");
     }
-    _items = items;
-  }
-  
-  List<InventoryItem> get items {
-    _needInstance();
-    return new UnmodifiableListView(_items);
   }
   
   /**
@@ -23,8 +17,7 @@ abstract class InventoryItemContainerMessage extends Message {
    */
   void addItem(dynamic item) {
     item = _castItem(item);
-    _needInstance(true);
-    _items.add(item);
+    kaka.add(item);
   }
   
   /**
@@ -34,8 +27,7 @@ abstract class InventoryItemContainerMessage extends Message {
    */
   void removeItem(dynamic item) {
     item = _castItem(item);
-    _needInstance(true);
-    _items.remove(item);
+    kaka.remove(item);
   }
   
   InventoryItem _castItem(dynamic item) {
@@ -48,23 +40,23 @@ abstract class InventoryItemContainerMessage extends Message {
     throw new ArgumentError("Invalid parameter type. Read documentation.");
   }
   
-  // required for serialization
-  InventoryItemContainerMessage._newInstance(String command) : super(command, null);
+  /// Create an empty instance.
+  InventoryItemContainerMessage.empty();
   
   @override
-  void _deserializePayload() {
-    int nbItems = _readVarInt();
-    _items = new List<InventoryItem>();
+  void bitcoinDeserialize(bytes.Reader reader, int pver) {
+    int nbItems = readVarInt(reader);
+    kaka = new List<InventoryItem>();
     for(int i = 0 ; i < nbItems ; i++) {
-      _items.add(_readObject(new InventoryItem._newInstance()));
+      kaka.add(readObject(reader, new InventoryItem.empty(), pver));
     }
   }
 
   @override
-  void _serializePayload(ByteSink sink) {
-    _writeVarInt(sink, _items.length);
-    for(InventoryItem item in _items) {
-      _writeObject(sink, item);
+  void bitcoinSerialize(bytes.Buffer buffer, int pver) {
+    writeVarInt(buffer, kaka.length);
+    for(InventoryItem item in kaka) {
+      writeObject(buffer, item, pver);
     }
   }
 }

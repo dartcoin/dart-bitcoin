@@ -4,10 +4,13 @@ library dartcoin.script;
 import "dart:collection";
 import "dart:typed_data";
 
+import "package:bignum/bignum.dart";
+import "package:bytes/bytes.dart";
 import "package:cryptoutils/cryptoutils.dart";
 
+import "package:dartcoin/core.dart";
+import "package:dartcoin/src/crypto.dart" as crypto;
 import "package:dartcoin/src/utils.dart" as utils;
-import "package:dartcoin/utils/byte_sink.dart";
 
 
 part "src/script/script.dart";

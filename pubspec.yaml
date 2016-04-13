@@ -4,13 +4,14 @@ author: Steven Roose <stevenroose@gmail.com>
 description: A Bitcoin library for Dart. Pub-test release.
 homepage: http://www.dartcoin.org/
 dependencies:
-  asn1lib: '>=0.3.1'
+  asn1lib: ">=0.3.1"
   base58check: "0.1.0"
-  bignum: '>=0.0.4'
+  bignum: ">=0.0.4"
+  bytes: ">=0.2.0 <0.3.0"
   cipher: any
   collection: any
   crypto: any
-  cryptoutils: '>=0.1.8'
+  cryptoutils: ">=0.1.8"
   json: any
   json_rpc: any
   pointycastle: any

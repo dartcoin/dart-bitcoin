@@ -15,7 +15,7 @@ class MultiSigInputScript extends Script {
    * Create a script that satisfies an [OP_CHECKMULTISIG] program.
    */
   factory MultiSigInputScript(List<TransactionSignature> signatures, [bool encoded = true]) {
-    return new MultiSigInputScript.fromEncodedSignatures(new List.from(signatures.map((s) => s.serialize())), encoded);
+    return new MultiSigInputScript.fromEncodedSignatures(new List.from(signatures.map((s) => s.bitcoinSerializedBytes(0))), encoded);
   }
 
   MultiSigInputScript.convert(Script script, [bool skipCheck = false]) : super(script.bytes) {
@@ -35,7 +35,7 @@ class MultiSigInputScript extends Script {
     ScriptBuilder builder = new ScriptBuilder()
       ..smallNum(0); // Work around a bug in CHECKMULTISIG that is now a required part of the protocol.
     signatures.forEach((s) => builder.data(s));
-    new MultiSigInputScript.convert(builder.build(encoded), true);
+    return new MultiSigInputScript.convert(builder.build(encoded), true);
   }
   
   /**
@@ -53,7 +53,7 @@ class MultiSigInputScript extends Script {
   }
   
   List<TransactionSignature> get signatures =>
-    chunks.sublist(0).map((c) => new TransactionSignature.deserialize(c.bytes, length: c.bytes.length));
+    chunks.sublist(0).map((c) => new TransactionSignature.deserialize(c.bytes));
   
   /**
    * 

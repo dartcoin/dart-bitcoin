@@ -34,7 +34,7 @@ class PayToPubKeyHashInputScript extends Script {
       throw new ScriptException("Given script is not an instance of this script type.");
   }
   
-  TransactionSignature get signature => new TransactionSignature.deserialize(chunks[0].bytes, length: chunks[0].bytes.length, requireCanonical: false);
+  TransactionSignature get signature => new TransactionSignature.deserialize(chunks[0].bytes, requireCanonical: false);
   
   KeyPair get pubKey => new KeyPair.public(chunks[1].bytes);
   

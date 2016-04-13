@@ -1,8 +1,8 @@
 part of dartcoin.core;
 
-class TransactionSignature extends ECDSASignature with BitcoinSerialization {
+class TransactionSignature extends ECDSASignature {
   
-  int _sigHashFlags;
+  int sigHashFlags;
   
   /**
    * Create a new TransactionSignature from an ECDSASignature.
@@ -11,42 +11,37 @@ class TransactionSignature extends ECDSASignature with BitcoinSerialization {
    * specify a SigHash value and the anyoneCanPay bool.
    * When nothing is specified, the default SigHash.ALL and !anyoneCanPay settings are used.
    */ //TODO fix serialization. is not required here, so use BitcoinSerializable instead
-  TransactionSignature(ECDSASignature signature, {SigHash mode, bool anyoneCanPay, int sigHashFlags}) : super(signature.r, signature.s) {
+  TransactionSignature(ECDSASignature signature, {SigHash mode, bool anyoneCanPay, int this.sigHashFlags}) : super(signature.r, signature.s) {
     if(sigHashFlags != null) {
       if(mode != null || anyoneCanPay != null)
         throw new ArgumentError("Please specify either the sigHashFlags byte or mode + anyoneCanPay, not both.");
-      _sigHashFlags = sigHashFlags;
+    } else {
+      _setSigHashFlags(mode == null ? mode : SigHash.ALL,
+        anyoneCanPay == null ? anyoneCanPay : false);
     }
-    else
-      _setSigHashFlags(mode == null ? mode : SigHash.ALL, 
-          anyoneCanPay == null ? anyoneCanPay : false);
   }
 
   // no lazy deserialization
-  factory TransactionSignature.deserialize(Uint8List bytes, {int length, bool requireCanonical: false, NetworkParameters params}) {
-    if(requireCanonical && !isEncodingCanonical(bytes)) throw new SerializationException("Signature is not canonical");
-    if(length == null)
-      length = bytes[1] + 2;
-    TransactionSignature ts = new TransactionSignature(new ECDSASignature.fromDER(bytes.sublist(0, length - 1)),
-        sigHashFlags: bytes[length - 1]);
-    ts.params = params;
-    ts._serializationLength = length;
-    return ts;
+  factory TransactionSignature.deserialize(Uint8List bytes, {bool requireCanonical: false}) {
+    if(requireCanonical && !isEncodingCanonical(bytes)) {
+      throw new SerializationException("Signature is not canonical");
+    }
+    return new TransactionSignature(new ECDSASignature.fromDER(bytes.sublist(0, bytes.length - 1)),
+        sigHashFlags: bytes.last);
   }
-  
+
+  //TODO remove?
   factory TransactionSignature.dummy() {
     ECDSASignature sig = new ECDSASignature(KeyPair.HALF_CURVE_ORDER, KeyPair.HALF_CURVE_ORDER);
     return new TransactionSignature(sig);
   }
   
-  int get sigHashFlags => _sigHashFlags;
-  
   void _setSigHashFlags(SigHash mode, bool anyoneCanPay) {
-    _sigHashFlags = SigHash.sigHashFlagsValue(mode, anyoneCanPay);
+    sigHashFlags = SigHash.sigHashFlagsValue(mode, anyoneCanPay);
   }
 
   SigHash get sigHashMode {
-    int mode = _sigHashFlags & 0x1f;
+    int mode = sigHashFlags & 0x1f;
     if (mode == SigHash.NONE.value)
       return SigHash.NONE;
     else if (mode == SigHash.SINGLE.value)
@@ -103,39 +98,15 @@ class TransactionSignature extends ECDSASignature with BitcoinSerialization {
     return true;
   }
 
-  @override
-  void _serialize(ByteSink sink) {
-    sink.add(encodeToDER());
-    sink.add(_sigHashFlags);
+  void bitcoinSerialize(bytes.Buffer buffer, int pver) {
+    writeBytes(buffer, encodeToDER());
+    writeBytes(buffer, [sigHashFlags]);
   }
 
-  @override
-  void _deserialize() {
-    // no lazy deserialization implemented
+  Uint8List bitcoinSerializedBytes(int pver) {
+    var buffer = new bytes.Buffer();
+    bitcoinSerialize(buffer, pver);
+    return buffer.asBytes();
   }
   
-}
-
-class SigHash {
-  static const SigHash ALL    = const SigHash._(1);
-  static const SigHash NONE   = const SigHash._(2);
-  static const SigHash SINGLE = const SigHash._(3);
-  
-  static const int ANYONE_CAN_PAY = 0x80;
-
-  /**
-   * The bit-value of this SigHash flag.
-   *
-   * Note that in BitcoinJ, this value is retrieved by doing sigHash.ordinal() + 1.
-   */
-  final int value;
-  
-  const SigHash._(int this.value);
-  
-  static int sigHashFlagsValue(SigHash sh, bool anyoneCanPay) {
-    int val = sh.value;
-    if(anyoneCanPay)
-      val |= ANYONE_CAN_PAY;
-    return val;
-  }
 }

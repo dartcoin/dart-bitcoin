@@ -1,4 +1,18 @@
-part of dartcoin.core;
+library dartcoin.crypto.key_crypter_scrypt;
+
+import "dart:math";
+import "dart:typed_data";
+
+import "package:pointycastle/api.dart";
+import "package:pointycastle/key_derivators/api.dart";
+import "package:pointycastle/key_derivators/scrypt.dart";
+import "package:pointycastle/padded_block_cipher/padded_block_cipher_impl.dart";
+import "package:pointycastle/paddings/pkcs7.dart";
+import "package:pointycastle/block/modes/cbc.dart";
+import "package:pointycastle/block/aes_fast.dart";
+
+import "package:dartcoin/core.dart";
+import "package:dartcoin/src/utils.dart" as utils;
 
 
 /**

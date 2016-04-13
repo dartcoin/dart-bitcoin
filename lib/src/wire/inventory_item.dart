@@ -1,4 +1,4 @@
-part of dartcoin.core;
+part of dartcoin.wire;
 
 class InventoryItemType {
 
@@ -13,69 +13,43 @@ class InventoryItemType {
   const InventoryItemType._(int this.value);
 }
 
-class InventoryItem extends Object with BitcoinSerialization {
+class InventoryItem extends BitcoinSerializable {
   
   static const int SERIALIZATION_LENGTH = 4 + Hash256.LENGTH;
   
-  InventoryItemType _type;
-  Hash256 _hash;
+  InventoryItemType type;
+  Hash256 hash;
   
-  InventoryItem(InventoryItemType type, Hash256 hash) {
+  InventoryItem(InventoryItemType this.type, Hash256 this.hash) {
     if(type == null || hash == null)
       throw new ArgumentError("None of the attributes should be null");
-    _type = type;
-    _hash = hash;
-    _serializationLength = SERIALIZATION_LENGTH;
   }
 
   InventoryItem.fromTransaction(Transaction tx) : this(InventoryItemType.MSG_TX, tx.hash);
   InventoryItem.fromBlock(Block block) : this(InventoryItemType.MSG_BLOCK, block.hash);
   
   // required for serialization
-  InventoryItem._newInstance();
-  
-  factory InventoryItem.deserialize(Uint8List bytes, {bool lazy, bool retain, NetworkParameters params}) => 
-          new BitcoinSerialization.deserialize(new InventoryItem._newInstance(), bytes, length: SERIALIZATION_LENGTH, lazy: lazy, retain: retain, params: params);
-  
-  InventoryItemType get type {
-    _needInstance();
-    return _type;
+  InventoryItem.empty();
+
+  void bitcoinDeserialize(bytes.Reader reader, int pver) {
+    type = new InventoryItemType._(readUintLE(reader));
+    hash = readSHA256(reader);
   }
 
-  Hash256 get hash {
-    _needInstance();
-    return _hash;
-  }
-  
-  @override
-  void _deserialize() {
-    _type = new InventoryItemType._(_readUintLE());
-    _hash = _readSHA256();
-  }
-
-  @override
-  void _deserializeLazy() {
-    _serializationCursor += SERIALIZATION_LENGTH;
-  }
-
-  @override
-  void _serialize(ByteSink sink) {
-    _writeUintLE(sink, _type.value);
-    _writeSHA256(sink, _hash);
+  void bitcoinSerialize(bytes.Buffer buffer, int pver) {
+    writeUintLE(buffer, type.value);
+    writeSHA256(buffer, hash);
   }
 
   @override
   int get hashCode {
-    _needInstance();
-    return _type.hashCode + _hash.hashCode;
+    return type.hashCode + hash.hashCode;
     // because hash collision is negligible, _hash.hashCode is enough. but we do it this way for elegance
   }
 
   @override
   bool operator ==(InventoryItem other) {
     if(!(other is InventoryItem)) return false;
-    _needInstance();
-    other._needInstance();
-    return _type == other._type && _hash == other._hash;
+    return type == other.type && hash == other.hash;
   }
 }

@@ -1,14 +1,14 @@
-part of dartcoin.core;
+part of dartcoin.wire;
 
 class AlertMessage extends Message {
+
+  @override
+  String get command => Message.CMD_ALERT;
   
   static const int ALERT_VERSION = 1;
   
   // Chosen arbitrarily to avoid memory blowups.
   static const int MAX_SET_SIZE = 100;
-  
-  Uint8List _message;
-  Uint8List _signature;
   
   int version; // specific version for alert messages
   DateTime relayUntil;
@@ -23,87 +23,73 @@ class AlertMessage extends Message {
   String comment;
   String statusBar;
   String reserved;
-  
-  AlertMessage(Uint8List message, Uint8List signature, [NetworkParameters params]) : super("alert", params) {
-    if(message == null || signature == null)
-      throw new ArgumentError();
-    this._message = message;
-    this._signature = signature;
-  }
-  
-  // required for serialization
-  AlertMessage._newInstance() : super("alert", null) { _lazySerialization = false; }
 
-  factory AlertMessage.deserialize(Uint8List bytes, {int length, bool retain, NetworkParameters params, int protocolVersion}) => 
-          new BitcoinSerialization.deserialize(new AlertMessage._newInstance(), bytes, length: length, lazy: false, retain: retain, params: params, protocolVersion: protocolVersion);
+  Uint8List messageChecksum;
+  Uint8List signature;
   
-  Uint8List get message => _message;
+  AlertMessage();
   
-  Uint8List get signature => _signature;
+  /// Create an empty instance.
+  AlertMessage.empty();
   
-  bool get isSignatureValid =>
-    KeyPair.verifySignatureForPubkey(crypto.doubleDigest(message),
-        new ECDSASignature.fromDER(signature), params.alertSigningKey);
+  bool isSignatureValid(Uint8List key) =>
+    KeyPair.verifySignatureForPubkey(messageChecksum,
+        new ECDSASignature.fromDER(signature), key);
 
   @override
-  void _deserializePayload() {
-    int startCursor = _serializationCursor;
-    _message = _readByteArray();
-    _signature = _readByteArray();
-    int finalCursor = _serializationCursor;
-    _serializationCursor = startCursor;
-    _readVarInt(); // skip content size varint
-    _parseMessage();
-    _serializationCursor = finalCursor;
+  void bitcoinDeserialize(bytes.Reader reader, int pver) {
+    signature = readByteArray(reader);
+    ChecksumReader messageReader =
+        new ChecksumReader(reader, new crypto.DoubleSHA256Digest());
+    _readMessage(messageReader);
+    messageChecksum = messageReader.checksum();
   }
 
-  void _parseMessage() {
-    version = _readUintLE();
-    relayUntil = new DateTime.fromMillisecondsSinceEpoch(_readUintLE(8) * 1000);
-    expiration = new DateTime.fromMillisecondsSinceEpoch(_readUintLE(8) * 1000);
-    id = _readUintLE();
-    cancel = _readUintLE();
-    int cancelSetSize = _readVarInt();
+  void _readMessage(bytes.Reader reader) {
+    version = readUintLE(reader);
+    relayUntil = new DateTime.fromMillisecondsSinceEpoch(readUintLE(reader, 8) * 1000);
+    expiration = new DateTime.fromMillisecondsSinceEpoch(readUintLE(reader, 8) * 1000);
+    id = readUintLE(reader);
+    cancel = readUintLE(reader);
+    int cancelSetSize = readVarInt(reader);
     cancelSet = new HashSet<int>();
     for(int i = 0 ; i < cancelSetSize ; i++) {
-      cancelSet.add(_readUintLE());
+      cancelSet.add(readUintLE(reader));
     }
-    minVer = _readUintLE();
-    maxVer = _readUintLE();
-    int subVerSetSize = _readVarInt();
+    minVer = readUintLE(reader);
+    maxVer = readUintLE(reader);
+    int subVerSetSize = readVarInt(reader);
     matchingSubVer = new HashSet<String>();
     for(int i = 0 ; i < subVerSetSize ; i++)
-      matchingSubVer.add(_readVarStr());
-    priority = _readUintLE();
-    comment = _readVarStr();
-    statusBar = _readVarStr();
-    reserved = _readVarStr();
+      matchingSubVer.add(readVarStr(reader));
+    priority = readUintLE(reader);
+    comment = readVarStr(reader);
+    statusBar = readVarStr(reader);
+    reserved = readVarStr(reader);
   }
 
   @override
-  void _serializePayload(ByteSink sink) {
-    if(_message == null || _signature == null)
+  void bitcoinSerialize(bytes.Buffer buffer, int pver) {
+    if(signature == null)
       throw new Exception("Cannot sign AlertMessages ourselves");
-    _writeByteArray(sink, _message);
-    _writeByteArray(sink, _signature);
+    _writeMessage(buffer);
+    writeByteArray(buffer, signature);
   }
   
-  Uint8List _constructMessage() {
-    List<int> result = new List<int>()
-      ..addAll(utils.uintToBytesLE(version, 4))
-      ..addAll(utils.uintToBytesLE(relayUntil.millisecondsSinceEpoch ~/ 1000, 8))
-      ..addAll(utils.uintToBytesLE(expiration.millisecondsSinceEpoch ~/ 1000, 8))
-      ..addAll(utils.uintToBytesLE(id, 4))
-      ..addAll(utils.uintToBytesLE(cancel, 4))
+  void _writeMessage(bytes.Buffer buffer) {
+    writeBytes(buffer, utils.uintToBytesLE(version, 4));
+    writeBytes(buffer, utils.uintToBytesLE(relayUntil.millisecondsSinceEpoch ~/ 1000, 8));
+    writeBytes(buffer, utils.uintToBytesLE(expiration.millisecondsSinceEpoch ~/ 1000, 8));
+    writeBytes(buffer, utils.uintToBytesLE(id, 4));
+    writeBytes(buffer, utils.uintToBytesLE(cancel, 4));
     //COMPLETE how to encode the sets?
-      ..addAll(utils.uintToBytesLE(minVer, 4))
-      ..addAll(utils.uintToBytesLE(maxVer, 4))
+    writeBytes(buffer, utils.uintToBytesLE(minVer, 4));
+    writeBytes(buffer, utils.uintToBytesLE(maxVer, 4));
     //another set
-      ..addAll(utils.uintToBytesLE(priority, 4))
-      ..addAll(new VarStr(comment).serialize())
-      ..addAll(new VarStr(statusBar).serialize())
-      ..addAll(new VarStr(reserved).serialize());
-    return new Uint8List.fromList(result);
+    writeBytes(buffer, utils.uintToBytesLE(priority, 4));
+    writeVarStr(buffer, comment);
+    writeVarStr(buffer, statusBar);
+    writeVarStr(buffer, reserved);
   }
 }
 

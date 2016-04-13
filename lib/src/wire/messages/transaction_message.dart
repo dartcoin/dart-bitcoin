@@ -1,34 +1,25 @@
-part of dartcoin.core;
+part of dartcoin.wire;
 
 class TransactionMessage extends Message {
-  
-  Transaction _tx;
-  
-  TransactionMessage(Transaction tx, [NetworkParameters params]) : super("tx", params != null ? params : tx.params) {
-    if(tx == null)
-      throw new ArgumentError("tx should not be null");
-    _tx = tx;
-    _tx._parent = this;
-  }
-  
-  // required for serialization
-  TransactionMessage._newInstance() : super("tx", null);
-  
-  factory TransactionMessage.deserialize(Uint8List bytes, {int length, bool lazy, bool retain, NetworkParameters params, int protocolVersion}) => 
-          new BitcoinSerialization.deserialize(new TransactionMessage._newInstance(), bytes, length: length, lazy: lazy, retain: retain, params: params, protocolVersion: protocolVersion);
-  
-  Transaction get transaction {
-    _needInstance();
-    return _tx;
-  }
-  
+
   @override
-  void _deserializePayload() {
-    _tx = _readObject(new Transaction._newInstance());
+  String get command => Message.CMD_TX;
+  
+  Transaction transaction;
+  
+  TransactionMessage(Transaction this.transaction) {
+  }
+  
+  /// Create an empty instance.
+  TransactionMessage.empty();
+
+  @override
+  void bitcoinDeserialize(bytes.Reader reader, int pver) {
+    transaction = readObject(reader, new Transaction.empty(), pver);
   }
 
   @override
-  void _serializePayload(ByteSink sink) {
-    _writeObject(sink, _tx);
+  void bitcoinSerialize(bytes.Buffer buffer, int pver) {
+    writeObject(buffer, transaction, pver);
   }
 }

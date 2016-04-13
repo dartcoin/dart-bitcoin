@@ -1,6 +1,6 @@
-wpart of dartcoin.core;
+part of dartcoin.core;
 
-class Block extends Object with BitcoinSerialization {
+class Block extends BitcoinSerializable {
   
   static const int BLOCK_VERSION = 1;
   
@@ -24,177 +24,53 @@ class Block extends Object with BitcoinSerialization {
   /** A value for difficultyTarget (nBits) that allows half of all possible hash solutions. Used in unit testing. */
   static const int EASIEST_DIFFICULTY_TARGET = 0x207fFFFF;
   
-  Hash256 _hash;
+  Hash256 hash;
   
-  int _version;
-  Hash256 _previous;
-  Hash256 _merkle;
-  int _timestamp;
-  int _difficultyTarget;
-  int _nonce;
-  List<Transaction> _txs;
+  int version;
+  Hash256 previousBlock;
+  Hash256 merkleRoot;
+  int timestamp;
+  int difficultyTarget;
+  int nonce;
+  List<Transaction> transactions;
   
-  int _height;
+  int height;
   
-  Block({ Hash256 hash,
-        Hash256 previousBlock,
-        Hash256 merkleRoot,
-          int timestamp,
-          int difficultyTarget,
-          int nonce: 0,
-          List<Transaction> transactions,
-          int height,
-          int version: BLOCK_VERSION,
-          NetworkParameters params: NetworkParameters.MAIN_NET}) {
-    _hash = hash;
-    _previous = previousBlock != null ? previousBlock : Hash256.ZERO_HASH;
-    _merkle = merkleRoot;
-    _timestamp = timestamp != null ? timestamp : new DateTime.now().millisecondsSinceEpoch ~/ 1000;
-    _difficultyTarget = difficultyTarget != null ? difficultyTarget : EASIEST_DIFFICULTY_TARGET;
-    _nonce = nonce;
-    _txs = transactions != null ? transactions : new List<Transaction>();
-    _height = height;
-    _version = version;
-    this.params = params;
-  }
-  
-  // required for serialization
-  Block._newInstance();
-  
-  /**
-   * Deserialize a block.
-   * 
-   * Please note that when this block represents only a header, 
-   * you must indicate the correct [length] or provide a [bytes] of correct length.
-   * You can also use the [deserializeHeader()] constructor for deserializing headers. 
-   */
-  factory Block.deserialize(Uint8List bytes, {int length, bool lazy, bool retain, NetworkParameters params, BitcoinSerialization parent}) =>  
-          new BitcoinSerialization.deserialize(new Block._newInstance(), bytes, length: length, lazy: lazy, retain: retain, params: params, parent: parent);
-  
-  /**
-   * Deserialize a block header.
-   */
-  factory Block.deserializeHeader(Uint8List bytes, {bool lazy, bool retain, NetworkParameters params, BitcoinSerialization parent}) =>  
-          new BitcoinSerialization.deserialize(new Block._newInstance(), bytes, length: HEADER_SIZE, lazy: lazy, retain: retain, params: params, parent: parent);
-  
-  int get version {
-    _needInstance();
-    return _version;
+  Block({ Hash256 this.hash,
+        Hash256 this.previousBlock,
+        Hash256 this.merkleRoot,
+          int this.timestamp,
+          int this.difficultyTarget,
+          int this.nonce: 0,
+          List<Transaction> this.transactions,
+          int this.height,
+          int this.version: BLOCK_VERSION}) {
+    previousBlock = previousBlock ?? Hash256.ZERO_HASH;
+    timestamp = timestamp ?? new DateTime.now().millisecondsSinceEpoch ~/ 1000;
+    difficultyTarget = difficultyTarget ?? EASIEST_DIFFICULTY_TARGET;
+    transactions = transactions ?? new List<Transaction>();
   }
 
-  Hash256 get hash {
-    if(_hash != null)
-      return _hash;
-    _hash = _calculateHash();
-    return _hash;
+  /// Create an empty instance.
+  Block.empty();
+
+  Hash256 calculateHash() {
+    var buffer = new bytes.Buffer();
+    _serializeHeader(buffer);
+    Uint8List checksum = crypto.doubleDigest(buffer.toUint8List());
+    return new Hash256(utils.reverseBytes(checksum));
   }
 
-  Hash256 _calculateHash() {
-    if(isCached)
-      return new Hash256(utils.reverseBytes(crypto.doubleDigest(new Uint8List.view(_serializationBuffer, _serializationOffset, HEADER_SIZE))));
-    return new Hash256(utils.reverseBytes(crypto.doubleDigest(_headerBytes)));
-  }
-
-  Uint8List get _headerBytes {
-    _needInstance();
-    ByteSink sink = new ByteSink(HEADER_SIZE);
-    _serializeHeader(sink);
-    return sink.toUint8List();
-  }
-
-  Hash256 get previousBlock {
-    _needInstance();
-    return _previous;
-  }
-  
-  void set previousBlock(Hash256 previousBlock) {
-    _needInstance(true);
-    _previous = previousBlock;
-  }
-
-  Hash256 get merkleRoot {
-    _needInstance();
-    if(_merkle == null) {
-      _needInstance(true);
-      _merkle = _calculateMerkleRoot();
-    }
-    return _merkle;
-  }
-  
-  void set merkleRoot(Hash256 merkleRoot) {
-    _needInstance(true);
-    _merkle = merkleRoot;
-  }
-  
-  int get timestamp {
-    _needInstance();
-    return _timestamp;
-  }
-  
-  void set timestamp(int timestamp) {
-    _needInstance(true);
-    _timestamp = timestamp;
-  }
-  
   DateTime get time => new DateTime.fromMillisecondsSinceEpoch(timestamp * 1000);
   
   void set time(DateTime time) {
     timestamp = time.millisecondsSinceEpoch ~/ 1000;
   }
   
-  /**
-   * The difficulty target. 
-   * 
-   * This is the same as the [bits] attribute; 
-   */
-  int get difficultyTarget {
-    _needInstance();
-    return _difficultyTarget;
-  }
-  
   BigInteger get difficultyTargetAsInteger => utils.decodeCompactBits(difficultyTarget);
   
-  void set difficultyTarget(int difficultyTarget) {
-    _needInstance(true);
-    _difficultyTarget = difficultyTarget;
-  }
-  
-  int get nonce {
-    _needInstance();
-    return _nonce;
-  }
-  
-  void set nonce(int nonce) {
-    _needInstance(true);
-    _nonce = nonce;
-  }
-  
-  int get height {
-    return _height;
-  }
-  
-  void set height(int height) {
-    _height = height;
-  }
-  
-  List<Transaction> get transactions {
-    _needInstance();
-    return _txs == null ? null : new UnmodifiableListView(_txs);
-  }
-  
-  void set transactions(List<Transaction> transactions) {
-    _needInstance(true);
-    for(Transaction tx in transactions)
-      tx._parent = this;
-    _txs = transactions;
-    _merkle = null;
-  }
-  
   bool get isHeader {
-    if(_serializationLength == HEADER_SIZE)
-      return true;
-    _needInstance();
-    return _txs == null || _txs.isEmpty;
+    return transactions == null || transactions.isEmpty;
   }
 
   /**
@@ -213,55 +89,43 @@ class Block extends Object with BitcoinSerialization {
    */
   BigInteger get work => _LARGEST_HASH / (difficultyTargetAsInteger + BigInteger.ONE);
   
-  Block cloneAsHeader() {
-    if(isCached) {
-      Uint8List headerBytes = serialize().sublist(0, HEADER_SIZE);
-      Uint8List cloneBytes = new Uint8List(HEADER_SIZE + 1);
-      utils.arrayCopy(headerBytes, 0, cloneBytes, 0, HEADER_SIZE);
-      return new Block.deserialize(cloneBytes, length: HEADER_SIZE + 1);
-    }
-    _needInstance(true);
-    Block b = new Block(
-        hash: hash, 
-        previousBlock: _previous,
-        merkleRoot: _merkle,
-        timestamp: _timestamp,
-        difficultyTarget: _difficultyTarget,
-        nonce: _nonce);
-    b._serializationLength = HEADER_SIZE + 1;
-    return b;
-  }
+  Block cloneAsHeader() => new Block(
+      hash: hash,
+      previousBlock: previousBlock,
+      merkleRoot: merkleRoot,
+      timestamp: timestamp,
+      difficultyTarget: difficultyTarget,
+      nonce: nonce);
 
   /** 
    * Adds a transaction to this block, with or without checking the sanity of doing so. 
    */
   void addTransaction(Transaction tx, [bool runSanityChecks = true]) {
-    _needInstance(true);
-    if (_txs == null) {
-      _txs = new List<Transaction>();
+    if (transactions == null) {
+      transactions = new List<Transaction>();
     }
-    tx._parent = this;
     if (runSanityChecks && transactions.length == 0 && !tx.isCoinbase)
       throw new Exception("Attempted to add a non-coinbase transaction as the first transaction: $tx");
     else if (runSanityChecks && transactions.length > 0 && tx.isCoinbase)
       throw new Exception("Attempted to add a coinbase transaction when there already is one: $tx");
-    _txs.add(tx);
+    transactions.add(tx);
     // Force a recalculation next time the values are needed.
-    _merkle = null;
+    merkleRoot = null;
   }
 
-  Hash256 _calculateMerkleRoot() {
-    _needInstance(true);
+  Hash256 calculateMerkleRoot() {
     // first add all tx hashes to the tree
     List<Uint8List> tree = new List<Uint8List>();
-    for(Transaction tx in _txs) {
+    for(Transaction tx in transactions) {
       tree.add(tx.hash.asBytes());
     }
     // then complete the tree
     _buildMerkleTree(tree);
-    return new Hash256(tree.last);
+    merkleRoot = new Hash256(tree.last);
+    return merkleRoot;
   }
-  
+
+  //TODO do this somewhere else
   static List<Uint8List> _buildMerkleTree(List<Uint8List> tree) {
     // The Merkle root is based on a tree of hashes calculated from the transactions:
     //
@@ -275,7 +139,7 @@ class Block extends Object with BitcoinSerialization {
     // entry is a hash.
     //
     // The hashing algorithm is double SHA-256. The leaves are a hash of the serialized contents of the transaction.
-    // The interior nodes are hashes of the concenation of the two child hashes.
+    // The interior nodes are hashes of the concatenation of the two child hashes.
     //
     // This structure allows the creation of proof that a transaction was included into a block without having to
     // provide the full block contents. Instead, you can provide only a Merkle branch. For example to prove tx2 was
@@ -337,10 +201,9 @@ class Block extends Object with BitcoinSerialization {
   }
 
   void _checkTimestamp() {
-    _needInstance();
     // Allow injection of a fake clock to allow unit testing.
     int currentTime = new DateTime.now().millisecondsSinceEpoch ~/ 1000;
-    if(_timestamp > currentTime + ALLOWED_TIME_DRIFT)
+    if(timestamp > currentTime + ALLOWED_TIME_DRIFT)
       throw new VerificationException("Block too far in future");
   }
 
@@ -348,26 +211,26 @@ class Block extends Object with BitcoinSerialization {
     // Check there aren't too many signature verifications in the block. This is an anti-DoS measure, see the
     // comments for MAX_BLOCK_SIGOPS.
     int sigOps = 0;
-    for(Transaction tx in _txs)
+    for(Transaction tx in transactions)
       sigOps += tx.sigOpCount;
     if(sigOps > MAX_BLOCK_SIGOPS)
       throw new VerificationException("Block had too many Signature Operations");
   }
 
   void _checkMerkleRoot() {
-    Hash256 calculatedRoot = _calculateMerkleRoot();
-    if (calculatedRoot != _merkle) {
-      throw new VerificationException("Merkle hashes do not match: $calculatedRoot vs $_merkle");
+    Hash256 calculatedRoot = calculateMerkleRoot();
+    if (calculatedRoot != merkleRoot) {
+      throw new VerificationException("Merkle hashes do not match: $calculatedRoot vs $merkleRoot");
     }
   }
 
   void _checkTransactions() {
     // The first transaction in a block must always be a coinbase transaction.
-    if (!_txs[0].isCoinbase)
+    if (!transactions[0].isCoinbase)
       throw new VerificationException("First tx is not coinbase");
     // The rest must not be.
     for (int i = 1; i < transactions.length; i++) {
-      if (_txs[i].isCoinbase)
+      if (transactions[i].isCoinbase)
         throw new VerificationException("TX $i is coinbase when it should not be.");
     }
   }
@@ -386,7 +249,6 @@ class Block extends Object with BitcoinSerialization {
     //
     // Firstly we need to ensure this block does in fact represent real work done. If the difficulty is high
     // enough, it's probably been done by the network.
-    _needInstance();
     _checkProofOfWork(true);
     if(checkTimestamp)
       _checkTimestamp();
@@ -402,21 +264,21 @@ class Block extends Object with BitcoinSerialization {
     // an invalid block, but if we didn't validate this then an untrusted man-in-the-middle could obtain the next
     // valid block from the network and simply replace the transactions in it with their own fictional
     // transactions that reference spent or non-existant inputs.
-    if(_txs == null || _txs.isEmpty)
+    if(transactions == null || transactions.isEmpty)
       throw new VerificationException("Block had no transactions");
-    _needInstance();
     if(this.serializationLength > MAX_BLOCK_SIZE)
       throw new VerificationException("Block larger than MAX_BLOCK_SIZE");
     _checkTransactions();
     _checkMerkleRoot();
     _checkSigOps();
-    for(Transaction tx in _txs)
+    for(Transaction tx in transactions)
       tx.verify();
   }
 
   /**
    * Verifies both the header and that the transactions hash to the merkle root.
    */
+  //TODO verification should not happen inside block object
   void verify([bool checkTimestamp = false]) {
     verifyHeader(checkTimestamp);
     verifyTransactions();
@@ -430,14 +292,12 @@ class Block extends Object with BitcoinSerialization {
    * extraNonce.</p>
    */
   void solve() {
-    _needInstance();
     while(true) {
       // Is our proof of work valid yet?
       if(_checkProofOfWork(false))
         return;
       // No, so increment the nonce and try again.
-      _needInstance(true);
-      _nonce++;
+      nonce++;
     }
   }
   
@@ -450,72 +310,64 @@ class Block extends Object with BitcoinSerialization {
   
   @override
   int get hashCode => hash.hashCode;
-  
-  void _serializeHeader(ByteSink sink) {
-    _writeUintLE(sink, _version);
-    _writeSHA256(sink, _previous);
-    _writeSHA256(sink, merkleRoot);
-    _writeUintLE(sink, _timestamp);
-    _writeUintLE(sink, _difficultyTarget);
-    _writeUintLE(sink, _nonce);
-  }
 
-  @override
-  void _serialize(ByteSink sink) {
-    _serializeHeader(sink);
-    if(isHeader)
-      sink.add(0);
-    else {
-      _writeVarInt(sink, _txs.length);
-      for(Transaction tx in _txs)
-        _writeObject(sink, tx);
+  void bitcoinSerialize(bytes.Buffer buffer, int pver) {
+    _serializeHeader(buffer);
+    if(isHeader) {
+      buffer.add([0]);
+    } else {
+      writeVarInt(buffer, transactions.length);
+      for(Transaction tx in transactions)
+        writeObject(buffer, tx, pver);
     }
   }
 
-  void _deserializeHeader() {
-    _version = _readUintLE();
-    _previous = _readSHA256();
-    _merkle = _readSHA256();
-    _timestamp = _readUintLE();
-    _difficultyTarget = _readUintLE();
-    _nonce = _readUintLE();
+  /**
+   * Deserialize a block.
+   *
+   * Please note that when this block represents only a header,
+   * you must indicate the correct [length] or provide a [toUint8List] of correct length.
+   * You can also use the [deserializeHeader()] constructor for deserializing headers.
+   */
+  void bitcoinDeserialize(bytes.Reader reader, int pver) {
+    // parse header
+    _deserializeHeader(reader);
+    //TODO find more elegant solution to deserialize headers only
+    try {
+      // parse transactions
+      _deserializeTransactions(reader, pver);
+    } on SerializationException {
+      //TODO wrong assumption that any SerializationException is for too few bytes
+      return;
+    }
   }
 
-  void _deserializeTransactions() {
+  void _serializeHeader(bytes.Buffer buffer) {
+    writeUintLE(buffer, version);
+    writeSHA256(buffer, previousBlock);
+    writeSHA256(buffer, merkleRoot);
+    writeUintLE(buffer, timestamp);
+    writeUintLE(buffer, difficultyTarget);
+    writeUintLE(buffer, nonce);
+  }
+
+  void _deserializeHeader(bytes.Reader reader) {
+    version = readUintLE(reader);
+    previousBlock = readSHA256(reader);
+    merkleRoot = readSHA256(reader);
+    timestamp = readUintLE(reader);
+    difficultyTarget = readUintLE(reader);
+    nonce = readUintLE(reader);
+  }
+
+  void _deserializeTransactions(bytes.Reader reader, int pver) {
     List<Transaction> txs = new List<Transaction>();
-    int nbTx = _readVarInt();
+    int nbTx = readVarInt(reader);
     for(int i = 0 ; i < nbTx ; i++) {
-      Transaction tx = _readObject(new Transaction._newInstance());
+      Transaction tx = readObject(reader, new Transaction.empty(), pver);
       txs.add(tx);
     }
-    _txs = txs.length > 0 ? txs : null;
-  }
-
-  @override
-  void _deserialize() {
-    // parse header
-    _deserializeHeader();
-    // check if this block is only a header or a full block
-    if(_serializationLength == HEADER_SIZE || (_serializationBuffer.lengthInBytes - _serializationOffset) == HEADER_SIZE)
-      return;
-    // parse transactions
-    _deserializeTransactions();
-  }
-  
-  @override
-  void   _deserializeLazy() {
-    _serializationCursor += HEADER_SIZE;
-    // transactions
-    int nbTx = _readVarInt();
-    for(int i = 0 ; i < nbTx ; i++)
-      Transaction tx = _readObject(new Transaction._newInstance(), lazy: true);
-  }
-  
-  @override
-  void _needInstance([bool clearCache = false]) {
-    super._needInstance(clearCache);
-    if(clearCache)
-      _hash = null;
+    transactions = txs.length > 0 ? txs : null;
   }
 }
 

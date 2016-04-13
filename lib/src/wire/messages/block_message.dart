@@ -1,34 +1,24 @@
-part of dartcoin.core;
+part of dartcoin.wire;
 
 class BlockMessage extends Message {
-  
-  Block _block;
-  
-  BlockMessage(Block block, [NetworkParameters params]) : super("block", params != null ? params : block.params) {
-    if(block == null)
-      throw new ArgumentError("block should not be null");
-    _block = block;
-    _block._parent = this;
-  }
-  
-  // required for serialization
-  BlockMessage._newInstance() : super("block", null);
-  
-  factory BlockMessage.deserialize(Uint8List bytes, {int length, bool lazy, bool retain, NetworkParameters params, int protocolVersion}) => 
-          new BitcoinSerialization.deserialize(new BlockMessage._newInstance(), bytes, length: length, lazy: lazy, retain: retain, params: params, protocolVersion: protocolVersion);
-  
-  Block get block {
-    _needInstance();
-    return _block;
-  }
-  
+
   @override
-  void _deserializePayload() {
-    _block = _readObject(new Block._newInstance());
+  String get command => Message.CMD_BLOCK;
+  
+  Block block;
+  
+  BlockMessage(Block this.block);
+  
+  /// Create an empty instance.
+  BlockMessage.empty();
+
+  @override
+  void bitcoinDeserialize(bytes.Reader reader, int pver) {
+    block = readObject(reader, new Block.empty(), pver) as Block;
   }
 
   @override
-  void _serializePayload(ByteSink sink) {
-    _writeObject(sink, _block);
+  void bitcoinSerialize(bytes.Buffer buffer, int pver) {
+    writeObject(buffer, block, pver);
   }
 }

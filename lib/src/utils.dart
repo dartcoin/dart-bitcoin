@@ -6,8 +6,11 @@ import "dart:typed_data";
 
 import "package:bignum/bignum.dart";
 import "package:base58check/base58check.dart";
+import "package:bytes/bytes.dart" as bytes;
 import "package:collection/equality.dart";
 
+import "package:dartcoin/src/wire/serialization.dart";
+import "package:dartcoin/src/crypto.dart" as crypto;
 
 export "package:base58check/base58check.dart" show Base58CheckPayload;
 
@@ -44,7 +47,7 @@ Uint8List toBytes(List<int> bytes, [int start = 0, int end = -1]) {
 const String _BASE58_ALPHABET =
     "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
 Base58CheckCodec _base58CheckCodec =
-    new Base58CheckCodec(_BASE58_ALPHABET, singleDigest);
+    new Base58CheckCodec(_BASE58_ALPHABET, crypto.singleDigest);
 
 String encodeBase58Check(int version, List<int> bytes) =>
     _base58CheckCodec.encode(new Base58CheckPayload(version, bytes));
@@ -109,14 +112,13 @@ final Uint8List BITCOIN_SIGNED_MESSAGE_HEADER_BYTES = new Uint8List.fromList(new
  * <tt><p>[24] "Bitcoin Signed Message:\n" [message.length as a varint] message</p></tt>
  */
 Uint8List formatMessageForSigning(String message) {
-  List<int> result = new List<int>();
-  result.add(BITCOIN_SIGNED_MESSAGE_HEADER_BYTES.length);
-  result.addAll(BITCOIN_SIGNED_MESSAGE_HEADER_BYTES);
-  Uint8List messageBytes = new Uint8List.fromList(new Utf8Encoder().convert(message));
-  VarInt size = new VarInt(messageBytes.length);
-  result.addAll(size.serialize());
-  result.addAll(messageBytes);
-  return new Uint8List.fromList(result);
+  var buffer = new bytes.Buffer();
+  buffer.addByte(BITCOIN_SIGNED_MESSAGE_HEADER_BYTES.length);
+  buffer.add(BITCOIN_SIGNED_MESSAGE_HEADER_BYTES);
+  Uint8List messageBytes = new Utf8Encoder().convert(message);
+  writeVarInt(buffer, messageBytes.length);
+  buffer.add(messageBytes);
+  return buffer.asBytes();
 }
 
 /**

@@ -2,20 +2,21 @@ part of dartcoin.core;
 
 class KeyPair {
 
+  //TODO remove once tested
   // EC curve definition "secp256k1"
-  static final _ec_q = new BigInteger("fffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2f", 16);
-  static final _ec_a = new BigInteger("0", 16);
-  static final _ec_b = new BigInteger("7", 16);
-  static final _ec_g = new BigInteger("0479be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8", 16);
-  static final _ec_n = new BigInteger("fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141", 16);
-  static final _ec_h = new BigInteger("1", 16);
+//  static final _ec_q = new BigInteger("fffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2f", 16);
+//  static final _ec_a = new BigInteger("0", 16);
+//  static final _ec_b = new BigInteger("7", 16);
+//  static final _ec_g = new BigInteger("0479be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8", 16);
+//  static final _ec_n = new BigInteger("fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141", 16);
+//  static final _ec_h = new BigInteger("1", 16);
+//  static final ECCurve _EC_CURVE = new fp.ECCurve(_ec_q, _ec_a, _ec_b);
+//  static final ECDomainParameters EC_PARAMS = new ECDomainParametersImpl(
+//      "secp256k1", _EC_CURVE, _EC_CURVE.decodePoint(_ec_g.toByteArray()), _ec_n, _ec_h, null);
 
-  static final ECCurve _EC_CURVE = new fp.ECCurve(_ec_q, _ec_a, _ec_b);
+  static final ECDomainParameters EC_PARAMS = new ECCurve_secp256k1();
 
-  static final ECDomainParameters EC_PARAMS = new ECDomainParametersImpl(
-      "secp256k1", _EC_CURVE, _EC_CURVE.decodePoint(_ec_g.toByteArray()), _ec_n, _ec_h, null);
-
-  static final BigInteger HALF_CURVE_ORDER = _ec_n.shiftRight(1);
+  static final BigInteger HALF_CURVE_ORDER = EC_PARAMS.n.shiftRight(1);
 
   // instance variables
   BigInteger _priv;
@@ -73,12 +74,15 @@ class KeyPair {
    */
   factory KeyPair.generate([Uint8List entropy]) {
     // ensure that at least 50 bytes of entropy are available
-    Random rand = new Random();
+    Random rand = new Random();//TODO make real entropy
     BigInteger pk;
     do {
-      entropy = new Uint8List.fromList(new List<int>()
-        ..addAll(entropy != null ? entropy : [])
-        ..addAll(new List.filled(50, 0).map((e) => rand.nextInt(255))));
+      var buffer = new bytes.Buffer();
+      buffer.add(entropy ?? []);
+      if (buffer.length < 50) {
+        buffer.add(new List.generate(50 - buffer.length,
+            (_) => rand.nextInt(255)));
+      }
       entropy = crypto.doubleDigest(entropy);
       pk = new BigInteger.fromBytes(1, entropy.sublist(0, EC_PARAMS.n.bitLength() ~/ 8));
     } while (pk == BigInteger.ZERO || pk >= EC_PARAMS.n);
@@ -390,7 +394,7 @@ class KeyPair {
     //        do another iteration of Step 1.
     //
     // More concisely, what these points mean is to use X as a compressed public key.
-    fp.ECCurve curve = _EC_CURVE;
+    fp.ECCurve curve = EC_PARAMS.curve;
 
     BigInteger prime = curve.q;
     // Bouncy Castle is not consistent about the letter it uses for the prime.
@@ -537,7 +541,7 @@ class KeyPair {
   /** Decompress a compressed public key (x co-ord and low-bit of y-coord). */
   static ECPoint _decompressKey(BigInteger xBN, bool yBit) {
     // This code is adapted from Bouncy Castle ECCurve.Fp.decodePoint(), but it wasn't easily re-used.
-    fp.ECCurve curve = _EC_CURVE;
+    fp.ECCurve curve = EC_PARAMS.curve;
     ECFieldElement x = new fp.ECFieldElement(curve.q, xBN);
     ECFieldElement alpha = x * (x.square() + curve.a) + curve.b;
     ECFieldElement beta = alpha.sqrt();

@@ -1,92 +1,39 @@
 part of dartcoin.core;
 
-class Transaction extends Object with BitcoinSerialization {
+class Transaction extends BitcoinSerializable {
   
   static const int TRANSACTION_VERSION = 1;
 
-  Hash256 _hash;
+  Hash256 hash;
   
-  int _version;
-  List<TransactionInput> _inputs;
-  List<TransactionOutput> _outputs;
-  int _lockTime;
+  int version;
+  List<TransactionInput> inputs;
+  List<TransactionOutput> outputs;
+  int lockTime;
   
-  Transaction({ Hash256 txid,
-                List<TransactionInput> inputs, 
-                List<TransactionOutput> outputs,
-                int lockTime: 0,
-                BitcoinSerialization parent,
-                int version: TRANSACTION_VERSION,
-                NetworkParameters params: NetworkParameters.MAIN_NET}) {
-    _hash = txid;
-    _inputs = inputs != null ? inputs : new List<TransactionInput>();
-    _outputs = outputs != null ? outputs : new List<TransactionOutput>();
-    _lockTime = lockTime;
-    _parent = parent;
-    _version = version;
-    this.params = params;
+  Transaction({ Hash256 this.hash,
+                List<TransactionInput> this.inputs,
+                List<TransactionOutput> this.outputs,
+                int this.lockTime: 0,
+                int this.version: TRANSACTION_VERSION}) {
+    inputs = inputs ?? new List<TransactionInput>();
+    outputs = outputs ?? new List<TransactionOutput>();
   }
   
-  // required for serialization
-  Transaction._newInstance();
-  
-  factory Transaction.deserialize(Uint8List bytes, {int length, bool lazy, bool retain, NetworkParameters params, BitcoinSerialization parent}) => 
-        new BitcoinSerialization.deserialize(new Transaction._newInstance(), bytes, length: length, lazy: lazy, retain: retain, params: params, parent: parent);
-  
-  int get version {
-    _needInstance();
-    return _version;
-  }
-  
-  List<TransactionInput> get inputs {
-    _needInstance();
-    return new UnmodifiableListView(_inputs);
-  }
-  
-  void set inputs(List<TransactionInput> inputs) {
-    _needInstance(true);
-    for(TransactionInput input in inputs)
-      input._parent = this;
-    _inputs = inputs;
-  }
-  
-  List<TransactionOutput> get outputs {
-    _needInstance();
-    return new UnmodifiableListView(_outputs);
-  }
-  
-  void set outputs(List<TransactionOutput> outputs) {
-    _needInstance(true);
-    for(TransactionOutput output in outputs)
-      output._parent = this;
-    _outputs = outputs;
-  }
-  
-  int get lockTime {
-    _needInstance();
-    return _lockTime;
-  }
-  
-  void set lockTime(int lockTime) {
-    _needInstance(true);
-    _lockTime = lockTime;
-  }
+  /// Create an empty instance.
+  Transaction.empty();
 
-  Hash256 get hash {
-    if(_hash == null) {
-      _hash = _calculateHash();
-    }
-    return _hash;
-  }
-
-  Hash256 _calculateHash() {
-    return new Hash256(utils.reverseBytes(crypto.doubleDigest(serialize())));
+  Hash256 calculateHash() {
+    var buffer = new bytes.Buffer();
+    bitcoinSerialize(buffer, 0);//TODO pver here?
+    Uint8List checksum = crypto.doubleDigest(buffer.asBytes());
+    hash = new Hash256(utils.reverseBytes(checksum));
+    return hash;
   }
 
   Hash256 get txid => hash;
   
   int get amount {
-    _needInstance();
     int totalAmount = 0;
     try {
       for(TransactionInput input in inputs) {
@@ -101,7 +48,6 @@ class Transaction extends Object with BitcoinSerialization {
   }
   
   int get fee {
-    _needInstance();
     int totalIn = amount;
     int totalOut = 0;
     try {
@@ -109,14 +55,13 @@ class Transaction extends Object with BitcoinSerialization {
         totalOut += output.value;
       }
     }
-    on NoSuchMethodError catch(e) {
+    on NoSuchMethodError {
       throw new Exception("Not all outputs fully known. Unable to calculate fee.");
     }
     return totalIn - totalOut;
   }
   
   bool get isCoinbase {
-    _needInstance();
     return inputs.length == 1 && inputs[0].isCoinbase;
   }
 
@@ -124,35 +69,20 @@ class Transaction extends Object with BitcoinSerialization {
    * Gets the count of regular SigOps in this transactions
    */
   int get sigOpCount {
-    _needInstance();
     int sigOps = 0;
-    for (TransactionInput input in _inputs)
+    for (TransactionInput input in inputs)
       sigOps += input.scriptSig.sigOpCount;
-    for (TransactionOutput output in _outputs)
+    for (TransactionOutput output in outputs)
       sigOps += output.scriptPubKey.sigOpCount;
     return sigOps;
   }
-  
-  Block get parentBlock => _parent;
-  
-  void set parentBlock(Block parentBlock) {
-    _parent = parentBlock;
-  }
+
   
   /**
    * Adds a TransactionInput to this transaction and returns it.
-   * 
-   * An input can be a TransactionInput object, but it can also be created
-   * from a TransactionOutput object.
    */
-  TransactionInput addInput(dynamic input) {
-    if(input is! TransactionInput && input is! TransactionOutput) 
-      throw new ArgumentError("The input must be either a TransactionInput or TransactionOutput object.");
-    if(input is TransactionOutput)
-      input = new TransactionInput.fromOutput(input, parentTransaction: this, params: params);
-    _needInstance(true);
-    input._parent = this;
-    _inputs.add(input);
+  TransactionInput addInput(TransactionInput input) {
+    inputs.add(input);
     return input;
   }
 
@@ -164,14 +94,12 @@ class Transaction extends Object with BitcoinSerialization {
    *
    * @throws [ScriptException] if the [scriptPubKey] is not a pay to address or pay to pubkey script.
    */
-  TransactionInput addSignedInput(TransactionOutPoint prevOut, Script scriptPubKey, KeyPair sigKey,
+  void addSignedInput(TransactionOutPoint prevOut, Script scriptPubKey, KeyPair sigKey,
                                        [SigHash sigHash = SigHash.ALL, bool anyoneCanPay = false]) {
-    TransactionInput input = new TransactionInput(
-        outpoint: prevOut,  
-        params: params);
-    addInput(input); // this method calls _needInstance(true) for us
+    TransactionInput input = new TransactionInput(outpoint: prevOut);
+    addInput(input);
     int sigHashFlags = SigHash.sigHashFlagsValue(sigHash, anyoneCanPay);
-    Hash256 hash = hashForSignature(_inputs.length - 1, scriptPubKey, sigHashFlags);
+    Hash256 hash = hashForSignature(inputs.length - 1, scriptPubKey, sigHashFlags);
     ECDSASignature ecSig = sigKey.sign(hash);
     TransactionSignature txSig = new TransactionSignature(ecSig, mode: sigHash, anyoneCanPay: anyoneCanPay);
     if (PayToPubKeyOutputScript.matchesType(scriptPubKey))
@@ -180,29 +108,21 @@ class Transaction extends Object with BitcoinSerialization {
       input.scriptSig = new PayToPubKeyHashInputScript(txSig, sigKey);
     else
       throw new ScriptException("Don't know how to sign for this kind of scriptPubKey: $scriptPubKey");
-    return input;
   }
   
   void clearInputs() {
-    _needInstance(true);
-    _inputs.forEach((i) => i._parent = null);
-    _inputs.clear();
+    inputs = new List<TransactionInput>();
   }
   
   /**
-   * Adds the transaction output to this transaction and returns it.
+   * Adds the transaction output to this transaction.
    */
-  TransactionOutput addOutput(TransactionOutput output) {
-    _needInstance(true);
-    output._parent = this;
-    _outputs.add(output);
-    return output;
+  void addOutput(TransactionOutput output) {
+    outputs.add(output);
   }
   
   void clearOutputs() {
-    _needInstance(true);
-    _outputs.forEach((o) => o._parent = null);
-    _outputs.clear();
+    outputs = new List<TransactionOutput>();
   }
 
   /**
@@ -211,15 +131,15 @@ class Transaction extends Object with BitcoinSerialization {
    *
    * @throws VerificationException
    */
+  //TODO do this somewhere else
   void verify() {
-    _needInstance();
-    if(_inputs.length == 0 || _outputs.length == 0)
+    if(inputs.length == 0 || outputs.length == 0)
       throw new VerificationException("Transaction had no inputs or no outputs.");
     if(this.serializationLength > Block.MAX_BLOCK_SIZE)
       throw new VerificationException("Transaction larger than MAX_BLOCK_SIZE");
 
     int valueOut = 0;
-    for(TransactionOutput output in _outputs) {
+    for(TransactionOutput output in outputs) {
       if(output.value < 0)
         throw new VerificationException("Transaction output negative");
       valueOut += output.value;
@@ -228,10 +148,10 @@ class Transaction extends Object with BitcoinSerialization {
       throw new VerificationException("Total transaction output value greater than possible");
 
     if(isCoinbase) {
-      if(_inputs[0].scriptSig.bytes.length < 2 || _inputs[0].scriptSig.bytes.length > 100)
+      if(inputs[0].scriptSig.bytes.length < 2 || inputs[0].scriptSig.bytes.length > 100)
         throw new VerificationException("Coinbase script size out of range");
     } else {
-      for(TransactionInput input in _inputs)
+      for(TransactionInput input in inputs)
         if(input.isCoinbase)
           throw new VerificationException("Coinbase input as input in non-coinbase transaction");
     }
@@ -245,7 +165,7 @@ class Transaction extends Object with BitcoinSerialization {
   }
   
   @override
-  int get hashCode => hash.hashCode;
+  int get hashCode => (hash ?? calculateHash()).hashCode;
   
   /**
    * 
@@ -253,7 +173,6 @@ class Transaction extends Object with BitcoinSerialization {
    * The [connectedScript] parameter must be either of typr [Script] or [Uint8List].
    */
   Hash256 hashForSignature(int inputIndex, dynamic connectedScript, int sigHashFlags) {
-    _needInstance(true);
     // The SIGHASH flags are used in the design of contracts, please see this page for a further understanding of
     // the purposes of the code in this method:
     //
@@ -269,12 +188,12 @@ class Transaction extends Object with BitcoinSerialization {
     if(connectedScript is! Uint8List)
       throw new ArgumentError("The connectedScript parameter must be either of type Script or Uint8List.");
     
-    List<Script> inputScripts = new List<Script>(_inputs.length);
-    List<int> inputSequenceNumbers = new List<int>(_inputs.length);
-    for (int i = 0; i < _inputs.length; i++) {
-      inputScripts[i] = _inputs[i].scriptSig;
-      inputSequenceNumbers[i] = _inputs[i].sequence;
-      _inputs[i].scriptSig = Script.EMPTY_SCRIPT;
+    List<Script> inputScripts = new List<Script>(inputs.length);
+    List<int> inputSequenceNumbers = new List<int>(inputs.length);
+    for (int i = 0; i < inputs.length; i++) {
+      inputScripts[i] = inputs[i].scriptSig;
+      inputSequenceNumbers[i] = inputs[i].sequence;
+      inputs[i].scriptSig = Script.EMPTY_SCRIPT;
     }
 
     // This step has no purpose beyond being synchronized with the reference clients bugs. OP_CODESEPARATOR
@@ -289,21 +208,21 @@ class Transaction extends Object with BitcoinSerialization {
     // Set the input to the script of its output. Satoshi does this but the step has no obvious purpose as
     // the signature covers the hash of the prevout transaction which obviously includes the output script
     // already. Perhaps it felt safer to him in some way, or is another leftover from how the code was written.
-    TransactionInput input = _inputs[inputIndex];
+    TransactionInput input = inputs[inputIndex];
 
     input.scriptSig = new Script(connectedScript);
 
-    List<TransactionOutput> outputs = _outputs;
+    List<TransactionOutput> originalOutputs = outputs;
     if ((sigHashFlags & 0x1f) == (SigHash.NONE.value)) {
       // SIGHASH_NONE means no outputs are signed at all - the signature is effectively for a "blank cheque".
-      _outputs = new List<TransactionOutput>(0);
+      outputs = new List<TransactionOutput>(0);
       // The signature isn't broken by new versions of the transaction issued by other parties.
-      for (int i = 0; i < _inputs.length; i++)
+      for (int i = 0; i < inputs.length; i++)
         if (i != inputIndex)
-          _inputs[i]._sequence = 0;
+          inputs[i].sequence = 0;
     } else if ((sigHashFlags & 0x1f) == (SigHash.SINGLE.value)) {
       // SIGHASH_SINGLE means only sign the output at the same index as the input (ie, my output).
-      if (inputIndex >= _outputs.length) {
+      if (inputIndex >= outputs.length) {
         // The input index is beyond the number of outputs, it's a buggy signature made by a broken
         // Bitcoin implementation. The reference client also contains a bug in handling this case:
         // any transaction output that is signed in this case will result in both the signed output
@@ -312,35 +231,37 @@ class Transaction extends Object with BitcoinSerialization {
         // Put the transaction back to how we found it.
         //
         // TODO: (from bitcoinj) Only allow this to happen if we are checking a signature, not signing a transactions
-        for (int i = 0 ; i < _inputs.length ; i++) {
-          _inputs[i].scriptSig = inputScripts[i];
-          _inputs[i].sequence = inputSequenceNumbers[i];
+        for (int i = 0 ; i < inputs.length ; i++) {
+          inputs[i].scriptSig = inputScripts[i];
+          inputs[i].sequence = inputSequenceNumbers[i];
         }
-        _outputs = outputs;
+        outputs = originalOutputs;
         // Satoshis bug is that SignatureHash was supposed to return a hash and on this codepath it
         // actually returns the constant "1" to indicate an error, which is never checked for. Oops.
         return new Hash256("0100000000000000000000000000000000000000000000000000000000000000");
       }
       // In SIGHASH_SINGLE the outputs after the matching input index are deleted, and the outputs before
       // that position are "nulled out". Unintuitively, the value in a "null" transaction is set to -1.
-      _outputs = new List.from(_outputs.sublist(0, inputIndex + 1));
+      outputs = new List.from(outputs.sublist(0, inputIndex + 1));
       for (int i = 0; i < inputIndex; i++)
-        _outputs[i] = new TransactionOutput(value: -1, scriptPubKey: Script.EMPTY_SCRIPT, parent: this, params: params);
+        outputs[i] = new TransactionOutput(value: -1, scriptPubKey: Script.EMPTY_SCRIPT);
       // The signature isn't broken by new versions of the transaction issued by other parties.
-      for (int i = 0; i < _inputs.length; i++)
+      for (int i = 0; i < inputs.length; i++)
         if (i != inputIndex)
-          _inputs[i].sequence = 0;
+          inputs[i].sequence = 0;
     }
 
-    List<TransactionInput> inputs = _inputs;
+    List<TransactionInput> originalInputs = this.inputs;
     if ((sigHashFlags & SigHash.ANYONE_CAN_PAY) == SigHash.ANYONE_CAN_PAY) {
       // SIGHASH_ANYONECANPAY means the signature in the input is not broken by changes/additions/removals
       // of other inputs. For example, this is useful for building assurance contracts.
-      _inputs = [input];
+      inputs = [input];
     }
-    
+
+    var buffer = new bytes.Buffer();
+    bitcoinSerialize(buffer, 0);
     Uint8List toHash = new Uint8List.fromList(new List<int>()
-      ..addAll(serialize())
+      ..addAll(buffer.asBytes())
     // We also have to write a hash type (sigHashType is actually an unsigned char)
       ..add(0x000000ff & sigHashFlags));
     // Note that this is NOT reversed to ensure it will be signed correctly. If it were to be printed out
@@ -348,64 +269,39 @@ class Transaction extends Object with BitcoinSerialization {
     Hash256 hash = new Hash256(crypto.doubleDigest(toHash));
 
     // Put the transaction back to how we found it.
-    _needInstance(true); // uncache
-    _inputs = inputs;
-    for (int i = 0; i < inputs.length; i++) {
-      inputs[i].scriptSig = inputScripts[i];
-      inputs[i].sequence = inputSequenceNumbers[i];
+    this.inputs = originalInputs;
+    for (int i = 0; i < originalInputs.length; i++) {
+      originalInputs[i].scriptSig = inputScripts[i];
+      originalInputs[i].sequence = inputSequenceNumbers[i];
     }
-    _outputs = outputs;
+    outputs = originalOutputs;
     return hash;
   }
 
-  @override
-  void _serialize(ByteSink sink) {
-    _writeUintLE(sink, _version);
-    _writeVarInt(sink, _inputs.length);
-    for(TransactionInput input in _inputs)
-      _writeObject(sink, input);
-    _writeVarInt(sink, _outputs.length);
-    for(TransactionOutput output in _outputs)
-      _writeObject(sink, output);
-    _writeUintLE(sink, _lockTime);
+  void bitcoinSerialize(bytes.Buffer buffer, int pver) {
+    writeUintLE(buffer, version);
+    writeVarInt(buffer, inputs.length);
+    for(TransactionInput input in inputs)
+      writeObject(buffer, input, pver);
+    writeVarInt(buffer, outputs.length);
+    for(TransactionOutput output in outputs)
+      writeObject(buffer, output, pver);
+    writeUintLE(buffer, lockTime);
   }
 
-  @override
-  void _deserialize() {
-    _version = _readUintLE();
-    int nbInputs = _readVarInt();
-    _inputs = new List<TransactionInput>();
+  void bitcoinDeserialize(bytes.Reader reader, int pver) {
+    version = readUintLE(reader);
+    int nbInputs = readVarInt(reader);
+    inputs = new List<TransactionInput>();
     for(int i = 0 ; i < nbInputs ; i++) {
-      _inputs.add(_readObject(new TransactionInput._newInstance()));
+      inputs.add(readObject(reader, new TransactionInput.empty(), pver));
     }
-    int nbOutputs = _readVarInt();
-    _outputs = new List<TransactionOutput>();
+    int nbOutputs = readVarInt(reader);
+    outputs = new List<TransactionOutput>();
     for(int i = 0 ; i < nbOutputs ; i++) {
-      _outputs.add(_readObject(new TransactionOutput._newInstance()));
+      outputs.add(readObject(reader, new TransactionOutput.empty(), pver));
     }
-    _lockTime = _readUintLE();
-  }
-  
-  @override
-  void _deserializeLazy() {
-    _serializationCursor += 4;
-    // inputs
-    int nbInputs = _readVarInt();
-    for(int i = 0 ; i < nbInputs ; i++)
-      _readObject(new TransactionInput._newInstance(), lazy: true);
-    // outputs
-    int nbOutputs = _readVarInt();
-    for(int i = 0 ; i < nbOutputs ; i++)
-      _readObject(new TransactionOutput._newInstance(), lazy: true);
-    // locktime
-    _serializationCursor += 4;
-  }
-  
-  @override
-  void _needInstance([bool clearCache = false]) {
-    super._needInstance(clearCache);
-    if(clearCache)
-      _hash = null;
+    lockTime = readUintLE(reader);
   }
 }
 

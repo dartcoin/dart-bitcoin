@@ -1,20 +1,18 @@
-part of dartcoin.core;
+part of dartcoin.wire;
 
 class FilterClearMessage extends Message {
-  
-  FilterClearMessage([NetworkParameters params]) : super("filterclear", params) {
-    _serializationLength = Message.HEADER_LENGTH;
-  }
-  
-  // required for serialization
-  FilterClearMessage._newInstance() : super("filterclear", null);
-
-  factory FilterClearMessage.deserialize(Uint8List bytes, {int length, bool lazy, bool retain, NetworkParameters params, int protocolVersion}) => 
-      new BitcoinSerialization.deserialize(new FilterClearMessage._newInstance(), bytes, length: length, lazy: lazy, retain: retain, params: params, protocolVersion: protocolVersion);
-  
-  @override
-  void _deserializePayload() {}
 
   @override
-  void _serializePayload(ByteSink sink) {}
+  String get command => Message.CMD_FILTERCLEAR;
+  
+  FilterClearMessage();
+  
+  /// Create an empty instance.
+  FilterClearMessage.empty();
+  
+  @override
+  void bitcoinDeserialize(bytes.Reader reader, int pver) {}
+
+  @override
+  void bitcoinSerialize(bytes.Buffer buffer, int pver) {}
 }

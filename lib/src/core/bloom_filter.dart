@@ -11,12 +11,12 @@ part of dartcoin.core;
  * a useful privacy feature - if you have spare bandwidth the false positive rate can be increased so the remote peer
  * gets a noisy picture of what transactions are relevant to your wallet.</p>
  */
-class BloomFilter extends Object with BitcoinSerialization {
+class BloomFilter extends BitcoinSerializable {
     
-    Uint8List _data;
-    int _hashFuncs;
-    int _nTweak;
-    int _nFlags;
+    Uint8List data;
+    int hashFuncs;
+    int nTweak;
+    int nFlags;
 
     // Same value as the reference client
   // A filter of 20,000 items and a false positive rate of 0.1% or one of 10,000 items and 0.0001% is just under 36,000 bytes
@@ -62,77 +62,42 @@ class BloomFilter extends Object with BitcoinSerialization {
     //                        Size required for a given number of elements and false-positive rate
     int size = min(( -1  / (pow(log(2), 2)) * elements * log(falsePositiveRate)).floor(),
                         MAX_FILTER_SIZE * 8) ~/ 8;
-    _data = new Uint8List(size <= 0 ? 1 : size);
+    data = new Uint8List(size <= 0 ? 1 : size);
     // Optimal number of hash functions for a given filter size and element count.
-    _hashFuncs = min((_data.length * 8 / elements * log(2)).floor(), MAX_HASH_FUNCS);
-    _nTweak = randomNonce;
-    _nFlags = (0xff & updateFlag.index);
+    hashFuncs = min((data.length * 8 / elements * log(2)).floor(), MAX_HASH_FUNCS);
+    nTweak = randomNonce;
+    nFlags = (0xff & updateFlag.index);
   }
-  
-  // required for serialization
-  BloomFilter._newInstance();
 
-  /**
-   * Construct a BloomFilter by deserializing payloadBytes
-   */
-  factory BloomFilter.deserialize(Uint8List bytes, {int length, bool lazy, bool retain, NetworkParameters params, BitcoinSerialization parent}) => 
-          new BitcoinSerialization.deserialize(new BloomFilter._newInstance(), bytes, length: length, lazy: lazy, retain: retain, params: params, parent: parent);
-  
-  Uint8List get data {
-    _needInstance();
-    return _data;
-  }
-  
-  int get hashFuncs {
-    _needInstance();
-    return _hashFuncs;
-  }
-  
-  int get nTweak {
-    _needInstance();
-    return _nTweak;
-  }
-  
-  int get nFlags {
-    _needInstance();
-    return _nFlags;
-  }
+  /// Create an empty instance.
+  BloomFilter.empty();
   
   /**
    * Returns the theoretical false positive rate of this filter if were to contain the given number of elements.
    */
   double getFalsePositiveRate(int elements) {
-    _needInstance();
-    return pow(1 - pow(E, -1.0 * (_hashFuncs * elements) / (_data.length * 8)), _hashFuncs);
+    return pow(1 - pow(E, -1.0 * (hashFuncs * elements) / (data.length * 8)), hashFuncs);
   }
 
   @override
   String toString() => "Bloom Filter of size ${data.length} with $hashFuncs hash functions.";
 
-  @override
-  void _deserialize() {
-    _data = _readByteArray();
-    if (_data.length > MAX_FILTER_SIZE)
+  void bitcoinDeserialize(bytes.Reader reader, int pver) {
+    data = readByteArray(reader);
+    if (data.length > MAX_FILTER_SIZE)
       throw new SerializationException("Bloom filter out of size range.");
-    _hashFuncs = _readUintLE();
-    if (_hashFuncs > MAX_HASH_FUNCS)
+    hashFuncs = readUintLE(reader);
+    if (hashFuncs > MAX_HASH_FUNCS)
       throw new SerializationException("Bloom filter hash function count out of range");
-    _nTweak = _readUintLE();
-    _nFlags = _readUintLE(1);
+    nTweak = readUintLE(reader);
+    nFlags = readUintLE(reader, 1);
   }
 
-  @override
-  void _serialize(ByteSink sink) {
-    _writeByteArray(sink, _data);
-    _writeUintLE(sink, _hashFuncs);
-    _writeUintLE(sink, _nTweak);
-    sink.add(_nFlags);
-  }
-  
-  @override
-  void _deserializeLazy() {
-    int dataSize = _readVarInt();
-    _serializationCursor += dataSize + 4 + 4 + 1;
+  void bitcoinSerialize(bytes.Buffer buffer, int pver) {
+    writeByteArray(buffer, data);
+    writeUintLE(buffer, hashFuncs);
+    writeUintLE(buffer, nTweak);
+    writeBytes(buffer, [nFlags]);
   }
 
   static int _rotateLeft32 (int x, int r) {
@@ -140,10 +105,10 @@ class BloomFilter extends Object with BitcoinSerialization {
   }
   
   int _hash(int hashNum, Uint8List object) {
-    _needInstance();
     // The following is MurmurHash3 (x86_32), see http://code.google.com/p/smhasher/source/browse/trunk/MurmurHash3.cpp
     // implementation copied from BitcoinJ
-    int h1 = hashNum * 0xFBA4C795 + _nTweak;
+    //TODO implement in Pointy Castle?
+    int h1 = hashNum * 0xFBA4C795 + nTweak;
     final int c1 = 0xcc9e2d51;
     final int c2 = 0x1b873593;
 
@@ -182,7 +147,7 @@ class BloomFilter extends Object with BitcoinSerialization {
     h1 *= 0xc2b2ae35;
     h1 ^= utils.lsr(h1, 16);
     
-    return ((h1 & 0xFFFFFFFF) % (_data.length * 8));
+    return ((h1 & 0xFFFFFFFF) % (data.length * 8));
   }
   
   /**
@@ -190,9 +155,8 @@ class BloomFilter extends Object with BitcoinSerialization {
    * (either because it was inserted, or because we have a false-positive)
    */
   bool contains(Uint8List object) {
-    _needInstance();
-    for (int i = 0; i < _hashFuncs; i++) {
-      if (!utils.checkBitLE(_data, _hash(i, object)))
+    for (int i = 0; i < hashFuncs; i++) {
+      if (!utils.checkBitLE(data, _hash(i, object)))
         return false;
     }
     return true;
@@ -202,9 +166,9 @@ class BloomFilter extends Object with BitcoinSerialization {
    * Insert the given arbitrary data into the filter
    */
   void insert(Uint8List object) {
-    _needInstance(true);
-    for(int i = 0; i < _hashFuncs; i++)
-      utils.setBitLE(_data, _hash(i, object));
+    for(int i = 0; i < hashFuncs; i++) {
+      utils.setBitLE(data, _hash(i, object));
+    }
   }
 
   /**
@@ -215,8 +179,7 @@ class BloomFilter extends Object with BitcoinSerialization {
    * transaction instead of 100-300 bytes as per usual.
    */
   void setMatchAll() {
-    _needInstance(true);
-    _data = new Uint8List.fromList([0xff]);
+    data = new Uint8List.fromList([0xff]);
   }
 
   /**
@@ -224,18 +187,16 @@ class BloomFilter extends Object with BitcoinSerialization {
    * IllegalArgumentException will be thrown.
    */
   void merge(BloomFilter filter) {
-    _needInstance(true);
-    filter._needInstance();
     if (!this.matchesAll() && !filter.matchesAll()) {
-      if(!(filter._data.length == _data.length &&
-          filter._hashFuncs == _hashFuncs &&
-          filter._nTweak == _nTweak)) {
+      if(!(filter.data.length == data.length &&
+          filter.hashFuncs == hashFuncs &&
+          filter.nTweak == nTweak)) {
         throw new Exception("Invalid filter passed as parameter; read the docs.");
       }
-      for (int i = 0; i < _data.length; i++)
-        _data[i] |= filter._data[i];
+      for (int i = 0; i < data.length; i++)
+        data[i] |= filter.data[i];
     } else {
-      _data = new Uint8List.fromList([0xff]);
+      data = new Uint8List.fromList([0xff]);
     }
   }
 
@@ -244,10 +205,11 @@ class BloomFilter extends Object with BitcoinSerialization {
    * for when this can be a useful thing to do.
    */
   bool matchesAll() {
-    _needInstance();
-    for(int b in _data)
-      if(b != 0xff)
+    for(int b in data) {
+      if (b != 0xff) {
         return false;
+      }
+    }
     return true;
   }
   
@@ -255,17 +217,14 @@ class BloomFilter extends Object with BitcoinSerialization {
   bool operator ==(BloomFilter other) {
     if(other is! BloomFilter) return false;
     if(identical(this, other)) return true;
-    _needInstance();
-    other._needInstance();
-    return other._hashFuncs == this._hashFuncs &&
-           other._nTweak == this._nTweak &&
-           utils.equalLists(other._data, this._data);
+    return other.hashFuncs == this.hashFuncs &&
+           other.nTweak == this.nTweak &&
+           utils.equalLists(other.data, this.data);
   }
 
   @override
   int get hashCode {
-    _needInstance();
-    return _hashFuncs ^ _nTweak ^ utils.listHashCode(_data);
+    return hashFuncs ^ nTweak ^ utils.listHashCode(data);
   }
 }
 

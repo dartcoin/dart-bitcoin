@@ -1,35 +1,23 @@
 part of dartcoin.core;
 
-class TransactionInput extends Object with BitcoinSerialization {
+class TransactionInput extends BitcoinSerializable {
   
   static const int NO_SEQUENCE = 0xFFFFFFFF;
   
-  TransactionOutPoint _outpoint;
-  Script _scriptSig;
-  int _sequence;
+  TransactionOutPoint outpoint;
+  Script scriptSig;
+  int sequence;
   
   /**
    * Create a new [TransactionInput].
    * 
    * It's not possible to specify both the [output] parameter and the [outpoint] parameter. 
    */
-  TransactionInput({TransactionOutPoint outpoint,
-                    Script scriptSig,
-                    Transaction parent, 
-                    int sequence: NO_SEQUENCE,
-                    NetworkParameters params: NetworkParameters.MAIN_NET}) {
-    _outpoint = outpoint != null ? outpoint : new TransactionOutPoint(index: NO_SEQUENCE, params: params);
-    _scriptSig = scriptSig != null ? scriptSig : Script.EMPTY_SCRIPT;
-    _sequence = sequence;
-    _parent = parent;
-    this.params = params;
-  }
-  
-  factory TransactionInput.fromOutput(TransactionOutput output, 
-      {Transaction parentTransaction, NetworkParameters params}) {
-    TransactionOutPoint outpoint = new TransactionOutPoint(transaction: output.parentTransaction, 
-              index: output.index, params: output.params);
-    return new TransactionInput(outpoint: outpoint, parent: parentTransaction, params: output.params);
+  TransactionInput({TransactionOutPoint this.outpoint,
+                    Script this.scriptSig,
+                    int this.sequence: NO_SEQUENCE}) {
+    outpoint = outpoint ?? new TransactionOutPoint(index: NO_SEQUENCE);
+    scriptSig = scriptSig ?? Script.EMPTY_SCRIPT;
   }
   
   /**
@@ -37,95 +25,43 @@ class TransactionInput extends Object with BitcoinSerialization {
    * 
    * It is specified by its [TransactionOutPoint] format, but can carry any [Script] as [scriptSig].
    */
-  TransactionInput.coinbase([Script scriptSig]) {
-    _outpoint = new TransactionOutPoint(txid: Hash256.ZERO_HASH, index: -1);
-    _scriptSig = (scriptSig != null) ? scriptSig : Script.EMPTY_SCRIPT;
+  TransactionInput.coinbase([Script this.scriptSig]) {
+    outpoint = new TransactionOutPoint(txid: Hash256.ZERO_HASH, index: -1);
+    scriptSig = scriptSig ?? Script.EMPTY_SCRIPT;
   }
   
-  // required for serialization
-  TransactionInput._newInstance();
-  
-  factory TransactionInput.deserialize(Uint8List bytes, {int length, bool lazy, bool retain, NetworkParameters params, BitcoinSerialization parent}) =>
-      new BitcoinSerialization.deserialize(new TransactionInput._newInstance(), bytes, length: length, lazy: lazy, retain: retain, params: params, parent: parent);
-  
-  TransactionOutPoint get outpoint {
-    _needInstance();
-    return _outpoint;
-  }
-  
-  void set outpoint(TransactionOutPoint outpoint) {
-    _needInstance(true);
-    _outpoint = outpoint;
-  }
-  
-  Script get scriptSig {
-    _needInstance();
-    return _scriptSig;
-  }
-  
-  void set scriptSig(Script scripSig) {
-    _needInstance(true);
-    _scriptSig = scripSig;
-  }
-  
-  int get sequence {
-    _needInstance();
-    return _sequence;
-  }
-  
-  void set sequence(int sequence) {
-    _needInstance(true);
-    _sequence = sequence;
-  }
-  
-  Transaction get parentTransaction => _parent;
-  
-  void set parentTransaction(Transaction parentTransaction) {
-    _parent = parentTransaction;
-  }
+  /// Create an empty instance.
+  TransactionInput.empty();
   
   bool get isCoinbase {
-    _needInstance();
-    return _outpoint.txid == Hash256.ZERO_HASH &&
-        (_outpoint.index & 0xFFFFFFFF) == 0xFFFFFFFF;
+    return outpoint.txid == Hash256.ZERO_HASH &&
+        (outpoint.index & 0xFFFFFFFF) == 0xFFFFFFFF;
   }
   
   @override
   operator ==(TransactionInput other) {
     if(other is! TransactionInput) return false;
     if(identical(this, other)) return true;
-    _needInstance();
-    other._needInstance();
-    return _outpoint == other._outpoint &&
-        _scriptSig == other._scriptSig &&
-        _sequence == other._sequence;
+    return outpoint == other.outpoint &&
+        scriptSig == other.scriptSig &&
+        sequence == other.sequence;
   }
   
   @override
   int get hashCode {
-    _needInstance();
-    return _outpoint.hashCode ^ _scriptSig.hashCode ^ _sequence.hashCode;
+    return outpoint.hashCode ^ scriptSig.hashCode ^ sequence.hashCode;
   }
 
-  @override
-  void _serialize(ByteSink sink) {
-    _writeObject(sink, _outpoint);
-    _writeByteArray(sink, _scriptSig.encode());
-    _writeUintLE(sink, _sequence);
+  void bitcoinSerialize(bytes.Buffer buffer, int pver) {
+    writeObject(buffer, outpoint, pver);
+    writeByteArray(buffer, scriptSig.encode());
+    writeUintLE(buffer, sequence);
   }
 
-  @override
-  void _deserialize() {
-    _outpoint = _readObject(new TransactionOutPoint._newInstance());
-    _scriptSig = new Script(_readByteArray());
-    _sequence = _readUintLE();
-  }
-  
-  @override
-  void _deserializeLazy() {
-    _serializationCursor += TransactionOutPoint.SERIALIZATION_LENGTH;
-    int scrLn = _readVarInt();
-    _serializationCursor += scrLn + 4;
+  void bitcoinDeserialize(bytes.Reader reader, int pver) {
+    outpoint = readObject(reader, new TransactionOutPoint.empty(), pver);
+    scriptSig = new Script(readByteArray(reader));
+    sequence = readUintLE(reader);
   }
 }
 
