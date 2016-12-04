@@ -10,6 +10,13 @@ class TransactionOutput extends BitcoinSerializable {
     if(value < -1 || value > NetworkParameters.MAX_MONEY)
       throw new ArgumentError("Amounts must be positive and smaller than the max value.");
   }
+
+  factory TransactionOutput.fromBitcoinSerialization(Uint8List serialization, int pver) {
+    var reader = new bytes.Reader(serialization);
+    var obj = new TransactionOutput.empty();
+    obj.bitcoinDeserialize(reader, pver);
+    return obj;
+  }
   
   /// Create an empty instance.
   TransactionOutput.empty();
@@ -25,7 +32,7 @@ class TransactionOutput extends BitcoinSerializable {
     return new TransactionOutput(value: amount, scriptPubKey: new PayToPubKeyOutputScript(key));
   }
   
-  factory TransactionOutput.payToScriptHash(Uint8List scriptHash, int amount,
+  factory TransactionOutput.payToScriptHash(Hash160 scriptHash, int amount,
       [Transaction parent, NetworkParameters params = NetworkParameters.MAIN_NET]) {
     return new TransactionOutput(value: amount, scriptPubKey: new PayToScriptHashOutputScript(scriptHash));
   }

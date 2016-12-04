@@ -3,7 +3,7 @@ part of dartcoin.wire;
 typedef Message _MessageGenerator();
 
 
-abstract class Message {
+abstract class Message extends BitcoinSerializable {
   
   static const String CMD_ADDR = "addr";
   static const String CMD_ALERT = "alert";
@@ -56,13 +56,32 @@ abstract class Message {
 
   Message();
 
+  factory Message.forCommand(String command) {
+    if (!_MESSAGE_GENERATORS.containsKey(command)) {
+      throw new ArgumentError("$command is not a valid message command");
+    }
+    return _MESSAGE_GENERATORS[command]();
+  }
+
   void bitcoinDeserialize(bytes.Reader reader, int pver);
   void bitcoinSerialize(bytes.Buffer buffer, int pver);
 
 
   /// Decode a serialized message.
-  static Message decode(Uint8List msgBytes, int pver) {
+  static Message decode(Uint8List msgBytes, int magicValue, int pver) {
+    if(msgBytes.length < HEADER_LENGTH)
+      throw new SerializationException("Too few bytes to be a Message");
+
+    // create a Reader for deserializing
     var reader = new bytes.Reader(msgBytes);
+
+    // verify the magic value
+    int magic = readUintLE(reader);
+    if (magic != magicValue) {
+      throw new SerializationException("Invalid magic value: $magic. Expected $magicValue.");
+    }
+
+    // read the command, length and checksum
     String cmd = _readCommand(readBytes(reader, COMMAND_LENGTH));
     int payloadLength = readUintLE(reader);
     Uint8List checksum = readBytes(reader, 4);
@@ -73,21 +92,24 @@ abstract class Message {
     int preLength = reader.remainingLength;
 
     // generate an empty concrete message instance and make it parse
-    Message msg = _MESSAGE_GENERATORS[cmd]();
+    Message msg = new Message.forCommand(cmd);
     msg.bitcoinDeserialize(payloadReader, pver);
     int postLength = reader.remainingLength;
 
     // check if the payload was of the claimed size
     if (preLength - postLength != payloadLength) {
       throw new SerializationException(
-          "Incorrect payload length in message header");
+          "Incorrect payload length in message header "
+          "(actual: ${(preLength - postLength)}, expected: $payloadLength");
     }
 
     // check the checksum
     Uint8List actualChecksum = payloadReader.checksum().sublist(0, 4);
     if (!utils.equalLists(checksum, actualChecksum)) {
       throw new SerializationException(
-          "Incorrect checksum provided in serialized message");
+          "Incorrect checksum provided in serialized message "
+          "(actual: ${CryptoUtils.bytesToHex(actualChecksum)}, "
+          "expected: ${CryptoUtils.bytesToHex(checksum)})");
     }
 
     return msg;
@@ -119,11 +141,11 @@ abstract class Message {
   static String _readCommand(Uint8List bytes) {
     int word = COMMAND_LENGTH;
     while(bytes[word - 1] == 0) word--;
-    return new AsciiDecoder().convert(bytes.sublist(0, word));
+    return ASCII.decode(bytes.sublist(0, word));
   }
   
   static List<int> _encodeCommand(String command) {
-    List<int> commandBytes = new List.from(new AsciiCodec().encode(command));
+    List<int> commandBytes = new List.from(ASCII.encode(command));
     while(commandBytes.length < COMMAND_LENGTH)
       commandBytes.add(0);
     return commandBytes;

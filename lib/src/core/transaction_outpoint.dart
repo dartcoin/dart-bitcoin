@@ -19,6 +19,13 @@ class TransactionOutPoint extends BitcoinSerializable {
       index = 0xFFFFFFFF;
     txid = txid ?? Hash256.ZERO_HASH;
   }
+
+  factory TransactionOutPoint.fromBitcoinSerialization(Uint8List serialization, int pver) {
+    var reader = new bytes.Reader(serialization);
+    var obj = new TransactionOutPoint.empty();
+    obj.bitcoinDeserialize(reader, pver);
+    return obj;
+  }
   
   /// Create an empty instance.
   TransactionOutPoint.empty();

@@ -23,8 +23,7 @@ class Block extends BitcoinSerializable {
   
   /** A value for difficultyTarget (nBits) that allows half of all possible hash solutions. Used in unit testing. */
   static const int EASIEST_DIFFICULTY_TARGET = 0x207fFFFF;
-  
-  Hash256 hash;
+
   
   int version;
   Hash256 previousBlock;
@@ -33,10 +32,11 @@ class Block extends BitcoinSerializable {
   int difficultyTarget;
   int nonce;
   List<Transaction> transactions;
-  
+
+  Hash256 _hash;
   int height;
   
-  Block({ Hash256 this.hash,
+  Block({ Hash256 hash,
         Hash256 this.previousBlock,
         Hash256 this.merkleRoot,
           int this.timestamp,
@@ -45,19 +45,34 @@ class Block extends BitcoinSerializable {
           List<Transaction> this.transactions,
           int this.height,
           int this.version: BLOCK_VERSION}) {
+    this._hash = hash;
     previousBlock = previousBlock ?? Hash256.ZERO_HASH;
     timestamp = timestamp ?? new DateTime.now().millisecondsSinceEpoch ~/ 1000;
     difficultyTarget = difficultyTarget ?? EASIEST_DIFFICULTY_TARGET;
     transactions = transactions ?? new List<Transaction>();
   }
 
+  factory Block.fromBitcoinSerialization(Uint8List serialization, int pver) {
+    var reader = new bytes.Reader(serialization);
+    var obj = new Block.empty();
+    obj.bitcoinDeserialize(reader, pver);
+    return obj;
+  }
+
   /// Create an empty instance.
   Block.empty();
+
+  Hash256 get hash {
+    if (_hash == null) {
+      _hash = calculateHash();
+    }
+    return _hash;
+  }
 
   Hash256 calculateHash() {
     var buffer = new bytes.Buffer();
     _serializeHeader(buffer);
-    Uint8List checksum = crypto.doubleDigest(buffer.toUint8List());
+    Uint8List checksum = crypto.doubleDigest(buffer.asBytes());
     return new Hash256(utils.reverseBytes(checksum));
   }
 
@@ -90,7 +105,7 @@ class Block extends BitcoinSerializable {
   BigInteger get work => _LARGEST_HASH / (difficultyTargetAsInteger + BigInteger.ONE);
   
   Block cloneAsHeader() => new Block(
-      hash: hash,
+      hash: _hash,
       previousBlock: previousBlock,
       merkleRoot: merkleRoot,
       timestamp: timestamp,

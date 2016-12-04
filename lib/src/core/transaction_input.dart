@@ -29,6 +29,13 @@ class TransactionInput extends BitcoinSerializable {
     outpoint = new TransactionOutPoint(txid: Hash256.ZERO_HASH, index: -1);
     scriptSig = scriptSig ?? Script.EMPTY_SCRIPT;
   }
+
+  factory TransactionInput.fromBitcoinSerialization(Uint8List serialization, int pver) {
+    var reader = new bytes.Reader(serialization);
+    var obj = new TransactionInput.empty();
+    obj.bitcoinDeserialize(reader, pver);
+    return obj;
+  }
   
   /// Create an empty instance.
   TransactionInput.empty();

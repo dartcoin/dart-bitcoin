@@ -29,6 +29,7 @@ import "package:dartcoin/src/utils.dart" as utils;
 import "package:dartcoin/src/crypto.dart" as crypto;
 
 import "package:dartcoin/script.dart";
+import "package:dartcoin/scripts/common.dart";
 
 import "package:dartcoin/src/wire/serialization.dart";
 
@@ -49,9 +50,9 @@ part "src/crypto/encrypted_private_key.dart";
 
 // network settings
 part "src/core/params/network_parameters.dart";
-part "src/core/params/main_net.dart";
-part "src/core/params/test_net.dart";
-part "src/core/params/unit_test.dart";
+part "src/core/params/main_net_params.dart";
+part "src/core/params/test_net_params.dart";
+part "src/core/params/unit_test_params.dart";
 
 // transactions
 part "src/core/transaction.dart";

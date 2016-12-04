@@ -19,6 +19,13 @@ class Transaction extends BitcoinSerializable {
     inputs = inputs ?? new List<TransactionInput>();
     outputs = outputs ?? new List<TransactionOutput>();
   }
+
+  factory Transaction.fromBitcoinSerialization(Uint8List serialization, int pver) {
+    var reader = new bytes.Reader(serialization);
+    var obj = new Transaction.empty();
+    obj.bitcoinDeserialize(reader, pver);
+    return obj;
+  }
   
   /// Create an empty instance.
   Transaction.empty();

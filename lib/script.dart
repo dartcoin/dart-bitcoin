@@ -9,6 +9,7 @@ import "package:bytes/bytes.dart";
 import "package:cryptoutils/cryptoutils.dart";
 
 import "package:dartcoin/core.dart";
+import "package:dartcoin/scripts/common.dart";
 import "package:dartcoin/src/crypto.dart" as crypto;
 import "package:dartcoin/src/utils.dart" as utils;
 

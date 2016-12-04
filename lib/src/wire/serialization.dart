@@ -46,7 +46,6 @@ class SerializationException implements Exception {
 // READING //
 /////////////
 
-
 Uint8List readBytes(bytes.Reader reader, int length) {
   return reader.readBytes(length);
 }
@@ -94,8 +93,7 @@ BitcoinSerializable readObject(bytes.Reader reader, BitcoinSerializable obj, int
 // WRITING //
 /////////////
 
-
-void writeBytes(bytes.Buffer buffer, Uint8List bytes) {
+void writeBytes(bytes.Buffer buffer, List<int> bytes) {
   buffer.add(bytes);
 }
 

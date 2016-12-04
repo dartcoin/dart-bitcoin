@@ -9,14 +9,15 @@ import "dart:typed_data";
 import "package:bignum/bignum.dart";
 import "package:bytes/bytes.dart" as bytes;
 import "package:cryptoutils/cryptoutils.dart";
-import "package:pointycastle/api.dart";
 
-import "package:dartcoin/core.dart" ;
-import "package:dartcoin/src/utils/checksum_buffer.dart";
-import "package:dartcoin/src/utils/checksum_reader.dart";
-import "package:dartcoin/src/wire/serialization.dart";
-import "package:dartcoin/src/crypto.dart" as crypto;
-import "package:dartcoin/src/utils.dart" as utils;
+import "core.dart" ;
+import "src/utils/checksum_buffer.dart";
+import "src/utils/checksum_reader.dart";
+import "src/wire/serialization.dart";
+import "src/crypto.dart" as crypto;
+import "src/utils.dart" as utils;
+
+export "src/wire/serialization.dart" show BitcoinSerializable, SerializationException;
 
 
 // wire

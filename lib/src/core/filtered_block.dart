@@ -15,6 +15,13 @@ class FilteredBlock extends BitcoinSerializable {
     if(header == null || merkleTree == null)
       throw new ArgumentError("header or merkleTree is null");
   }
+
+  factory FilteredBlock.fromBitcoinSerialization(Uint8List serialization, int pver) {
+    var reader = new bytes.Reader(serialization);
+    var obj = new FilteredBlock.empty();
+    obj.bitcoinDeserialize(reader, pver);
+    return obj;
+  }
   
   /// Create an empty instance.
   FilteredBlock.empty();

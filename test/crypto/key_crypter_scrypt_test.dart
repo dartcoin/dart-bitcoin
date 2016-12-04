@@ -1,15 +1,17 @@
 library dartcoin.test.crypto.key_crypter_scrypt;
 
-import "package:unittest/unittest.dart";
-import "package:cryptoutils/cryptoutils.dart";
-
-import "package:dartcoin/core/core.dart";
-
 import "dart:typed_data";
 import "dart:math";
 
-import "package:cipher/cipher.dart";
+import "package:cryptoutils/cryptoutils.dart";
+import "package:pointycastle/key_derivators/api.dart";
 import "package:uuid/uuid.dart";
+
+import "package:test/test.dart";
+
+import "package:dartcoin/core.dart";
+import "package:dartcoin/src/utils.dart" as utils;
+import "package:dartcoin/crypto/key_crypter_scrypt.dart";
 
 
 
@@ -23,122 +25,101 @@ final String _WRONG_PASSWORD = "thisIsTheWrongPassword";
 
 ScryptParameters _scryptParameters;
 
-void _setUp() {
-  Uint8List salt = new Uint8List(KeyCrypterScrypt.SALT_LENGTH);
-  Random r = new Random();
-  for(int i = 0 ; i < KeyCrypterScrypt.SALT_LENGTH ; i++) salt[i] = r.nextInt(256); 
-  _scryptParameters = KeyCrypterScrypt.generateScryptParams(salt, 4);
-}
-
-
-void _testKeyCrypterGood1() {
-  KeyCrypterScrypt keyCrypter = new KeyCrypterScrypt.withParams(_scryptParameters);
-
-  // Encrypt.
-  EncryptedPrivateKey encryptedPrivateKey = keyCrypter.encrypt(_TEST_BYTES1, keyCrypter.deriveKey(_PASSWORD1));
-  expect(encryptedPrivateKey, isNotNull);
-
-  // Decrypt.
-  Uint8List reborn = keyCrypter.decrypt(encryptedPrivateKey, keyCrypter.deriveKey(_PASSWORD1));
-  print("Original: " + CryptoUtils.bytesToHex(_TEST_BYTES1));
-  print("Reborn  : " + CryptoUtils.bytesToHex(reborn));
-  expect(CryptoUtils.bytesToHex(reborn), equals(CryptoUtils.bytesToHex(_TEST_BYTES1)));
-}
-
-/**
- * Test with random plain text strings and random passwords.
- * UUIDs are used and hence will only cover hex characters (and the separator hyphen).
- * @throws KeyCrypterException
- * @throws UnsupportedEncodingException
- */
-
-void _testKeyCrypterGood2() {
-  KeyCrypterScrypt keyCrypter = new KeyCrypterScrypt.withParams(_scryptParameters);
-
-  print("EncrypterDecrypterTest: Trying random UUIDs for plainText and passwords :");
-  int numberOfTests = 16;
-  Uuid uuid = new Uuid();
-  for (int i = 0; i < numberOfTests; i++) {
-    // Create a UUID as the plaintext and use another for the password.
-    String plainText = uuid.v4();
-    String password = uuid.v4();
-
-    EncryptedPrivateKey encryptedPrivateKey = keyCrypter.encrypt(Utils.stringToUTF8(plainText), keyCrypter.deriveKey(password));
-
-    expect(encryptedPrivateKey, isNotNull);
-
-    Uint8List reconstructedPlainBytes = keyCrypter.decrypt(encryptedPrivateKey,keyCrypter.deriveKey(password));
-    expect(CryptoUtils.bytesToHex(reconstructedPlainBytes), equals(CryptoUtils.bytesToHex(Utils.stringToUTF8(plainText))));
-    print('.');
-  }
-  print(" Done.");
-}
-
-
-void _testKeyCrypterWrongPassword() {
-  KeyCrypterScrypt keyCrypter = new KeyCrypterScrypt.withParams(_scryptParameters);
-
-  // create a longer encryption string
-  StringBuffer stringBuffer = new StringBuffer();
-  for (int i = 0; i < 100; i++) {
-    stringBuffer..write(i)..write(" ")..write("The quick brown fox");
-  }
-
-  EncryptedPrivateKey encryptedPrivateKey = keyCrypter.encrypt(Utils.stringToUTF8(stringBuffer.toString()), keyCrypter.deriveKey(_PASSWORD2));
-  expect(encryptedPrivateKey, isNotNull);
-
-  
-  expect(() => keyCrypter.decrypt(encryptedPrivateKey, keyCrypter.deriveKey(_WRONG_PASSWORD)), throws);
-}
-
-
-void _testEncryptDecryptBytes1() {
-    KeyCrypterScrypt keyCrypter = new KeyCrypterScrypt.withParams(_scryptParameters);
-
-    // Encrypt bytes.
-    EncryptedPrivateKey encryptedPrivateKey = keyCrypter.encrypt(_TEST_BYTES1, keyCrypter.deriveKey(_PASSWORD1));
-    expect(encryptedPrivateKey, isNotNull);
-    print("\nEncrypterDecrypterTest: cipherBytes = \nlength = ${encryptedPrivateKey.encryptedKey.length}\n---------------\n${CryptoUtils.bytesToHex(encryptedPrivateKey.encryptedKey)}\n---------------\n");
-
-    Uint8List rebornPlainBytes = keyCrypter.decrypt(encryptedPrivateKey, keyCrypter.deriveKey(_PASSWORD1));
-
-    print("Original: " + CryptoUtils.bytesToHex(_TEST_BYTES1));
-    print("Reborn1 : " + CryptoUtils.bytesToHex(rebornPlainBytes));
-    expect(CryptoUtils.bytesToHex(rebornPlainBytes), equals(CryptoUtils.bytesToHex(_TEST_BYTES1)));
-}
-
-
-void _testEncryptDecryptBytes2() {
-    KeyCrypterScrypt keyCrypter = new KeyCrypterScrypt.withParams(_scryptParameters);
-
-    // Encrypt random bytes of various lengths up to length 50.
-    Random r = new Random();
-
-    for (int i = 0; i < 50; i++) {
-        Uint8List plainBytes = new Uint8List(i);
-        for(int j = 0 ; j < i ; j++) plainBytes[j] = r.nextInt(256);
-
-        EncryptedPrivateKey encryptedPrivateKey = keyCrypter.encrypt(plainBytes, keyCrypter.deriveKey(_PASSWORD1));
-        expect(encryptedPrivateKey, isNotNull);
-        //log.debug("\nEncrypterDecrypterTest: cipherBytes = \nlength = " + cipherBytes.length + "\n---------------\n" + Utils.bytesToHexString(cipherBytes) + "\n---------------\n");
-
-        Uint8List rebornPlainBytes = keyCrypter.decrypt(encryptedPrivateKey, keyCrypter.deriveKey(_PASSWORD1));
-
-        print("Original: ($i) " + CryptoUtils.bytesToHex(plainBytes));
-        print("Reborn1 : ($i) " + CryptoUtils.bytesToHex(rebornPlainBytes));
-        expect(CryptoUtils.bytesToHex(rebornPlainBytes), equals(CryptoUtils.bytesToHex(plainBytes)));
-    }
-}
-
 
 void main() {
   group("crypto.KeyCrypterScrypt", () {
-    setUp(() => _setUp());
-    test("KeyCrypterGood1", () => _testKeyCrypterGood1());
-    test("KeyCrypterGood2", () => _testKeyCrypterGood2());
-    test("KeyCrypterWrongPasswd", () => _testKeyCrypterWrongPassword());
-    test("EncryptDecryptBytes1", () => _testEncryptDecryptBytes1());
-    test("EncryptDecryptBytes2", () => _testEncryptDecryptBytes2());
+    setUp(() {
+      Uint8List salt = new Uint8List(KeyCrypterScrypt.SALT_LENGTH);
+      Random r = new Random();
+      for(int i = 0 ; i < KeyCrypterScrypt.SALT_LENGTH ; i++) salt[i] = r.nextInt(256);
+      _scryptParameters = KeyCrypterScrypt.generateScryptParams(salt, 4);
+    });
+
+    test("KeyCrypterGood1", () {
+      KeyCrypterScrypt keyCrypter = new KeyCrypterScrypt.withParams(_scryptParameters);
+    
+      // Encrypt.
+      EncryptedPrivateKey encryptedPrivateKey = keyCrypter.encrypt(_TEST_BYTES1, keyCrypter.deriveKey(_PASSWORD1));
+      expect(encryptedPrivateKey, isNotNull);
+    
+      // Decrypt.
+      Uint8List reborn = keyCrypter.decrypt(encryptedPrivateKey, keyCrypter.deriveKey(_PASSWORD1));
+      print("Original: " + CryptoUtils.bytesToHex(_TEST_BYTES1));
+      print("Reborn  : " + CryptoUtils.bytesToHex(reborn));
+      expect(CryptoUtils.bytesToHex(reborn), equals(CryptoUtils.bytesToHex(_TEST_BYTES1)));
+    });
+    
+    test("KeyCrypterGood2", () {
+      KeyCrypterScrypt keyCrypter = new KeyCrypterScrypt.withParams(_scryptParameters);
+    
+      print("EncrypterDecrypterTest: Trying random UUIDs for plainText and passwords :");
+      int numberOfTests = 16;
+      Uuid uuid = new Uuid();
+      for (int i = 0; i < numberOfTests; i++) {
+        // Create a UUID as the plaintext and use another for the password.
+        String plainText = uuid.v4();
+        String password = uuid.v4();
+    
+        EncryptedPrivateKey encryptedPrivateKey = keyCrypter.encrypt(utils.stringToUTF8(plainText), keyCrypter.deriveKey(password));
+    
+        expect(encryptedPrivateKey, isNotNull);
+    
+        Uint8List reconstructedPlainBytes = keyCrypter.decrypt(encryptedPrivateKey,keyCrypter.deriveKey(password));
+        expect(CryptoUtils.bytesToHex(reconstructedPlainBytes), equals(CryptoUtils.bytesToHex(utils.stringToUTF8(plainText))));
+        print('.');
+      }
+      print(" Done.");
+    });
+    
+    test("KeyCrypterWrongPasswd", () {
+      KeyCrypterScrypt keyCrypter = new KeyCrypterScrypt.withParams(_scryptParameters);
+    
+      // create a longer encryption string
+      StringBuffer stringBuffer = new StringBuffer();
+      for (int i = 0; i < 100; i++) {
+        stringBuffer..write(i)..write(" ")..write("The quick brown fox");
+      }
+    
+      EncryptedPrivateKey encryptedPrivateKey = keyCrypter.encrypt(utils.stringToUTF8(stringBuffer.toString()), keyCrypter.deriveKey(_PASSWORD2));
+      expect(encryptedPrivateKey, isNotNull);
+    
+      
+      expect(() => keyCrypter.decrypt(encryptedPrivateKey, keyCrypter.deriveKey(_WRONG_PASSWORD)), throws);
+    });
+    
+    test("EncryptDecryptBytes1", () {
+        KeyCrypterScrypt keyCrypter = new KeyCrypterScrypt.withParams(_scryptParameters);
+    
+        // Encrypt bytes.
+        EncryptedPrivateKey encryptedPrivateKey = keyCrypter.encrypt(_TEST_BYTES1, keyCrypter.deriveKey(_PASSWORD1));
+        expect(encryptedPrivateKey, isNotNull);
+        print("\nEncrypterDecrypterTest: cipherBytes = \nlength = ${encryptedPrivateKey.encryptedKey.length}\n---------------\n${CryptoUtils.bytesToHex(encryptedPrivateKey.encryptedKey)}\n---------------\n");
+    
+        Uint8List rebornPlainBytes = keyCrypter.decrypt(encryptedPrivateKey, keyCrypter.deriveKey(_PASSWORD1));
+    
+        print("Original: " + CryptoUtils.bytesToHex(_TEST_BYTES1));
+        print("Reborn1 : " + CryptoUtils.bytesToHex(rebornPlainBytes));
+        expect(CryptoUtils.bytesToHex(rebornPlainBytes), equals(CryptoUtils.bytesToHex(_TEST_BYTES1)));
+    });
+    
+    test("EncryptDecryptBytes2", () {
+        KeyCrypterScrypt keyCrypter = new KeyCrypterScrypt.withParams(_scryptParameters);
+    
+        // Encrypt random bytes of various lengths up to length 50.
+        Random r = new Random();
+        for (int i = 1; i < 50; i++) {
+            Uint8List plainBytes = new Uint8List(i);
+            for(int j = 0 ; j < i ; j++) plainBytes[j] = r.nextInt(256);
+            EncryptedPrivateKey encryptedPrivateKey = keyCrypter.encrypt(plainBytes, keyCrypter.deriveKey(_PASSWORD1));
+            expect(encryptedPrivateKey, isNotNull);
+
+            Uint8List rebornPlainBytes = keyCrypter.decrypt(encryptedPrivateKey, keyCrypter.deriveKey(_PASSWORD1));
+    
+            print("Original: ($i) " + CryptoUtils.bytesToHex(plainBytes));
+            print("Reborn1 : ($i) " + CryptoUtils.bytesToHex(rebornPlainBytes));
+            expect(CryptoUtils.bytesToHex(rebornPlainBytes), equals(CryptoUtils.bytesToHex(plainBytes)));
+        }
+    });
   });
 }
 

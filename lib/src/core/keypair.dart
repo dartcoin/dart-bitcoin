@@ -83,7 +83,7 @@ class KeyPair {
         buffer.add(new List.generate(50 - buffer.length,
             (_) => rand.nextInt(255)));
       }
-      entropy = crypto.doubleDigest(entropy);
+      entropy = crypto.doubleDigest(buffer.asBytes());
       pk = new BigInteger.fromBytes(1, entropy.sublist(0, EC_PARAMS.n.bitLength() ~/ 8));
     } while (pk == BigInteger.ZERO || pk >= EC_PARAMS.n);
     return new KeyPair._internal(pk, publicKeyFromPrivateKey(pk, true));

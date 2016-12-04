@@ -26,8 +26,15 @@ class PeerAddress extends BitcoinSerializable {
     services = services ?? BigInteger.ZERO;
   }
   
-  factory PeerAddress.localhost({BigInteger services}) =>
-    new PeerAddress("127.0.0.1", services: services);
+  factory PeerAddress.localhost({BigInteger services, int port}) =>
+    new PeerAddress("127.0.0.1", port: port, services: services);
+
+  factory PeerAddress.fromBitcoinSerialization(Uint8List serialization, int pver) {
+    var reader = new bytes.Reader(serialization);
+    var obj = new PeerAddress.empty();
+    obj.bitcoinDeserialize(reader, pver);
+    return obj;
+  }
 
   /// Create an empty instance.
   PeerAddress.empty();

@@ -7,7 +7,7 @@ import "dart:typed_data";
 import "package:bignum/bignum.dart";
 import "package:base58check/base58check.dart";
 import "package:bytes/bytes.dart" as bytes;
-import "package:collection/equality.dart";
+import "package:collection/collection.dart";
 
 import "package:dartcoin/src/wire/serialization.dart";
 import "package:dartcoin/src/crypto.dart" as crypto;
@@ -139,7 +139,8 @@ void arrayCopy(Uint8List src, int srcPos, Uint8List dest, int destPos, [int leng
  * 
  * "==" operator is used to compare the elements in the lists.
  */
-bool equalLists(List list1, List list2) => new ListEquality(new DefaultEquality()).equals(list1, list2);
+bool equalLists(List list1, List list2) =>
+    new ListEquality(new DefaultEquality()).equals(list1, list2);
 
 /**
  * Generate a valid hashcode for the list.
@@ -147,8 +148,9 @@ bool equalLists(List list1, List list2) => new ListEquality(new DefaultEquality(
 int listHashCode(List<int> list) => new ListEquality().hash(list);
 
 /**
- * The regular BigInteger.toByteArray() method isn't quite what we often need: it appends a
- * leading zero to indicate that the number is positive and may need padding.
+ * The regular BigInteger.toByteArray() method isn't quite what we often need:
+ * it appends a leading zero to indicate that the number is positive and may
+ * need padding.
  */
 Uint8List bigIntegerToBytes(BigInteger b, int numBytes) {
   if (b == null) {

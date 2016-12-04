@@ -1,4 +1,3 @@
-
 part of dartcoin.core;
 
 class _UnitTestParams extends NetworkParameters {

@@ -76,9 +76,8 @@ class KeyCrypterScrypt implements KeyCrypter {
     Uint8List passBytes = utils.stringToUTF8(passphrase);
     Uint8List keyBytes = new Uint8List(_scryptParams.desiredKeyLength);
     try {
-      Scrypt scrypt = new Scrypt()
-        ..init(_scryptParams)
-        ..deriveKey(passBytes, 0, keyBytes, 0);
+      Scrypt scrypt = new Scrypt()..init(_scryptParams);
+      scrypt.deriveKey(passBytes, 0, keyBytes, 0);
       return new KeyParameter(keyBytes);
     } catch(e) {
       throw new KeyCrypterException("Could not derive key from passphrase and salt.", e);
@@ -86,19 +85,26 @@ class KeyCrypterScrypt implements KeyCrypter {
   }
 
   EncryptedPrivateKey encrypt(Uint8List privKey, KeyParameter aesKey) {
-    if(privKey == null || aesKey == null) throw new ArgumentError();
-//    try {
+    if (privKey == null)
+      throw new ArgumentError.notNull("privKey");
+    if (aesKey == null)
+      throw new ArgumentError.notNull("aesKey");
+    if (privKey.isEmpty)
+      throw new ArgumentError.value(privKey, "privKey", "must not be empty");
+
+    if (privKey == null || aesKey == null) throw new ArgumentError();
       Uint8List iv = _randomBytes(BLOCK_LENGTH);
       BlockCipher cipher = _createBlockCipher(true, aesKey, iv);
       Uint8List encryptedKey = cipher.process(privKey);
       return new EncryptedPrivateKey(encryptedKey, iv);
-//    } catch(e) {
-//      throw new KeyCrypterException("Could not encrypt key.", e);
-//    }
   }
   
   Uint8List decrypt(EncryptedPrivateKey encryptedPrivKey, KeyParameter aesKey) {
-    if(encryptedPrivKey == null || aesKey == null) throw new ArgumentError();
+    if (encryptedPrivKey == null)
+      throw new ArgumentError.notNull("encryptedPrivKey");
+    if (aesKey == null)
+      throw new ArgumentError.notNull("aesKey");
+
     try {
       BlockCipher cipher = _createBlockCipher(false, aesKey, encryptedPrivKey.iv);
       return cipher.process(encryptedPrivKey.encryptedKey);

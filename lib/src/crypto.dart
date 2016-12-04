@@ -13,34 +13,34 @@ import "package:dartcoin/src/utils.dart" as utils;
 
 class DoubleSHA256Digest extends BaseDigest {//TODO pointycastle registry
 
-    SHA256Digest _internal = new SHA256Digest();
+  SHA256Digest _internal = new SHA256Digest();
 
-    DoubleSHA256Digest();
+  DoubleSHA256Digest();
 
-    @override
-    String get algorithmName => "SHA-256d";
+  @override
+  String get algorithmName => "SHA-256d";
 
-    @override
-    int get digestSize => _internal.digestSize;
+  @override
+  int get digestSize => _internal.digestSize;
 
-    @override
-    void reset() => _internal.reset();
+  @override
+  void reset() => _internal.reset();
 
-    @override
-    void updateByte(int inp) => _internal.updateByte(inp);
+  @override
+  void updateByte(int inp) => _internal.updateByte(inp);
 
-    @override
-    void update(Uint8List inp, int inpOff, int len) =>
-        _internal.update(inp, inpOff, len);
+  @override
+  void update(Uint8List inp, int inpOff, int len) =>
+      _internal.update(inp, inpOff, len);
 
-    @override
-    int doFinal(Uint8List out, int outOff) {
-        Uint8List firstSum = new Uint8List(digestSize);
-        _internal.doFinal(firstSum, 0);
-        SHA256Digest secondDigest = new SHA256Digest();
-        secondDigest.update(firstSum, 0, firstSum.length);
-        return secondDigest.doFinal(out, outOff);
-    }
+  @override
+  int doFinal(Uint8List out, int outOff) {
+    Uint8List firstSum = new Uint8List(digestSize);
+    _internal.doFinal(firstSum, 0);
+    SHA256Digest secondDigest = new SHA256Digest();
+    secondDigest.update(firstSum, 0, firstSum.length);
+    return secondDigest.doFinal(out, outOff);
+  }
 }
 
 

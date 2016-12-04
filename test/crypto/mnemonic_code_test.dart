@@ -1,12 +1,61 @@
 library dartcoin.test.crypto.mnemonic_code;
 
+import "dart:typed_data";
 
-import "package:unittest/unittest.dart";
 import "package:cryptoutils/cryptoutils.dart";
 
-import "package:dartcoin/core/core.dart";
+import "package:test/test.dart";
 
-import "dart:typed_data";
+import "package:dartcoin/crypto/mnemonic_code.dart";
+
+
+MnemonicCode _mc;
+
+List<String> _split(String words) => words.split(" ");
+
+void main() {
+  group("crypto.MnemonicCode", () {
+    setUp(() {
+      _mc = new MnemonicCode(_wordlist_english);
+    });
+
+    test("badEntropyLength", () {
+      Uint8List entropy = CryptoUtils.hexToBytes("7f7f7f7f7f7f7f7f7f7f7f7f7f7f");
+      expect(() => _mc.toMnemonic(entropy), throwsA(new isInstanceOf<MnemonicException>()));
+    });
+
+    test("badLength", () {
+      List<String> words = _split("risk tiger venture dinner age assume float denial penalty hello");
+      expect(() => _mc.check(words), throwsA(new isInstanceOf<MnemonicException>()));
+    });
+
+    test("badWord", () {
+      List<String> words = _split("risk tiger venture dinner xyzzy assume float denial penalty hello game wing");
+      expect(() => _mc.check(words), throwsA(new isInstanceOf<MnemonicException>()));
+    });
+
+    test("badChecksum", () {
+      List<String> words = _split("bless cloud wheel regular tiny venue bird web grief security dignity zoo");
+      expect(() => _mc.check(words), throwsA(new isInstanceOf<MnemonicException>()));
+    });
+
+    test("vectors", () {
+      for (int ii = 0; ii < _vectors.length; ii += 3) {
+        String vecData = _vectors[ii];
+        String vecCode = _vectors[ii+1];
+        String vecSeed = _vectors[ii+2];
+
+        List<String> code = _mc.toMnemonic(CryptoUtils.hexToBytes(vecData));
+        Uint8List seed = MnemonicCode.toSeed(code, "TREZOR");
+        Uint8List entropy = _mc.toEntropy(_split(vecCode));
+
+        expect(CryptoUtils.bytesToHex(entropy), equals(vecData), reason: "incorrect entropy");
+        expect(code.join(" "), equals(vecCode), reason: "incorrect mnemonic");
+        expect(CryptoUtils.bytesToHex(seed), equals(vecSeed), reason: "incorrect seed");
+      }
+    });
+  });
+}
 
 // These vectors are from https://github.com/trezor/python-mnemonic/blob/master/vectors.json
 List<String> _vectors = [
@@ -129,68 +178,6 @@ List<String> _vectors = [
     "beyond stage sleep clip because twist token leaf atom beauty genius food business side grid unable middle armed observe pair crouch tonight away coconut",
     "b15509eaa2d09d3efd3e006ef42151b30367dc6e3aa5e44caba3fe4d3e352e65101fbdb86a96776b91946ff06f8eac594dc6ee1d3e82a42dfe1b40fef6bcc3fd"
 ];
-
-MnemonicCode _mc;
-
-
-void _setup() {
-  _mc = new MnemonicCode(_wordlist_english);
-}
-
-
-void _testBadEntropyLength() {
-  Uint8List entropy = CryptoUtils.hexToBytes("7f7f7f7f7f7f7f7f7f7f7f7f7f7f");
-  expect(() => _mc.toMnemonic(entropy), throwsA(new isInstanceOf<MnemonicLengthException>()));
-}    
-
-
-void _testBadLength() {
-  List<String> words = _split("risk tiger venture dinner age assume float denial penalty hello");
-  expect(() => _mc.check(words), throwsA(new isInstanceOf<MnemonicLengthException>()));
-}
-
-
-void _testBadWord() {
-  List<String> words = _split("risk tiger venture dinner xyzzy assume float denial penalty hello game wing");
-  expect(() => _mc.check(words), throwsA(new isInstanceOf<MnemonicWordException>()));
-}
-
-void _testBadChecksum() {
-  List<String> words = _split("bless cloud wheel regular tiny venue bird web grief security dignity zoo");
-  expect(() => _mc.check(words), throwsA(new isInstanceOf<MnemonicChecksumException>()));
-}
-
-
-void _testVectors() {
-  for (int ii = 0; ii < _vectors.length; ii += 3) {
-    String vecData = _vectors[ii];
-    String vecCode = _vectors[ii+1];
-    String vecSeed = _vectors[ii+2];
-
-    List<String> code = _mc.toMnemonic(CryptoUtils.hexToBytes(vecData));
-    Uint8List seed = MnemonicCode.toSeed(code, "TREZOR");
-    Uint8List entropy = _mc.toEntropy(_split(vecCode));
-
-    expect(CryptoUtils.bytesToHex(entropy), equals(vecData), reason: "incorrect entropy");
-    expect(code.join(" "), equals(vecCode), reason: "incorrect mnemonic");
-    expect(CryptoUtils.bytesToHex(seed), equals(vecSeed), reason: "incorrect seed");
-  }
-}
-
-List<String> _split(String words) => words.split(" ");
-
-
-void main() {
-  group("crypto.MnemonicCode", () {
-    setUp(() => _setup());
-    test("badEntropyLength", () => _testBadEntropyLength());
-    test("badLength", () => _testBadLength());
-    test("badWord", () => _testBadWord());
-    test("badChecksum", () => _testBadChecksum());
-    test("vectors", () => _testVectors());
-  });
-}
-
 
 
 // THE WORD LIST

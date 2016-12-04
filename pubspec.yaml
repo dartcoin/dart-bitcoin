@@ -8,7 +8,6 @@ dependencies:
   base58check: "0.1.0"
   bignum: ">=0.0.4"
   bytes: ">=0.2.0 <0.3.0"
-  cipher: any
   collection: any
   crypto: any
   cryptoutils: ">=0.1.8"
@@ -17,5 +16,5 @@ dependencies:
   pointycastle: any
 dev_dependencies:
   browser: any
-  unittest: any
+  test: any
   uuid: any

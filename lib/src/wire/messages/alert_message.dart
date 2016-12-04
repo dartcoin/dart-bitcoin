@@ -25,7 +25,7 @@ class AlertMessage extends Message {
   String reserved;
 
   Uint8List messageChecksum;
-  Uint8List signature;
+  ECDSASignature signature;
   
   AlertMessage();
   
@@ -33,19 +33,18 @@ class AlertMessage extends Message {
   AlertMessage.empty();
   
   bool isSignatureValid(Uint8List key) =>
-    KeyPair.verifySignatureForPubkey(messageChecksum,
-        new ECDSASignature.fromDER(signature), key);
+      KeyPair.verifySignatureForPubkey(messageChecksum, signature, key);
+
 
   @override
   void bitcoinDeserialize(bytes.Reader reader, int pver) {
-    signature = readByteArray(reader);
-    ChecksumReader messageReader =
-        new ChecksumReader(reader, new crypto.DoubleSHA256Digest());
-    _readMessage(messageReader);
-    messageChecksum = messageReader.checksum();
+    Uint8List message = readByteArray(reader);
+    signature = new ECDSASignature.fromDER(readByteArray(reader));
+    messageChecksum = crypto.doubleDigest(message);
+    _parseMessage(new bytes.Reader(message));
   }
 
-  void _readMessage(bytes.Reader reader) {
+  void _parseMessage(bytes.Reader reader) {
     version = readUintLE(reader);
     relayUntil = new DateTime.fromMillisecondsSinceEpoch(readUintLE(reader, 8) * 1000);
     expiration = new DateTime.fromMillisecondsSinceEpoch(readUintLE(reader, 8) * 1000);
@@ -73,7 +72,7 @@ class AlertMessage extends Message {
     if(signature == null)
       throw new Exception("Cannot sign AlertMessages ourselves");
     _writeMessage(buffer);
-    writeByteArray(buffer, signature);
+    writeByteArray(buffer, signature.encodeToDER());
   }
   
   void _writeMessage(bytes.Buffer buffer) {
