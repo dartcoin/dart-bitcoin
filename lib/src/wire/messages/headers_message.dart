@@ -5,27 +5,27 @@ class HeadersMessage extends Message {
   @override
   String get command => Message.CMD_HEADERS;
   
-  List<Block> headers;
+  List<BlockHeader> headers;
   
-  HeadersMessage(List<Block> this.headers);
+  HeadersMessage(List<BlockHeader> this.headers);
   
   /// Create an empty instance.
   HeadersMessage.empty();
 
-  void addHeader(Block header) {
+  void addHeader(BlockHeader header) {
     headers.add(header);
   }
   
-  void removeHeader(Block header) {
+  void removeHeader(BlockHeader header) {
     headers.remove(header);
   }
   
   @override
   void bitcoinDeserialize(bytes.Reader reader, int pver) {
     int nbHeaders = readVarInt(reader);
-    List<Block> newHeaders = new List<Block>(nbHeaders);
+    List<BlockHeader> newHeaders = new List<Block>(nbHeaders);
     for(int i = 0 ; i < nbHeaders ; i++) {
-      newHeaders[i] = readObject(reader, new Block.empty(), pver);
+      newHeaders[i] = readObject(reader, new BlockHeader.empty(), pver);
     }
     headers = newHeaders;
   }
@@ -33,12 +33,8 @@ class HeadersMessage extends Message {
   @override
   void bitcoinSerialize(bytes.Buffer buffer, int pver) {
     writeVarInt(buffer, headers.length);
-    for(Block header in headers) {
-      if(header.isHeader) {
-        writeObject(buffer, header, pver);
-      } else {
-        writeObject(buffer, header.cloneAsHeader(), pver);
-      }
+    for(BlockHeader header in headers) {
+      header.bitcoinSerializeAsEmptyBlock(buffer, pver);
     }
   }
 }

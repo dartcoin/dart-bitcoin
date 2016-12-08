@@ -26,7 +26,7 @@ class InventoryItem extends BitcoinSerializable {
   }
 
   InventoryItem.fromTransaction(Transaction tx) : this(InventoryItemType.MSG_TX, tx.hash);
-  InventoryItem.fromBlock(Block block) : this(InventoryItemType.MSG_BLOCK, block.hash);
+  InventoryItem.fromBlock(BlockHeader block) : this(InventoryItemType.MSG_BLOCK, block.hash);
   
   // required for serialization
   InventoryItem.empty();
