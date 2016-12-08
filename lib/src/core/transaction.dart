@@ -4,18 +4,19 @@ class Transaction extends BitcoinSerializable {
   
   static const int TRANSACTION_VERSION = 1;
 
-  Hash256 hash;
+  Hash256 _hash;
   
   int version;
   List<TransactionInput> inputs;
   List<TransactionOutput> outputs;
   int lockTime;
   
-  Transaction({ Hash256 this.hash,
+  Transaction({ Hash256 hash,
                 List<TransactionInput> this.inputs,
                 List<TransactionOutput> this.outputs,
                 int this.lockTime: 0,
                 int this.version: TRANSACTION_VERSION}) {
+    _hash = hash;
     inputs = inputs ?? new List<TransactionInput>();
     outputs = outputs ?? new List<TransactionOutput>();
   }
@@ -30,12 +31,18 @@ class Transaction extends BitcoinSerializable {
   /// Create an empty instance.
   Transaction.empty();
 
+  Hash256 get hash {
+    if (_hash == null) {
+      _hash = calculateHash();
+    }
+    return _hash;
+  }
+
   Hash256 calculateHash() {
     var buffer = new bytes.Buffer();
     bitcoinSerialize(buffer, 0);//TODO pver here?
     Uint8List checksum = crypto.doubleDigest(buffer.asBytes());
-    hash = new Hash256(utils.reverseBytes(checksum));
-    return hash;
+    return new Hash256(utils.reverseBytes(checksum));
   }
 
   Hash256 get txid => hash;
