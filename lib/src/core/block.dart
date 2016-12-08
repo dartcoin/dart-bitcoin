@@ -1,6 +1,6 @@
 part of dartcoin.core;
 
-class Block extends BitcoinSerializable {
+class Block extends BlockHeader {
   
   static const int BLOCK_VERSION = 1;
   
@@ -24,33 +24,33 @@ class Block extends BitcoinSerializable {
   /** A value for difficultyTarget (nBits) that allows half of all possible hash solutions. Used in unit testing. */
   static const int EASIEST_DIFFICULTY_TARGET = 0x207fFFFF;
 
-  
-  int version;
-  Hash256 previousBlock;
-  Hash256 merkleRoot;
-  int timestamp;
-  int difficultyTarget;
-  int nonce;
+
   List<Transaction> transactions;
 
-  Hash256 _hash;
   int height;
   
   Block({ Hash256 hash,
-        Hash256 this.previousBlock,
-        Hash256 this.merkleRoot,
-          int this.timestamp,
-          int this.difficultyTarget,
-          int this.nonce: 0,
+          int version: BLOCK_VERSION,
+          Hash256 previousBlock,
+          Hash256 merkleRoot,
+          int timestamp,
+          int difficultyTarget,
+          int nonce: 0,
           List<Transaction> this.transactions,
-          int this.height,
-          int this.version: BLOCK_VERSION}) {
-    this._hash = hash;
-    previousBlock = previousBlock ?? Hash256.ZERO_HASH;
-    timestamp = timestamp ?? new DateTime.now().millisecondsSinceEpoch ~/ 1000;
-    difficultyTarget = difficultyTarget ?? EASIEST_DIFFICULTY_TARGET;
+          int this.height})
+      : super._header(hash, version, previousBlock, merkleRoot, timestamp, difficultyTarget, nonce) {
     transactions = transactions ?? new List<Transaction>();
   }
+
+  Block.fromHeader(BlockHeader header) : this(
+      hash: header.hash,
+      version: header.version,
+      previousBlock: header.previousBlock,
+      merkleRoot: header.merkleRoot,
+      timestamp: header.timestamp,
+      difficultyTarget: header.difficultyTarget,
+      nonce: header.nonce
+  );
 
   factory Block.fromBitcoinSerialization(Uint8List serialization, int pver) {
     var reader = new bytes.Reader(serialization);
@@ -60,32 +60,10 @@ class Block extends BitcoinSerializable {
   }
 
   /// Create an empty instance.
-  Block.empty();
-
-  Hash256 get hash {
-    if (_hash == null) {
-      _hash = calculateHash();
-    }
-    return _hash;
-  }
-
-  Hash256 calculateHash() {
-    var buffer = new bytes.Buffer();
-    _serializeHeader(buffer);
-    Uint8List checksum = crypto.doubleDigest(buffer.asBytes());
-    return new Hash256(utils.reverseBytes(checksum));
-  }
-
-  DateTime get time => new DateTime.fromMillisecondsSinceEpoch(timestamp * 1000);
+  Block.empty() : super.empty();
   
-  void set time(DateTime time) {
-    timestamp = time.millisecondsSinceEpoch ~/ 1000;
-  }
-  
-  BigInteger get difficultyTargetAsInteger => utils.decodeCompactBits(difficultyTarget);
-  
-  bool get isHeader {
-    return transactions == null || transactions.isEmpty;
+  bool get hasTransactions {
+    return transactions != null && transactions.isNotEmpty;
   }
 
   /**
@@ -94,17 +72,7 @@ class Block extends BitcoinSerializable {
    */
   static final BigInteger _LARGEST_HASH = (BigInteger.ONE << 256);
   
-  /**
-   * Returns the work represented by this block.
-   *
-   * Work is defined as the number of tries needed to solve a block in the
-   * average case. Consider a difficulty target that covers 5% of all possible
-   * hash values. Then the work of the block will be 20. As the target gets
-   * lower, the amount of work goes up.
-   */
-  BigInteger get work => _LARGEST_HASH / (difficultyTargetAsInteger + BigInteger.ONE);
-  
-  Block cloneAsHeader() => new Block(
+  BlockHeader cloneAsHeader() => new BlockHeader(
       hash: _hash,
       previousBlock: previousBlock,
       merkleRoot: merkleRoot,
@@ -315,21 +283,22 @@ class Block extends BitcoinSerializable {
       nonce++;
     }
   }
-  
+
   @override
   bool operator ==(Block other) {
-    if(other is! Block) return false;
+    if(other.runtimeType != Block) return false;
     if(identical(this, other)) return true;
     return hash == other.hash;
   }
-  
+
   @override
-  int get hashCode => hash.hashCode;
+  int get hashCode => (Block).hashCode ^ hash.hashCode;
 
   void bitcoinSerialize(bytes.Buffer buffer, int pver) {
-    _serializeHeader(buffer);
-    if(isHeader) {
-      buffer.add([0]);
+    // serialize header
+    super.bitcoinSerialize(buffer, pver);
+    if(!hasTransactions) {
+      buffer.addByte(0);
     } else {
       writeVarInt(buffer, transactions.length);
       for(Transaction tx in transactions)
@@ -337,42 +306,10 @@ class Block extends BitcoinSerializable {
     }
   }
 
-  /**
-   * Deserialize a block.
-   *
-   * Please note that when this block represents only a header,
-   * you must indicate the correct [length] or provide a [toUint8List] of correct length.
-   * You can also use the [deserializeHeader()] constructor for deserializing headers.
-   */
   void bitcoinDeserialize(bytes.Reader reader, int pver) {
-    // parse header
-    _deserializeHeader(reader);
-    //TODO find more elegant solution to deserialize headers only
-    try {
-      // parse transactions
-      _deserializeTransactions(reader, pver);
-    } on SerializationException {
-      //TODO wrong assumption that any SerializationException is for too few bytes
-      return;
-    }
-  }
-
-  void _serializeHeader(bytes.Buffer buffer) {
-    writeUintLE(buffer, version);
-    writeSHA256(buffer, previousBlock);
-    writeSHA256(buffer, merkleRoot);
-    writeUintLE(buffer, timestamp);
-    writeUintLE(buffer, difficultyTarget);
-    writeUintLE(buffer, nonce);
-  }
-
-  void _deserializeHeader(bytes.Reader reader) {
-    version = readUintLE(reader);
-    previousBlock = readSHA256(reader);
-    merkleRoot = readSHA256(reader);
-    timestamp = readUintLE(reader);
-    difficultyTarget = readUintLE(reader);
-    nonce = readUintLE(reader);
+    // deserialize header
+    super.bitcoinDeserialize(reader, pver);
+    _deserializeTransactions(reader, pver);
   }
 
   void _deserializeTransactions(bytes.Reader reader, int pver) {

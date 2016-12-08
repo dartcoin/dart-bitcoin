@@ -41,9 +41,10 @@ void main() {
       , 0);
 
       // Block 100001
-      expect(block.hash, equals(new Hash256(
-          "00000000000080b66c911bd5ba14a74260057311eaeb1982802f7010f1a9f090")));
-      expect(filteredBlock.header.hash, equals(block.hash));
+      var actualHash = new Hash256(
+          "00000000000080b66c911bd5ba14a74260057311eaeb1982802f7010f1a9f090");
+      expect(block.hash, equals(actualHash));
+      expect(filteredBlock.header.hash, equals(actualHash));
 
       List<Hash256> txHashList = filteredBlock.transactionHashes;
       expect(txHashList.length, equals(4));

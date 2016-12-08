@@ -4,14 +4,14 @@ class FilteredBlock extends BitcoinSerializable {
   /** The protocol version at which Bloom filtering started to be supported. */
   static const int MIN_PROTOCOL_VERSION = 70000;
   
-  Block header;
+  BlockHeader header;
   PartialMerkleTree merkleTree;
 
   // cached list of tx hashes
   List<Hash256> _hashes;
   Map<Hash256, Transaction> _txs;
   
-  FilteredBlock(Block this.header, PartialMerkleTree this.merkleTree) {
+  FilteredBlock(BlockHeader this.header, PartialMerkleTree this.merkleTree) {
     if(header == null || merkleTree == null)
       throw new ArgumentError("header or merkleTree is null");
   }
@@ -70,16 +70,12 @@ class FilteredBlock extends BitcoinSerializable {
   // serialization
 
   void bitcoinSerialize(bytes.Buffer buffer, int pver) {
-    if(header.isHeader) {
-      writeObject(buffer, header, pver);
-    } else {
-      writeObject(buffer, header.cloneAsHeader(), pver);
-    }
+    header.bitcoinSerializeAsEmptyBlock(buffer, pver);
     writeObject(buffer, merkleTree, pver);
   }
 
   void bitcoinDeserialize(bytes.Reader reader, int pver) {
-    header = readObject(reader, new Block.empty(), pver);
+    header = readObject(reader, new BlockHeader.empty(), pver);
     merkleTree = readObject(reader, new PartialMerkleTree.empty(), pver);
   }
 }

@@ -62,6 +62,7 @@ part "src/core/transaction_output.dart";
 
 // blocks
 part "src/core/block.dart";
+part "src/core/block_header.dart";
 part "src/core/verification_exception.dart";
 
 // bloom filters

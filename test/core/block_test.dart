@@ -92,13 +92,6 @@ void main() {
       expect(() => block.verify(true), throwsA(new isInstanceOf<VerificationException>()));
     });
 
-    test("header-parse", () {
-      Block block = new Block.fromBitcoinSerialization(blockBytes, 0);
-      Block header = block.cloneAsHeader();
-      Block reparsed = new Block.fromBitcoinSerialization(header.bitcoinSerializedBytes(0), 0);
-      expect(reparsed, equals(header));
-    });
-
     test("serialization", () {
       // We have to be able to reserialize everything exactly as we found it for hashing to work. This test also
       // proves that transaction serialization works, along with all its subobjects like scripts and in/outpoints.
@@ -140,6 +133,17 @@ void main() {
 //      expect(block.length, origBlockLen + tx.length);
 //      expect(tx.length, origTxLength + 41); // - 1 + 40 + 1 + 1
 //   });
+
+  });
+
+  group("core.BlockHeader", () {
+
+    test("header-parse", () {
+      Block block = new Block.fromBitcoinSerialization(blockBytes, 0);
+      BlockHeader header = block.cloneAsHeader();
+      BlockHeader reparsed = new BlockHeader.fromBitcoinSerialization(header.bitcoinSerializedBytes(0), 0);
+      expect(reparsed, equals(header));
+    });
 
   });
 }
