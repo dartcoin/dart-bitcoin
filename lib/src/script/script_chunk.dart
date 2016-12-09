@@ -1,52 +1,45 @@
 part of dartcoin.script;
 
 class ScriptChunk {
-  bool _isOpCode;
-  Uint8List _data;
-  int _startLocationInProgram;
+
+  /// Only set if opCode, otherwise null
+  int opCode;
+  /// Only set if not opcode, otherwise null
+  Uint8List data;
+
+  int startLocationInProgram;
   
-  ScriptChunk(bool isOpCode, Uint8List data, [int startLocationInProgram]) {
-    if(isOpCode && data.length != 1) throw new ArgumentError("OpCode data must be of length 1.");
-    //if(data.length > Script.MAX_SCRIPT_ELEMENT_SIZE) throw new ArgumentError("ScriptChunk data exceeds max data size.");
-    _isOpCode = isOpCode;
-    _data = new Uint8List.fromList(data);
-    _startLocationInProgram = startLocationInProgram;
-  }
-  
-  ScriptChunk.opCode(int opCode) {
-    _isOpCode = true;
-    _data = new Uint8List.fromList([0xff & opCode]);
+  ScriptChunk.opCodeChunk(int this.opCode, [int this.startLocationInProgram]) {
+    opCode = opCode & 0xff;
   }
 
-  ScriptChunk.data(Uint8List data) {
-    _isOpCode = false;
-    _data = new Uint8List.fromList(data);
-  }
+  ScriptChunk.dataChunk(Uint8List this.data, [int this.startLocationInProgram]);
   
-  bool get isOpCode => _isOpCode;
-  
-  Uint8List get bytes => serialize();
-  
-  int get startLocationInProgram => _startLocationInProgram;
+  bool get isOpCode => opCode != null;
   
   @override
   String toString() {
-    if(_isOpCode)
-      return ScriptOpCodes.getOpCodeName(bytes[0]);
+    if(isOpCode)
+      return ScriptOpCodes.getOpCodeName(opCode);
     else
-      return "[" + CryptoUtils.bytesToHex(bytes) + "]";
+      return "[" + CryptoUtils.bytesToHex(data) + "]";
   }
   
-  bool equalsOpCode(int opCode) => _isOpCode && _data[0] == opCode;
-  
-  Uint8List serialize() => _isOpCode ? new Uint8List.fromList(_data) : Script.encodeData(bytes);
+  Uint8List serialize() {
+    if (isOpCode) {
+      return new Uint8List.fromList([opCode]);
+    } else {
+      return Script.encodeData(data);
+    }
+  }
   
   @override
   bool operator ==(ScriptChunk other) {
     if(other is! ScriptChunk) return false;
-    return _isOpCode == other._isOpCode && utils.equalLists(_data, other._data);
+    return isOpCode == other.isOpCode &&
+        utils.equalLists(serialize(), other.serialize());
   }
   
   @override
-  int get hashCode => (_isOpCode ? 0xffff : 0) ^ utils.listHashCode(_data);
+  int get hashCode => (isOpCode ? 0xffff : 0) ^ utils.listHashCode(serialize());
 }

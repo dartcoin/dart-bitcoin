@@ -5,7 +5,7 @@ import "dart:collection";
 import "dart:typed_data";
 
 import "package:bignum/bignum.dart";
-import "package:bytes/bytes.dart";
+import "package:bytes/bytes.dart" as bytes;
 import "package:cryptoutils/cryptoutils.dart";
 
 import "package:dartcoin/core.dart";

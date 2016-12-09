@@ -149,7 +149,7 @@ class Transaction extends BitcoinSerializable {
   void verify() {
     if(inputs.length == 0 || outputs.length == 0)
       throw new VerificationException("Transaction had no inputs or no outputs.");
-    if(this.serializationLength > Block.MAX_BLOCK_SIZE)
+    if(bitcoinSerializedBytes(0).length > Block.MAX_BLOCK_SIZE)
       throw new VerificationException("Transaction larger than MAX_BLOCK_SIZE");
 
     int valueOut = 0;
@@ -162,7 +162,7 @@ class Transaction extends BitcoinSerializable {
       throw new VerificationException("Total transaction output value greater than possible");
 
     if(isCoinbase) {
-      if(inputs[0].scriptSig.bytes.length < 2 || inputs[0].scriptSig.bytes.length > 100)
+      if(inputs[0].scriptSig.program.length < 2 || inputs[0].scriptSig.program.length > 100)
         throw new VerificationException("Coinbase script size out of range");
     } else {
       for(TransactionInput input in inputs)
@@ -198,7 +198,7 @@ class Transaction extends BitcoinSerializable {
     //
     // Also store the input sequence numbers in case we are clearing them with SigHash.NONE/SINGLE
     if(connectedScript is Script)
-      connectedScript = connectedScript.bytes;
+      connectedScript = connectedScript.program;
     if(connectedScript is! Uint8List)
       throw new ArgumentError("The connectedScript parameter must be either of type Script or Uint8List.");
     

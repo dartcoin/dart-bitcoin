@@ -14,11 +14,13 @@ class MultiSigInputScript extends Script {
   /**
    * Create a script that satisfies an [OP_CHECKMULTISIG] program.
    */
-  factory MultiSigInputScript(List<TransactionSignature> signatures, [bool encoded = true]) {
-    return new MultiSigInputScript.fromEncodedSignatures(new List.from(signatures.map((s) => s.bitcoinSerializedBytes(0))), encoded);
+  factory MultiSigInputScript(List<TransactionSignature> signatures) {
+    return new MultiSigInputScript.fromEncodedSignatures(new List.from(
+        signatures.map((s) => s.bitcoinSerializedBytes(0))));
   }
 
-  MultiSigInputScript.convert(Script script, [bool skipCheck = false]) : super(script.bytes) {
+  MultiSigInputScript.convert(Script script, [bool skipCheck = false])
+      : super(script.program) {
     if(!skipCheck && !matchesType(script))
       throw new ScriptException("Given script is not an instance of this script type.");
   }
@@ -29,13 +31,13 @@ class MultiSigInputScript extends Script {
    * 
    * No checks on the encoding are performed.
    */
-  factory MultiSigInputScript.fromEncodedSignatures(List<Uint8List> signatures, [bool encoded = true]) {
+  factory MultiSigInputScript.fromEncodedSignatures(List<Uint8List> signatures) {
     if(signatures.length <= 0 || signatures.length > 16)
       throw new ScriptException("A minimum of 1 and a maximum of 16 signatures should be given.");
     ScriptBuilder builder = new ScriptBuilder()
       ..smallNum(0); // Work around a bug in CHECKMULTISIG that is now a required part of the protocol.
     signatures.forEach((s) => builder.data(s));
-    return new MultiSigInputScript.convert(builder.build(encoded), true);
+    return new MultiSigInputScript.convert(builder.build(), true);
   }
   
   /**
@@ -44,16 +46,18 @@ class MultiSigInputScript extends Script {
    * Use [aesKeys] to specify the decryption keys for each key (if required). 
    * The [aesKeys] are mapped one-to-one with the [keys].
    */
-  factory MultiSigInputScript.fromKeys(List<KeyPair> keys, Hash256 message, [List<KeyParameter> aesKeys, bool encoded = true]) {
-    if(aesKeys == null) aesKeys = new List.filled(keys.length, null); // for convenience
-    List<TransactionSignature> signatures = new List<TransactionSignature>(keys.length);
+  factory MultiSigInputScript.fromKeys(List<KeyPair> keys, Hash256 message,
+      [List<KeyParameter> aesKeys]) {
+    if(aesKeys == null) aesKeys = new List.filled(keys.length, null);
+    List<TransactionSignature> signatures =
+    new List<TransactionSignature>(keys.length);
     for(int i = 0 ; i < keys.length ; i++)
       signatures[i] = keys[i].sign(message, aesKeys[i]);
-    return new MultiSigInputScript(signatures, encoded);
+    return new MultiSigInputScript(signatures);
   }
   
   List<TransactionSignature> get signatures =>
-    chunks.sublist(0).map((c) => new TransactionSignature.deserialize(c.bytes));
+    chunks.sublist(0).map((c) => new TransactionSignature.deserialize(c.data));
   
   /**
    * 
@@ -64,7 +68,7 @@ class MultiSigInputScript extends Script {
     List<ScriptChunk> chunks = script.chunks;
     if(chunks.length > 17 || chunks.length < 2)
       return false;
-    if(!chunks[0].equalsOpCode(Script.encodeToOpN(0)))
+    if(chunks[0].opCode != Script.encodeToOpN(0))
       return false;
     for(int i = 1 ; i < chunks.length ; i++) {
       if(chunks[i].isOpCode)

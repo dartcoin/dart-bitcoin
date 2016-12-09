@@ -16,7 +16,7 @@ class PayToPubKeyHashInputScript extends Script {
    * If [encoded] is set to false, the script will be built using chunks. This improves
    * performance when the script is intended for execution.
    */
-  factory PayToPubKeyHashInputScript(dynamic signature, dynamic pubKey, [bool encoded = true]) {
+  factory PayToPubKeyHashInputScript(dynamic signature, dynamic pubKey) {
     if(signature is TransactionSignature) 
       signature = signature.encodeToDER();
     if(pubKey is KeyPair)
@@ -26,17 +26,17 @@ class PayToPubKeyHashInputScript extends Script {
     return new PayToPubKeyHashInputScript.convert(new ScriptBuilder()
       .data(signature)
       .data(pubKey)
-      .build(encoded), true);
+      .build(), true);
   }
   
-  PayToPubKeyHashInputScript.convert(Script script, [bool skipCheck = false]) : super(script.bytes) {
+  PayToPubKeyHashInputScript.convert(Script script, [bool skipCheck = false]) : super(script.program) {
     if(!skipCheck && !matchesType(script)) 
       throw new ScriptException("Given script is not an instance of this script type.");
   }
   
-  TransactionSignature get signature => new TransactionSignature.deserialize(chunks[0].bytes, requireCanonical: false);
+  TransactionSignature get signature => new TransactionSignature.deserialize(chunks[0].data, requireCanonical: false);
   
-  KeyPair get pubKey => new KeyPair.public(chunks[1].bytes);
+  KeyPair get pubKey => new KeyPair.public(chunks[1].data);
   
   Address getAddress([NetworkParameters params]) => pubKey.getAddress(params);
   
@@ -45,7 +45,7 @@ class PayToPubKeyHashInputScript extends Script {
    */
   static bool matchesType(Script script) {
     return script.chunks.length == 2 && 
-        script.chunks[0].bytes.length > 1 &&
-        script.chunks[1].bytes.length > 1;
+        script.chunks[0].data.length > 1 &&
+        script.chunks[1].data.length > 1;
   }
 }

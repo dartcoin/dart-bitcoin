@@ -21,13 +21,13 @@ class ScriptExecutor {
       bool shouldExecute = !ifStack.contains(false);
       
       if(!chunk.isOpCode) {
-        if(chunk.bytes.length > Script.MAX_SCRIPT_ELEMENT_SIZE)
+        if(chunk.data.length > Script.MAX_SCRIPT_ELEMENT_SIZE)
           throw new ScriptException("Attempted to push a data string larger than 520 bytes", script);
         if(!shouldExecute)
           continue;
-        stack.add(chunk.bytes);
+        stack.add(chunk.data);
       } else {
-        int opcode = chunk.bytes[0];
+        int opcode = chunk.opCode;
         // increase opCount
         if (opcode > ScriptOpCodes.OP_16) {
           opCount++;
@@ -566,7 +566,7 @@ class ScriptExecutor {
       throw new ScriptException("Attempted OP_CHECKSIG(VERIFY) with a sig or pubkey of length 0", script, opcode);
   
     // copy the program bytes
-    Uint8List prog = new Uint8List.fromList(script.bytes);
+    Uint8List prog = new Uint8List.fromList(script.program);
     Uint8List connectedScript = prog.sublist(lastCodeSepLocation);
 
     connectedScript = removeAllInstancesOf(connectedScript, Script.encodeData(sigBytes));
@@ -621,7 +621,7 @@ class ScriptExecutor {
     }
   
     // copying
-    Uint8List prog = new Uint8List.fromList(script.bytes);
+    Uint8List prog = new Uint8List.fromList(script.program);
     Uint8List connectedScript = prog.sublist(lastCodeSepLocation, prog.length);
     
     for (Uint8List sig in sigs)

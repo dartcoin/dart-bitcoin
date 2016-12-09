@@ -17,7 +17,7 @@ class _UnitTestParams extends NetworkParameters {
       Block genesis = NetworkParameters._createGenesis(this)
         ..timestamp = new DateTime.now().millisecondsSinceEpoch ~/ 1000
         ..difficultyTarget = Block.EASIEST_DIFFICULTY_TARGET
-        ..solve();
+        ..solve(this);
       _genesis = genesis;
     }
     return _genesis;

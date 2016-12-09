@@ -6,7 +6,7 @@ class Script {
   static final Script EMPTY_SCRIPT = new Script(new Uint8List(0));
   
   List<ScriptChunk> _chunks;
-  Uint8List _bytes;
+  Uint8List _program;
   
   /**
    * Create a new script.
@@ -15,7 +15,7 @@ class Script {
    */
   Script(dynamic script) {
     if(script is Uint8List) {
-      _bytes = new Uint8List.fromList(script);
+      _program = new Uint8List.fromList(script);
       return;
     }
     if(script is Iterable<ScriptChunk>) {
@@ -36,7 +36,7 @@ class Script {
       try {
         int val = int.parse(s);
         if (val >= -1 && val <= 16) {
-          chunks.add(new ScriptChunk.opCode(Script.encodeToOpN(val)));
+          chunks.add(new ScriptChunk.opCodeChunk(Script.encodeToOpN(val)));
           continue;
         }
 //        else
@@ -47,12 +47,12 @@ class Script {
         s = s.substring(3);
       int opcode = ScriptOpCodes.getOpCode(s);
       if(opcode != ScriptOpCodes.OP_INVALIDOPCODE) {
-        chunks.add(new ScriptChunk.opCode(opcode));
+        chunks.add(new ScriptChunk.opCodeChunk(opcode));
         continue;
       }
       // try data
       if(s.startsWith("[") && s.endsWith("]")) {
-        chunks.add(new ScriptChunk.data(CryptoUtils.hexToBytes(s.substring(1, s.length - 1))));
+        chunks.add(new ScriptChunk.dataChunk(CryptoUtils.hexToBytes(s.substring(1, s.length - 1))));
         continue;
       }
       throw new FormatException("The script string is invalid: $string");
@@ -60,11 +60,11 @@ class Script {
     return new Script(chunks);
   }
   
-  Uint8List get bytes {
-    if(_bytes == null) {
-      _bytes = encode();
+  Uint8List get program {
+    if(_program == null) {
+      _program = encode();
     }
-    return new Uint8List.fromList(_bytes);
+    return new Uint8List.fromList(_program);
   }
   
   List<ScriptChunk> get chunks {
@@ -78,12 +78,12 @@ class Script {
   operator ==(Script other) {
     if(other is! Script) return false;
     if(identical(this, other)) return true;
-    return utils.equalLists(bytes, other.bytes);
+    return utils.equalLists(this.program, other.program);
   }
   
   @override
   int get hashCode {
-    return utils.listHashCode(bytes);
+    return utils.listHashCode(this.program);
   }
   
   String toString() {
@@ -95,53 +95,58 @@ class Script {
   void _parse() {
     if(_chunks != null) return;
     List<ScriptChunk> chunks = new List<ScriptChunk>();
-    DoubleLinkedQueue<int> bytes = new DoubleLinkedQueue.from(_bytes); // because there is removeLast but not removeFirst
-    int initialSize = bytes.length;
-    
-    while(bytes.length > 0) {
-      int startLocationInProgram = initialSize - bytes.length;
-      int opcode = bytes.removeFirst();
+    var reader = new bytes.Reader(_program);
+    int initialSize = reader.remainingLength;
+
+    while(reader.remainingLength > 0) {
+      int startLocationInProgram = initialSize - reader.remainingLength;
+      int opcode = reader.readByte();
       
       int dataToRead = -1;
       if(opcode >= 0 && opcode < ScriptOpCodes.OP_PUSHDATA1) {
         dataToRead = opcode;
       } else if(opcode == ScriptOpCodes.OP_PUSHDATA1) {
-        if(bytes.length < 1) throw new ScriptException("Unexpected end of script", this, opcode);
-        dataToRead = bytes.removeFirst();
+        if(reader.remainingLength < 1) {
+          throw new ScriptException("Unexpected end of script", this, opcode);
+        }
+        dataToRead = reader.readByte();
       } else if(opcode == ScriptOpCodes.OP_PUSHDATA2) {
-        if(bytes.length < 2) throw new ScriptException("Unexpected end of script", this, opcode);
-        dataToRead = bytes.removeFirst() | (bytes.removeFirst() << 8);
+        if(reader.remainingLength < 2) {
+          throw new ScriptException("Unexpected end of script", this, opcode);
+        }
+        dataToRead = reader.readByte() | (reader.readByte() << 8);
       } else if(opcode == ScriptOpCodes.OP_PUSHDATA4) {
-        if(bytes.length < 2) throw new ScriptException("Unexpected end of script", this, opcode);
-        dataToRead = bytes.removeFirst() | (bytes.removeFirst() << 8) | (bytes.removeFirst() << 16) | (bytes.removeFirst() << 24);
+        if(reader.remainingLength < 4) {
+          throw new ScriptException("Unexpected end of script", this, opcode);
+        }
+        dataToRead = reader.readByte()
+            | (reader.readByte() << 8)
+            | (reader.readByte() << 16)
+            | (reader.readByte() << 24);
       }
       
-      if(dataToRead < 0) {
-        chunks.add(new ScriptChunk(true, new Uint8List.fromList([opcode]), startLocationInProgram));
+      if (dataToRead == -1) {
+        chunks.add(new ScriptChunk.opCodeChunk(opcode, startLocationInProgram));
       } else {
-        if (dataToRead > bytes.length)
-          throw new ScriptException("Push of data element that is larger than remaining data", this, opcode);
-        chunks.add(new ScriptChunk(false, new Uint8List.fromList(_takeFirstN(dataToRead, bytes)), startLocationInProgram));
+        if (dataToRead > reader.remainingLength) {
+          throw new ScriptException(
+              "Push of data element that is larger than remaining data", this,
+              opcode);
+        }
+        chunks.add(new ScriptChunk.dataChunk(reader.readBytes(dataToRead),
+            startLocationInProgram));
       }
     }
     _chunks = chunks;
   }
   
-  List<int> _takeFirstN(int n, DoubleLinkedQueue<int> reverseBuffer) {
-    List<int> result = new List<int>();
-    for(int i = 0 ; i < n ; i++) {
-      result.add(reverseBuffer.removeFirst());
-    }
-    return result;
-  }
-  
   Uint8List encode() {
-    if(_bytes != null) return _bytes;
-    List<int> bytes = new List<int>();
-    for(ScriptChunk chunk in chunks) {
-      bytes.addAll(chunk.bytes);
+    if (_program != null) return _program;
+    var buffer = new bytes.Buffer();
+    for (ScriptChunk chunk in chunks) {
+      buffer.add(chunk.serialize());
     }
-    return new Uint8List.fromList(bytes);
+    return buffer.asBytes();
   }
   
   static Uint8List encodeData(Uint8List data) {
@@ -195,7 +200,7 @@ class Script {
     int lastOpCode = ScriptOpCodes.OP_INVALIDOPCODE;
     for(ScriptChunk chunk in chunks) {
       if(chunk.isOpCode) {
-        int opcode = 0xFF & chunk.bytes[0];
+        int opcode = 0xFF & chunk.data[0];
         switch (opcode) {
         case ScriptOpCodes.OP_CHECKSIG:
         case ScriptOpCodes.OP_CHECKSIGVERIFY:
@@ -230,8 +235,9 @@ class Script {
     // the tx half broken (also it's not so thread safe to work on it directly.
     var oldTx = txContainingThis;
     txContainingThis = new Transaction.empty();
-    txContainingThis.bitcoinDeserialize(new Reader(oldTx.bitcoinSerializedBytes(0)), 0);
-    if (bytes.length > 10000 || scriptPubKey.bytes.length > 10000)
+    txContainingThis.bitcoinDeserialize(
+        new bytes.Reader(oldTx.bitcoinSerializedBytes(0)), 0);
+    if (this.program.length > 10000 || scriptPubKey.program.length > 10000)
       throw new ScriptException("Script larger than 10,000 bytes");
     
     DoubleLinkedQueue<Uint8List> stack = new DoubleLinkedQueue<Uint8List>();
@@ -264,7 +270,7 @@ class Script {
     // TODO [bitcoinj]: Check if we can take out enforceP2SH if there's a checkpoint at the enforcement block.
     if (enforceP2SH && PayToScriptHashOutputScript.matchesType(scriptPubKey)) {
       for (ScriptChunk chunk in chunks)
-        if (chunk.isOpCode && (chunk.bytes[0] & 0xff) > ScriptOpCodes.OP_16)
+        if (chunk.isOpCode && (chunk.data[0] & 0xff) > ScriptOpCodes.OP_16)
           throw new ScriptException("Attempted to spend a P2SH scriptPubKey with a script that contained script ops");
       
       Uint8List scriptPubKeyBytes = p2shStack.removeLast();

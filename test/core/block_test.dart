@@ -48,7 +48,8 @@ void main() {
 
     test("blockVerification", () {
       Block block = new Block.fromBitcoinSerialization(blockBytes, 0);
-      expect(() => block.verify(true), returnsNormally);
+      expect(() => block.verify(NetworkParameters.MAIN_NET, true),
+          returnsNormally);
       expect(block.hash.toString(), equals("00000000a6e5eb79dcec11897af55e90cd571a4335383a3ccfbc12ec81085935"));
     });
 
@@ -62,21 +63,21 @@ void main() {
       NetworkParameters params = NetworkParameters.UNIT_TEST;
       Block block = new Block.fromBitcoinSerialization(blockBytes, 0);
       block.nonce = 12346;
-      expect(() => block.verify(true), throwsA(new isInstanceOf<VerificationException>()));
+      expect(() => block.verify(params, true), throwsA(new isInstanceOf<VerificationException>()));
 
       // Blocks contain their own difficulty target. The BlockChain verification mechanism is what stops real blocks
       // from containing artificially weak difficulties.
       block.difficultyTarget = Block.EASIEST_DIFFICULTY_TARGET;
       // Now it should pass.
-      expect(() => block.verify(true), returnsNormally);
+      expect(() => block.verify(params, true), returnsNormally);
       // Break the nonce again at the lower difficulty level so we can try solving for it.
       block.nonce = 1;
-      expect(() => block.verify(true), throwsA(new isInstanceOf<VerificationException>()));
+      expect(() => block.verify(params, true), throwsA(new isInstanceOf<VerificationException>()));
 
       // Should find an acceptable nonce.
-      block.solve();
+      block.solve(params);
       expect(block.nonce, equals(2));
-      expect(() => block.verify(true), returnsNormally);
+      expect(() => block.verify(params, true), returnsNormally);
     });
 
     test("bad-transaction", () {
@@ -89,7 +90,8 @@ void main() {
       txs[1] = tx1;
       block.transactions = txs;
 
-      expect(() => block.verify(true), throwsA(new isInstanceOf<VerificationException>()));
+      expect(() => block.verify(NetworkParameters.MAIN_NET, true),
+          throwsA(new isInstanceOf<VerificationException>()));
     });
 
     test("serialization", () {

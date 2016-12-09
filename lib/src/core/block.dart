@@ -159,7 +159,7 @@ class Block extends BlockHeader {
   }
 
   /** Returns true if the hash of the block is OK (lower than difficulty target). */
-  bool _checkProofOfWork(bool throwException) {
+  bool _checkProofOfWork(NetworkParameters params, bool throwException) {
     // This part is key - it is what proves the block was as difficult to make as it claims
     // to be. Note however that in the context of this function, the block can claim to be
     // as difficult as it wants to be .... if somebody was able to take control of our network
@@ -226,13 +226,13 @@ class Block extends BlockHeader {
    *
    * @throws VerificationException
    */
-  void verifyHeader([bool checkTimestamp = false]) {
+  void verifyHeader(NetworkParameters params, [bool checkTimestamp = false]) {
     // Prove that this block is OK. It might seem that we can just ignore most of these checks given that the
     // network is also verifying the blocks, but we cannot as it'd open us to a variety of obscure attacks.
     //
     // Firstly we need to ensure this block does in fact represent real work done. If the difficulty is high
     // enough, it's probably been done by the network.
-    _checkProofOfWork(true);
+    _checkProofOfWork(params, true);
     if(checkTimestamp)
       _checkTimestamp();
   }
@@ -249,7 +249,7 @@ class Block extends BlockHeader {
     // transactions that reference spent or non-existant inputs.
     if(transactions == null || transactions.isEmpty)
       throw new VerificationException("Block had no transactions");
-    if(this.serializationLength > MAX_BLOCK_SIZE)
+    if(bitcoinSerializedBytes(0).length > MAX_BLOCK_SIZE)
       throw new VerificationException("Block larger than MAX_BLOCK_SIZE");
     _checkTransactions();
     _checkMerkleRoot();
@@ -261,9 +261,8 @@ class Block extends BlockHeader {
   /**
    * Verifies both the header and that the transactions hash to the merkle root.
    */
-  //TODO verification should not happen inside block object
-  void verify([bool checkTimestamp = false]) {
-    verifyHeader(checkTimestamp);
+  void verify(NetworkParameters params, [bool checkTimestamp = false]) {
+    verifyHeader(params, checkTimestamp);
     verifyTransactions();
   }
 
@@ -274,10 +273,10 @@ class Block extends BlockHeader {
    * <p>This can loop forever if a solution cannot be found solely by incrementing nonce. It doesn't change
    * extraNonce.</p>
    */
-  void solve() {
+  void solve(NetworkParameters params) {
     while(true) {
       // Is our proof of work valid yet?
-      if(_checkProofOfWork(false))
+      if(_checkProofOfWork(params, false))
         return;
       // No, so increment the nonce and try again.
       nonce++;

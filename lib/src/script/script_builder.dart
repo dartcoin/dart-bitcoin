@@ -11,17 +11,17 @@ class ScriptBuilder {
   }
   
   ScriptBuilder op(int opcode) {
-    _chunks.add(new ScriptChunk.opCode(opcode & 0xff));
+    _chunks.add(new ScriptChunk.opCodeChunk(opcode));
     return this;
   }
   
   ScriptBuilder data(Uint8List data) {
-    _chunks.add(new ScriptChunk.data(data));
+    _chunks.add(new ScriptChunk.dataChunk(data));
     return this;
   }
   
   ScriptBuilder smallNum(int num) {
-    _chunks.add(new ScriptChunk.opCode(Script.encodeToOpN(num)));
+    _chunks.add(new ScriptChunk.opCodeChunk(Script.encodeToOpN(num)));
     return this;
   }
   
@@ -30,9 +30,9 @@ class ScriptBuilder {
   }
 
   Uint8List buildBytes() {
-    Buffer buffer = new Buffer();
+    var buffer = new bytes.Buffer();
     for(ScriptChunk chunk in _chunks) {
-      buffer.add(chunk.bytes);
+      buffer.add(chunk.data);
     }
     return buffer.asBytes();
   }

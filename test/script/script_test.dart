@@ -46,10 +46,10 @@ void main() {
     test("fromString", () {
       Script s = new Script.fromString("DUP [ffff] 4 EQUALVERIFY");
       expect(s.chunks.length, equals(4));
-      expect(s.chunks[0], equals(new ScriptChunk.opCode(ScriptOpCodes.OP_DUP)));
-      expect(s.chunks[1], equals(new ScriptChunk.data(new Uint8List.fromList([0xff, 0xff]))));
-      expect(s.chunks[2], equals(new ScriptChunk.opCode(Script.encodeToOpN(4))));
-      expect(s.chunks[3], equals(new ScriptChunk.opCode(ScriptOpCodes.OP_EQUALVERIFY)));
+      expect(s.chunks[0], equals(new ScriptChunk.opCodeChunk(ScriptOpCodes.OP_DUP)));
+      expect(s.chunks[1], equals(new ScriptChunk.dataChunk(new Uint8List.fromList([0xff, 0xff]))));
+      expect(s.chunks[2], equals(new ScriptChunk.opCodeChunk(Script.encodeToOpN(4))));
+      expect(s.chunks[3], equals(new ScriptChunk.opCodeChunk(ScriptOpCodes.OP_EQUALVERIFY)));
     });
 
     test("scriptSig", () {
@@ -74,22 +74,27 @@ void main() {
     });
 
     test("multiSig", () {
-      List<KeyPair> keys = [new KeyPair.generate(), new KeyPair.generate(), new KeyPair.generate()];
-    
+      List<KeyPair> keys = [new KeyPair.generate(), new KeyPair.generate(),
+          new KeyPair.generate()];
+
       expect(() => new MultiSigOutputScript(2, keys), returnsNormally);
       expect(() => new MultiSigOutputScript(3, keys), returnsNormally);
       expect(MultiSigOutputScript.matchesType(
-          new PayToAddressOutputScript(keys[0].getAddress(params))), isFalse);
+          new PayToPubKeyHashOutputScript.withAddress(
+              keys[0].getAddress(params))), isFalse);
     
       // Fail if we ask for more signatures than keys.
-      expect(() => new MultiSigOutputScript(4, keys), throwsA(new isInstanceOf<ScriptException>()));
-      expect(() => new MultiSigOutputScript(0, keys), throwsA(new isInstanceOf<ScriptException>()));
+      expect(() => new MultiSigOutputScript(4, keys),
+          throwsA(new isInstanceOf<ScriptException>()));
+      expect(() => new MultiSigOutputScript(0, keys),
+          throwsA(new isInstanceOf<ScriptException>()));
       // Actual execution is tested by the data driven tests.
     });
 
     test("p2sh", () {
       Address p2shAddress = new Address("35b9vsyH1KoFT5a5KtrKusaCcPLkiSo1tU");
-      expect(PayToScriptHashOutputScript.matchesType(new PayToAddressOutputScript(p2shAddress)), isTrue);
+      expect(PayToScriptHashOutputScript.matchesType(
+          new PayToScriptHashOutputScript.withAddress(p2shAddress)), isTrue);
     });
 
     test("ip", () {
@@ -107,6 +112,8 @@ void main() {
           if(instance.length < 2) continue;
           Script scriptSig = parseScriptString(instance[0]);
           Script scriptPubKey = parseScriptString(instance[1]);
+          scriptSig.correctlySpends(
+              new Transaction(), 0, scriptPubKey, true);
           expect(() => scriptSig.correctlySpends(
               new Transaction(), 0, scriptPubKey, true), returnsNormally,
               reason: JSON.encode(instance));
@@ -144,10 +151,10 @@ void main() {
             Script s = parseScriptString(script);
             // tmp skip scripts with CHECKSIG or MULTISIG
             for(ScriptChunk sc in s.chunks) {
-              if(sc.equalsOpCode(ScriptOpCodes.OP_CHECKMULTISIG) ||
-              sc.equalsOpCode(ScriptOpCodes.OP_CHECKMULTISIGVERIFY) ||
-              sc.equalsOpCode(ScriptOpCodes.OP_CHECKSIG) ||
-              sc.equalsOpCode(ScriptOpCodes.OP_CHECKSIGVERIFY)) {
+              if (sc.opCode == ScriptOpCodes.OP_CHECKMULTISIG ||
+                  sc.opCode == ScriptOpCodes.OP_CHECKMULTISIGVERIFY ||
+                  sc.opCode == ScriptOpCodes.OP_CHECKSIG ||
+                  sc.opCode == ScriptOpCodes.OP_CHECKSIGVERIFY) {
                 continue instances;
               }
             }
@@ -169,10 +176,10 @@ void main() {
       
             // tmp skip scripts with CHECKSIG or MULTISIG
             for(ScriptChunk sc in input.scriptSig.chunks) {
-              if(sc.equalsOpCode(ScriptOpCodes.OP_CHECKMULTISIG) ||
-              sc.equalsOpCode(ScriptOpCodes.OP_CHECKMULTISIGVERIFY) ||
-              sc.equalsOpCode(ScriptOpCodes.OP_CHECKSIG) ||
-              sc.equalsOpCode(ScriptOpCodes.OP_CHECKSIGVERIFY)) {
+              if (sc.opCode == ScriptOpCodes.OP_CHECKMULTISIG ||
+                  sc.opCode == ScriptOpCodes.OP_CHECKMULTISIGVERIFY ||
+                  sc.opCode == ScriptOpCodes.OP_CHECKSIG ||
+                  sc.opCode == ScriptOpCodes.OP_CHECKSIGVERIFY) {
                 continue instances;
               }
             }

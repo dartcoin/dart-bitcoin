@@ -15,28 +15,28 @@ class PayToPubKeyInputScript extends Script {
    * If [encoded] is set to false, the script will be built using chunks. This improves
    * performance when the script is intended for execution.
    */
-  factory PayToPubKeyInputScript(dynamic signature, [bool encoded = true]) {
+  factory PayToPubKeyInputScript(dynamic signature) {
     if (signature is TransactionSignature) 
       signature = signature.encodeToDER();
     if (!(signature is Uint8List)) 
       throw new ArgumentError("The value for signature can be either a TransactionSignature or a Uint8List.");
     return new PayToPubKeyInputScript.convert(new ScriptBuilder()
       .data(signature)
-      .build(encoded), true);
+      .build(), true);
   }
 
-  PayToPubKeyInputScript.convert(Script script, [bool skipCheck = false]): super(script.bytes) {
+  PayToPubKeyInputScript.convert(Script script, [bool skipCheck = false]): super(script.program) {
     if(!skipCheck && !matchesType(script)) 
       throw new ScriptException("Given script is not an instance of this script type.");
   }
 
   TransactionSignature get signature => 
-      new TransactionSignature.deserialize(chunks[0].bytes);
+      new TransactionSignature.deserialize(chunks[0].data);
 
   /**
    * Script must contain only one chunk, the signature data chunk.
    */
   static bool matchesType(Script script) {
-    return script.chunks.length == 1 && script.chunks[0].bytes.length > 1;
+    return script.chunks.length == 1 && script.chunks[0].data.length > 1;
   }
 }
