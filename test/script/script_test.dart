@@ -88,7 +88,7 @@ void main() {
     });
 
     test("p2sh", () {
-      Address p2shAddress = new Address("35b9vsyH1KoFT5a5KtrKusaCcPLkiSo1tU", NetworkParameters.MAIN_NET);
+      Address p2shAddress = new Address("35b9vsyH1KoFT5a5KtrKusaCcPLkiSo1tU");
       expect(PayToScriptHashOutputScript.matchesType(new PayToAddressOutputScript(p2shAddress)), isTrue);
     });
 

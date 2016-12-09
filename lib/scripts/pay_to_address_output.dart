@@ -11,13 +11,15 @@ import "package:dartcoin/scripts/pay_to_script_hash_output.dart";
 /**
  * This class represents a general output script type that can be categorized as pay-to-address.
  * 
- * Examples of scripts in this category are pay-to-puubkey-hash and pay-to-script-hash.
+ * Examples of scripts in this category are pay-to-pubkey-hash and pay-to-script-hash.
  */
 abstract class PayToAddressOutputScript extends Script {
-  
-  factory PayToAddressOutputScript(Address address, [bool encoded = true]) {
-    if(address.isP2SHAddress)
+
+  factory PayToAddressOutputScript(Address address,
+      {NetworkParameters params: NetworkParameters.MAIN_NET, bool encoded: true}) {
+    if(address.isP2SHAddress(params)) {
       return new PayToScriptHashOutputScript(address.hash160, encoded);
+    }
     return new PayToPubKeyHashOutputScript(address.hash160, encoded);
   }
   

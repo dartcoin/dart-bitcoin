@@ -165,7 +165,7 @@ class KeyPair {
    * If [params] is ommited, the MAINNET params will be used.
    */
   Address getAddress([NetworkParameters params = NetworkParameters.MAIN_NET]) =>
-      new Address(pubKeyHash, params);
+      new Address.fromHash160(pubKeyHash, params.addressHeader);
 
   @override
   String toString() {

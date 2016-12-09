@@ -36,7 +36,7 @@ class PayToScriptHashOutputScript extends PayToAddressOutputScript {
   Uint8List get scriptHash => new Uint8List.fromList(bytes.getRange(2, 22));
   
   Address getAddress([NetworkParameters params = NetworkParameters.MAIN_NET]) =>
-      new Address(bytes.getRange(3,  23), params, params.p2shHeader);
+      new Address.fromHash160(bytes.getRange(3,  23), params.p2shHeader);
 
   /**
    * <p>Whether or not this is a scriptPubKey representing a pay-to-script-hash output. In such outputs, the logic that

@@ -16,31 +16,33 @@ void main() {
 
     test("stringification", () {
       // Test a testnet address.
-      Address a = new Address(CryptoUtils.hexToBytes("fda79a24e50ff70ff42f7d89585da5bd19d9e5cc"), _testParams);
+      Address a = new Address.fromHash160(CryptoUtils.hexToBytes(
+          "fda79a24e50ff70ff42f7d89585da5bd19d9e5cc"), _testParams.addressHeader);
       expect(a.toString(), equals("n4eA2nbYqErp7H6jebchxAN59DmNpksexv"));
       expect(a.address, equals("n4eA2nbYqErp7H6jebchxAN59DmNpksexv"));
-      expect(a.isP2SHAddress, isFalse);
+      expect(a.isP2SHAddress(_testParams), isFalse);
 
-      Address b = new Address(CryptoUtils.hexToBytes("4a22c3c4cbb31e4d03b15550636762bda0baf85a"), _mainParams);
+      Address b = new Address.fromHash160(CryptoUtils.hexToBytes(
+          "4a22c3c4cbb31e4d03b15550636762bda0baf85a"), _mainParams.addressHeader);
       expect(b.toString(), equals("17kzeh4N8g49GFvdDzSf8PjaPfyoD1MndL"));
       expect(b.address, equals("17kzeh4N8g49GFvdDzSf8PjaPfyoD1MndL"));
-      expect(b.isP2SHAddress, isFalse);
+      expect(b.isP2SHAddress(_mainParams), isFalse);
     });
 
     test("decoding", () {
-      Address a = new Address("n4eA2nbYqErp7H6jebchxAN59DmNpksexv", _testParams);
+      Address a = new Address("n4eA2nbYqErp7H6jebchxAN59DmNpksexv");
       expect(CryptoUtils.bytesToHex(a.hash160.asBytes()), equals("fda79a24e50ff70ff42f7d89585da5bd19d9e5cc"));
 
-      Address b = new Address("17kzeh4N8g49GFvdDzSf8PjaPfyoD1MndL", _mainParams);
+      Address b = new Address("17kzeh4N8g49GFvdDzSf8PjaPfyoD1MndL");
       expect(CryptoUtils.bytesToHex(b.hash160.asBytes()), equals("4a22c3c4cbb31e4d03b15550636762bda0baf85a"));
     });
 
     test("errorPaths", () {
       // Check what happens if we try and decode garbage.
       try {
-        new Address("this is not a valid address!", _testParams);
+        new Address("this is not a valid address!");
         fail("should not work");
-      } on FormatException catch (e) {
+      } on FormatException {
         // success
       } catch (e) {
         fail("wrong exception: $e");
@@ -48,47 +50,35 @@ void main() {
 
       // Check the empty case.
       try {
-        new Address("", _testParams);
+        new Address("");
         fail("should not work");
       } on FormatException {
         // success
       } catch (e) {
         fail("wrong exception: $e");
       }
-
-      // Check the case of a mismatched network.
-      try {
-        new Address("17kzeh4N8g49GFvdDzSf8PjaPfyoD1MndL", _testParams);
-        fail("should not work");
-      } on WrongNetworkException catch(e) {
-        // Success.
-        expect(e.version, equals(_mainParams.addressHeader));
-        expect(e.acceptableVersions, equals(_testParams.acceptableAddressHeaders));
-      } on FormatException {
-        fail("formateception");
-      }
     });
 
     test("getNetwork", () {
-      NetworkParameters params = new Address("17kzeh4N8g49GFvdDzSf8PjaPfyoD1MndL").params;
+      NetworkParameters params = new Address("17kzeh4N8g49GFvdDzSf8PjaPfyoD1MndL").findNetwork();
       expect(params.id, _mainParams.id);
-      params = new Address("n4eA2nbYqErp7H6jebchxAN59DmNpksexv").params;
+      params = new Address("n4eA2nbYqErp7H6jebchxAN59DmNpksexv").findNetwork();
       expect(params.id, _testParams.id);
     });
 
     test("p2shAddress", () {
       // Test that we can construct P2SH addresses
-      Address mainNetP2SHAddress = new Address("35b9vsyH1KoFT5a5KtrKusaCcPLkiSo1tU", _mainParams);
+      Address mainNetP2SHAddress = new Address("35b9vsyH1KoFT5a5KtrKusaCcPLkiSo1tU");
       expect(mainNetP2SHAddress.version, equals(_mainParams.p2shHeader));
-      expect(mainNetP2SHAddress.isP2SHAddress, isTrue);
-      Address testNetP2SHAddress = new Address("2MuVSxtfivPKJe93EC1Tb9UhJtGhsoWEHCe", _testParams);
+      expect(mainNetP2SHAddress.isP2SHAddress(_mainParams), isTrue);
+      Address testNetP2SHAddress = new Address("2MuVSxtfivPKJe93EC1Tb9UhJtGhsoWEHCe");
       expect(testNetP2SHAddress.version, equals(_testParams.p2shHeader));
-      expect(testNetP2SHAddress.isP2SHAddress, isTrue);
+      expect(testNetP2SHAddress.isP2SHAddress(_testParams), isTrue);
 
       // Test that we can determine what network a P2SH address belongs to
-      NetworkParameters mainNetParams = new Address("35b9vsyH1KoFT5a5KtrKusaCcPLkiSo1tU").params;
+      NetworkParameters mainNetParams = new Address("35b9vsyH1KoFT5a5KtrKusaCcPLkiSo1tU").findNetwork();
       expect(mainNetParams.id, _mainParams.id);
-      NetworkParameters testNetParams = new Address("2MuVSxtfivPKJe93EC1Tb9UhJtGhsoWEHCe").params;
+      NetworkParameters testNetParams = new Address("2MuVSxtfivPKJe93EC1Tb9UhJtGhsoWEHCe").findNetwork();
       expect(testNetParams.id, _testParams.id);
 
       // Test that we can convert them from hashes
