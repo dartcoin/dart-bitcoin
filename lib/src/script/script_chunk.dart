@@ -1,4 +1,4 @@
-part of dartcoin.script;
+part of bitcoin.script;
 
 class ScriptChunk {
   /// Only set if opCode, otherwise null

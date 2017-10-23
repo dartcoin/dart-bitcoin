@@ -1,4 +1,4 @@
-library dartcoin.test.wire.alert_message;
+library bitcoin.test.wire.alert_message;
 
 import "dart:typed_data";
 
@@ -7,8 +7,8 @@ import "package:cryptoutils/cryptoutils.dart";
 
 import "package:test/test.dart";
 
-import "package:dartcoin/core.dart";
-import "package:dartcoin/wire.dart";
+import "package:bitcoin/core.dart";
+import "package:bitcoin/wire.dart";
 
 Uint8List _TEST_KEY_PRIV =
     CryptoUtils.hexToBytes("6421e091445ade4b24658e96aa60959ce800d8ea9e7bd8613335aa65ba8d840b");

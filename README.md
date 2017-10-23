@@ -1,4 +1,4 @@
-dartcoin-lib
+dart-bitcoin
 ============
 
 Bitcoin library witten in Google Dart (dartlang.org).

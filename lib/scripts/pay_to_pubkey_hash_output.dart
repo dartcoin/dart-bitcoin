@@ -1,11 +1,11 @@
-library dartcoin.scripts.output.pay_to_pubkey_hash;
+library bitcoin.scripts.output.pay_to_pubkey_hash;
 
 import "dart:typed_data";
 
 import "package:cryptoutils/cryptoutils.dart";
 
-import "package:dartcoin/core.dart";
-import "package:dartcoin/script.dart";
+import "package:bitcoin/core.dart";
+import "package:bitcoin/script.dart";
 
 class PayToPubKeyHashOutputScript extends Script {
   static const int LENGTH =

@@ -1,4 +1,4 @@
-part of dartcoin.wire;
+part of bitcoin.wire;
 
 class PeerAddress extends BitcoinSerializable {
   static const int SERIALIZATION_SIZE = 30;

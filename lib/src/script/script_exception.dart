@@ -1,4 +1,4 @@
-part of dartcoin.script;
+part of bitcoin.script;
 
 class ScriptException extends VerificationException {
   //TODO

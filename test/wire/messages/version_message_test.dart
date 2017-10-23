@@ -1,4 +1,4 @@
-library dartcoin.test.wire.version_message;
+library bitcoin.test.wire.version_message;
 
 import "dart:typed_data";
 
@@ -8,8 +8,8 @@ import "package:cryptoutils/cryptoutils.dart";
 
 import "package:test/test.dart";
 
-import "package:dartcoin/core.dart";
-import "package:dartcoin/wire.dart";
+import "package:bitcoin/core.dart";
+import "package:bitcoin/wire.dart";
 
 void main() {
   group("wire.messages.VersionMessage", () {

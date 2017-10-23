@@ -1,11 +1,11 @@
-library dartcoin.test.core.utils;
+library bitcoin.test.core.utils;
 
 import "package:test/test.dart";
 import "package:cryptoutils/cryptoutils.dart";
 
-import "package:dartcoin/core.dart";
-import "package:dartcoin/src/crypto.dart" as crypto;
-import "package:dartcoin/src/utils.dart" as utils;
+import "package:bitcoin/core.dart";
+import "package:bitcoin/src/crypto.dart" as crypto;
+import "package:bitcoin/src/utils.dart" as utils;
 
 import "dart:convert";
 import "dart:typed_data";

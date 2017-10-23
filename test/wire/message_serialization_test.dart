@@ -1,4 +1,4 @@
-library dartcoin.test.wire.serialization;
+library bitcoin.test.wire.serialization;
 
 import "dart:typed_data";
 
@@ -6,8 +6,8 @@ import "package:cryptoutils/cryptoutils.dart";
 
 import "package:test/test.dart";
 
-import "package:dartcoin/core.dart";
-import "package:dartcoin/wire.dart";
+import "package:bitcoin/core.dart";
+import "package:bitcoin/wire.dart";
 
 final Uint8List _addrMessage = CryptoUtils.hexToBytes("f9beb4d96164647200000000000000001f000000" +
     "ed52399b01e215104d010000000000000000000000000000000000ffff0a000001208d");

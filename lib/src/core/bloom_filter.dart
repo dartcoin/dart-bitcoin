@@ -1,4 +1,4 @@
-part of dartcoin.core;
+part of bitcoin.core;
 
 /**
  * <p>A Bloom filter is a probabilistic data structure which can be sent to another client so that it can avoid

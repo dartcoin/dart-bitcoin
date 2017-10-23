@@ -1,12 +1,12 @@
-library dartcoin.scripts.input.multisig;
+library bitcoin.scripts.input.multisig;
 
 import "dart:typed_data";
 
 import "package:cryptoutils/cryptoutils.dart";
 import "package:pointycastle/api.dart";
 
-import "package:dartcoin/core.dart";
-import "package:dartcoin/script.dart";
+import "package:bitcoin/core.dart";
+import "package:bitcoin/script.dart";
 
 class MultiSigInputScript extends Script {
   /**

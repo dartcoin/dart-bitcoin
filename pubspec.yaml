@@ -1,4 +1,4 @@
-name: dartcoin
+name: bitcoin
 version: 0.0.0
 author: Steven Roose <stevenroose@gmail.com>
 description: A Bitcoin library for Dart. Pub-test release.

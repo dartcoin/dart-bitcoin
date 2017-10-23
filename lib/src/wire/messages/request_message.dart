@@ -1,4 +1,4 @@
-part of dartcoin.wire;
+part of bitcoin.wire;
 
 abstract class RequestMessage extends Message {
   List<Hash256> locators;

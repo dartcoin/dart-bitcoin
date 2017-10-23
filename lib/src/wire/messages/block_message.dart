@@ -1,4 +1,4 @@
-part of dartcoin.wire;
+part of bitcoin.wire;
 
 class BlockMessage extends Message {
   @override

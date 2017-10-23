@@ -1,4 +1,4 @@
-part of dartcoin.core;
+part of bitcoin.core;
 
 class KeyPair {
   //TODO remove once tested

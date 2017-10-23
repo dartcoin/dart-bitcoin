@@ -1,4 +1,4 @@
-part of dartcoin.core;
+part of bitcoin.core;
 
 class Address {
   static const int LENGTH = 20; // bytes (= 160 bits)

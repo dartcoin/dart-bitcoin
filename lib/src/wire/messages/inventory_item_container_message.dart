@@ -1,4 +1,4 @@
-part of dartcoin.wire;
+part of bitcoin.wire;
 
 abstract class InventoryItemContainerMessage extends Message {
   List<InventoryItem> kaka;

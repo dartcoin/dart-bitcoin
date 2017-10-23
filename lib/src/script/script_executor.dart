@@ -1,4 +1,4 @@
-part of dartcoin.script;
+part of bitcoin.script;
 
 /**
  * Usability class with functionality for executing Bitcoin scripts.

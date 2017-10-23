@@ -6,7 +6,7 @@ import "dart:typed_data";
 import "package:bytes/bytes.dart" as bytes;
 import "package:cryptoutils/cryptoutils.dart";
 
-import "package:dartcoin/src/utils.dart" as utils;
+import "package:bitcoin/src/utils.dart" as utils;
 
 /// This interface defines the minimal functions required to support Bitcoin serialization.
 abstract class BitcoinSerializable {

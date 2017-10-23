@@ -1,4 +1,4 @@
-part of dartcoin.wire;
+part of bitcoin.wire;
 
 class InventoryItemType {
   static const ERROR = const InventoryItemType._(0);

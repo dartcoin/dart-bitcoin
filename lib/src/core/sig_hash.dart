@@ -1,4 +1,4 @@
-part of dartcoin.core;
+part of bitcoin.core;
 
 class SigHash {
   static const SigHash ALL = const SigHash._(1);

@@ -1,4 +1,4 @@
-part of dartcoin.core;
+part of bitcoin.core;
 
 class Block extends BlockHeader {
   static const int BLOCK_VERSION = 1;

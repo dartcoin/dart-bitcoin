@@ -1,9 +1,9 @@
-library dartcoin.scripts.input.pay_to_pubkey;
+library bitcoin.scripts.input.pay_to_pubkey;
 
 import "dart:typed_data";
 
-import "package:dartcoin/core.dart";
-import "package:dartcoin/script.dart";
+import "package:bitcoin/core.dart";
+import "package:bitcoin/script.dart";
 
 class PayToPubKeyInputScript extends Script {
   /**

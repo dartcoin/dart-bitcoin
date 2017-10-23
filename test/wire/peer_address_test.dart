@@ -1,9 +1,9 @@
-library dartcoin.test.wire.peer_address;
+library bitcoin.test.wire.peer_address;
 
 import "package:test/test.dart";
 import "package:cryptoutils/cryptoutils.dart";
 
-import "package:dartcoin/wire.dart";
+import "package:bitcoin/wire.dart";
 
 void main() {
   group("wire.PeerAddress", () {

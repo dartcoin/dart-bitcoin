@@ -1,4 +1,4 @@
-part of dartcoin.script;
+part of bitcoin.script;
 
 class ScriptOpCodes {
   // push value

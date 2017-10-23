@@ -1,4 +1,4 @@
-part of dartcoin.core;
+part of bitcoin.core;
 
 class KeyCrypterException implements Exception {
   String message;

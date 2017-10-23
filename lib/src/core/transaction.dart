@@ -1,4 +1,4 @@
-part of dartcoin.core;
+part of bitcoin.core;
 
 class Transaction extends BitcoinSerializable {
   static const int TRANSACTION_VERSION = 1;

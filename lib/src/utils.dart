@@ -1,4 +1,4 @@
-library dartcoin.src.utils;
+library bitcoin.src.utils;
 
 import "dart:convert";
 import "dart:math";
@@ -9,8 +9,8 @@ import "package:base58check/base58check.dart";
 import "package:bytes/bytes.dart" as bytes;
 import "package:collection/collection.dart";
 
-import "package:dartcoin/src/wire/serialization.dart";
-import "package:dartcoin/src/crypto.dart" as crypto;
+import "package:bitcoin/src/wire/serialization.dart";
+import "package:bitcoin/src/crypto.dart" as crypto;
 
 export "package:base58check/base58check.dart" show Base58CheckPayload;
 

@@ -1,4 +1,4 @@
-library dartcoin.crypto.key_crypter_scrypt;
+library bitcoin.crypto.key_crypter_scrypt;
 
 import "dart:math";
 import "dart:typed_data";
@@ -11,8 +11,8 @@ import "package:pointycastle/paddings/pkcs7.dart";
 import "package:pointycastle/block/modes/cbc.dart";
 import "package:pointycastle/block/aes_fast.dart";
 
-import "package:dartcoin/core.dart";
-import "package:dartcoin/src/utils.dart" as utils;
+import "package:bitcoin/core.dart";
+import "package:bitcoin/src/utils.dart" as utils;
 
 /**
  * Implements a KeyCrypter for BIP0038 using Scrypt.

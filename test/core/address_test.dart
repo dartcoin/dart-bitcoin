@@ -1,9 +1,9 @@
-library dartcoin.test.core.address;
+library bitcoin.test.core.address;
 
 import "package:test/test.dart";
 import "package:cryptoutils/cryptoutils.dart";
 
-import "package:dartcoin/core.dart";
+import "package:bitcoin/core.dart";
 
 import "dart:typed_data";
 

@@ -1,3 +1,3 @@
-library dartcoin.test.config;
+library bitcoin.test.config;
 
-final String RESOURCES = "/home/steven/git/dartcoin-lib/test/resources";
+final String RESOURCES = "/home/steven/git/dart-bitcoin/test/resources";

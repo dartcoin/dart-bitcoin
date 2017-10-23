@@ -1,4 +1,4 @@
-library dartcoin.test.crypto.key_crypter_scrypt;
+library bitcoin.test.crypto.key_crypter_scrypt;
 
 import "dart:typed_data";
 import "dart:math";
@@ -9,9 +9,9 @@ import "package:uuid/uuid.dart";
 
 import "package:test/test.dart";
 
-import "package:dartcoin/core.dart";
-import "package:dartcoin/src/utils.dart" as utils;
-import "package:dartcoin/crypto/key_crypter_scrypt.dart";
+import "package:bitcoin/core.dart";
+import "package:bitcoin/src/utils.dart" as utils;
+import "package:bitcoin/crypto/key_crypter_scrypt.dart";
 
 // Nonsense bytes for encryption test.
 final Uint8List _TEST_BYTES1 = new Uint8List.fromList([

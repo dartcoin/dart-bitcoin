@@ -1,10 +1,10 @@
-library dartcoin.test.core.block;
+library bitcoin.test.core.block;
 
 import "package:test/test.dart";
 import "package:cryptoutils/cryptoutils.dart";
 
-import "package:dartcoin/core.dart";
-import "package:dartcoin/script.dart";
+import "package:bitcoin/core.dart";
+import "package:bitcoin/script.dart";
 
 import "package:bignum/bignum.dart";
 import "dart:typed_data";

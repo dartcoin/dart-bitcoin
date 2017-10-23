@@ -1,4 +1,4 @@
-part of dartcoin.core;
+part of bitcoin.core;
 
 class TransactionOutPoint extends BitcoinSerializable {
   static const int SERIALIZATION_LENGTH = 36;

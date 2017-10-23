@@ -1,9 +1,9 @@
-library dartcoin.test.core.filtered_block_and_partial_merkle_tree;
+library bitcoin.test.core.filtered_block_and_partial_merkle_tree;
 
 import "package:test/test.dart";
 import "package:cryptoutils/cryptoutils.dart";
 
-import "package:dartcoin/core.dart";
+import "package:bitcoin/core.dart";
 
 void main() {
   group("core.FilteredBlockAndPartialMerkleTree", () {

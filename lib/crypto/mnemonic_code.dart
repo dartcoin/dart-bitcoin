@@ -1,4 +1,4 @@
-library dartcoin.crypto.mnemonic_code;
+library bitcoin.crypto.mnemonic_code;
 
 import "dart:convert" show UTF8;
 import "dart:typed_data";
@@ -12,8 +12,8 @@ import "package:pointycastle/key_derivators/api.dart";
 import "package:pointycastle/key_derivators/pbkdf2.dart";
 import "package:pointycastle/macs/hmac.dart";
 
-import "package:dartcoin/src/crypto.dart" as crypto;
-import "package:dartcoin/src/utils.dart" as utils;
+import "package:bitcoin/src/crypto.dart" as crypto;
+import "package:bitcoin/src/utils.dart" as utils;
 
 /**
  * A MnemonicCode object may be used to convert between binary seed values and

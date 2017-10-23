@@ -1,4 +1,4 @@
-library dartcoin.src.crypto;
+library bitcoin.src.crypto;
 
 import "dart:typed_data";
 
@@ -7,7 +7,7 @@ import "package:pointycastle/digests/sha256.dart";
 import "package:pointycastle/digests/sha1.dart";
 import "package:pointycastle/src/impl/base_digest.dart";
 
-import "package:dartcoin/src/utils.dart" as utils;
+import "package:bitcoin/src/utils.dart" as utils;
 
 class DoubleSHA256Digest extends BaseDigest {
   //TODO pointycastle registry

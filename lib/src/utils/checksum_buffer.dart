@@ -1,4 +1,4 @@
-library dartcoin.src.utils.checksum_buffer;
+library bitcoin.src.utils.checksum_buffer;
 
 import "dart:typed_data";
 

@@ -1,4 +1,4 @@
-library dartcoin.wire;
+library bitcoin.wire;
 
 import "dart:collection";
 import "dart:convert";

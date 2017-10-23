@@ -1,4 +1,4 @@
-library dartcoin.core;
+library bitcoin.core;
 
 import "package:cryptoutils/cryptoutils.dart";
 
@@ -23,13 +23,13 @@ import "package:pointycastle/ecc/curves/secp256k1.dart";
 // tmp
 import "package:asn1lib/asn1lib.dart";
 
-import "package:dartcoin/src/utils.dart" as utils;
-import "package:dartcoin/src/crypto.dart" as crypto;
+import "package:bitcoin/src/utils.dart" as utils;
+import "package:bitcoin/src/crypto.dart" as crypto;
 
-import "package:dartcoin/script.dart";
-import "package:dartcoin/scripts/common.dart";
+import "package:bitcoin/script.dart";
+import "package:bitcoin/scripts/common.dart";
 
-import "package:dartcoin/src/wire/serialization.dart";
+import "package:bitcoin/src/wire/serialization.dart";
 
 // utils
 part "src/core/units.dart";

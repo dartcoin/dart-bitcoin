@@ -1,4 +1,4 @@
-part of dartcoin.core;
+part of bitcoin.core;
 
 abstract class NetworkParameters {
   // USE THESE AS PARAMS

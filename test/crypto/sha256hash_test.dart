@@ -1,9 +1,9 @@
-library dartcoin.test.core.sha256hash;
+library bitcoin.test.core.sha256hash;
 
 import "package:test/test.dart";
 import "package:cryptoutils/cryptoutils.dart";
 
-import "package:dartcoin/src/crypto.dart" as crypto;
+import "package:bitcoin/src/crypto.dart" as crypto;
 
 import "dart:typed_data";
 import "dart:convert";

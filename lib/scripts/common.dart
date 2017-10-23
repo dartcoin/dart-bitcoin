@@ -1,4 +1,4 @@
-library dartcoin.scripts.common;
+library bitcoin.scripts.common;
 
 export "multisig_input.dart";
 export "multisig_output.dart";

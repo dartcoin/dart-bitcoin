@@ -1,10 +1,10 @@
-library dartcoin.test.serialization.varint;
+library bitcoin.test.serialization.varint;
 
 import "package:bytes/bytes.dart";
 
 import "package:test/test.dart";
 
-import "package:dartcoin/src/wire/serialization.dart";
+import "package:bitcoin/src/wire/serialization.dart";
 
 ReaderBuffer buffer;
 

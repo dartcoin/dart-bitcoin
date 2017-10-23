@@ -1,9 +1,9 @@
-library dartcoin.rpc.bitcoind;
+library bitcoin.rpc.bitcoind;
 
 import "package:json_rpc_2/json_rpc_2.dart" as json_rpc;
 
-import "package:dartcoin/core.dart";
-import "package:dartcoin/json.dart";
+import "package:bitcoin/core.dart";
+import "package:bitcoin/json.dart";
 
 import "bitcoin_core_api.dart";
 

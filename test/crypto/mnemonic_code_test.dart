@@ -1,4 +1,4 @@
-library dartcoin.test.crypto.mnemonic_code;
+library bitcoin.test.crypto.mnemonic_code;
 
 import "dart:typed_data";
 
@@ -6,7 +6,7 @@ import "package:cryptoutils/cryptoutils.dart";
 
 import "package:test/test.dart";
 
-import "package:dartcoin/crypto/mnemonic_code.dart";
+import "package:bitcoin/crypto/mnemonic_code.dart";
 
 MnemonicCode _mc;
 

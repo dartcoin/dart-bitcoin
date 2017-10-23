@@ -1,4 +1,4 @@
-part of dartcoin.core;
+part of bitcoin.core;
 
 class TransactionInput extends BitcoinSerializable {
   static const int NO_SEQUENCE = 0xFFFFFFFF;

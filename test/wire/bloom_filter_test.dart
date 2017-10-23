@@ -1,10 +1,10 @@
-library dartcoin.test.wire.bloom_filter;
+library bitcoin.test.wire.bloom_filter;
 
 import "package:cryptoutils/cryptoutils.dart";
 
 import "package:test/test.dart";
 
-import "package:dartcoin/core.dart";
+import "package:bitcoin/core.dart";
 
 void main() {
   group("wire.BloomFilter", () {

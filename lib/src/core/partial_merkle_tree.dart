@@ -1,4 +1,4 @@
-part of dartcoin.core;
+part of bitcoin.core;
 
 /**
  * <p>A data structure that contains proofs of block inclusion for one or more transactions, in an efficient manner.</p>

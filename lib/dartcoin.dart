@@ -1,3 +1,3 @@
-library dartcoin;
+library bitcoin;
 
 export 'core.dart';

@@ -1,4 +1,4 @@
-library dartcoin.test.script.script_test;
+library bitcoin.test.script.script_test;
 
 import "dart:collection";
 import "dart:convert";
@@ -10,10 +10,10 @@ import "package:cryptoutils/cryptoutils.dart";
 
 import "package:test/test.dart";
 
-import "package:dartcoin/core.dart";
-import "package:dartcoin/script.dart";
-import "package:dartcoin/scripts/common.dart";
-import "package:dartcoin/src/utils.dart" as utils;
+import "package:bitcoin/core.dart";
+import "package:bitcoin/script.dart";
+import "package:bitcoin/scripts/common.dart";
+import "package:bitcoin/src/utils.dart" as utils;
 import "../test_config.dart";
 
 //TODO basic matchesType tests for all supported standard types

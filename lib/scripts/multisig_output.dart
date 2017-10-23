@@ -1,7 +1,7 @@
-library dartcoin.scripts.output.multisig;
+library bitcoin.scripts.output.multisig;
 
-import "package:dartcoin/core.dart";
-import "package:dartcoin/script.dart";
+import "package:bitcoin/core.dart";
+import "package:bitcoin/script.dart";
 
 class MultiSigOutputScript extends Script {
   /**

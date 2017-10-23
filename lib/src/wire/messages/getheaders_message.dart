@@ -1,4 +1,4 @@
-part of dartcoin.wire;
+part of bitcoin.wire;
 
 class GetHeadersMessage extends RequestMessage {
   @override

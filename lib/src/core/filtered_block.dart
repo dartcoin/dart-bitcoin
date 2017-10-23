@@ -1,4 +1,4 @@
-part of dartcoin.core;
+part of bitcoin.core;
 
 class FilteredBlock extends BitcoinSerializable {
   /** The protocol version at which Bloom filtering started to be supported. */
