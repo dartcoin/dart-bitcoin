@@ -1,12 +1,11 @@
 part of dartcoin.wire;
 
 class MemPoolMessage extends Message {
-
   @override
   String get command => Message.CMD_MEMPOOL;
-  
+
   MemPoolMessage();
-  
+
   /// Create an empty instance.
   MemPoolMessage.empty();
 

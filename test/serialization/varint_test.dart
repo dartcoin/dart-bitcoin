@@ -6,11 +6,9 @@ import "package:test/test.dart";
 
 import "package:dartcoin/src/wire/serialization.dart";
 
-
 ReaderBuffer buffer;
 
-
-void main(){
+void main() {
   group("serialization.VarInt", () {
     setUp(() {
       buffer = new ReaderBuffer();
@@ -43,6 +41,5 @@ void main(){
       expect(buffer.asBytes().length, equals(9));
       expect(readVarInt(buffer), equals(0xCAFEBABEDEADBEEF));
     });
-
   });
 }

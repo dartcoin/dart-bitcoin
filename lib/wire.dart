@@ -1,6 +1,5 @@
 library dartcoin.wire;
 
-
 import "dart:collection";
 import "dart:convert";
 import "dart:math";
@@ -10,7 +9,7 @@ import "package:bignum/bignum.dart";
 import "package:bytes/bytes.dart" as bytes;
 import "package:cryptoutils/cryptoutils.dart";
 
-import "core.dart" ;
+import "core.dart";
 import "src/utils/checksum_buffer.dart";
 import "src/utils/checksum_reader.dart";
 import "src/wire/serialization.dart";
@@ -18,7 +17,6 @@ import "src/crypto.dart" as crypto;
 import "src/utils.dart" as utils;
 
 export "src/wire/serialization.dart" show BitcoinSerializable, SerializationException;
-
 
 // wire
 part "src/wire/inventory_item.dart";

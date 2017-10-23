@@ -18,21 +18,17 @@ import "package:dartcoin/src/utils.dart" as utils;
 
 import "../test_config.dart";
 
-
 String _testPrivKey1 = "18E14A7B6A307F426A94F8114701E7C8E774E7F9A47E2C2035DB29A206321725";
-String _testPubKey1 = "0450863AD64A87AE8A2FE83C1AF1A8403CB53F53E486D8511DAD8A04887E5B23522CD470243453A299FA9E77237716103ABC11A1DF38855ED6F2EE187E9C582BA6";
+String _testPubKey1 =
+    "0450863AD64A87AE8A2FE83C1AF1A8403CB53F53E486D8511DAD8A04887E5B23522CD470243453A299FA9E77237716103ABC11A1DF38855ED6F2EE187E9C582BA6";
 String _testAddress1 = "16UwLL9Risc3QfPqBUvKofHmBQ7wMtjvM";
 
 KeyCrypter _keyCrypter;
-String _PASSWORD1      = "my hovercraft has eels";
+String _PASSWORD1 = "my hovercraft has eels";
 String _WRONG_PASSWORD = "it is a snowy day today";
-
-
-
 
 void main() {
   group("core.KeyPair", () {
-
     test("keypair_address1", () {
       var bytes = CryptoUtils.hexToBytes(_testPubKey1);
       KeyPair kp = new KeyPair.public(bytes);
@@ -81,25 +77,30 @@ void main() {
           final Hash256 hash = new Hash256(crypto.singleDigest(new Uint8List.fromList([i])));
           ECDSASignature signature = key.sign(hash);
           expect(signature.s <= KeyPair.HALF_CURVE_ORDER, isTrue);
-        }}
-      );
+        }
+      });
 
       test("signatures", () {
         // Test that we can construct an KeyPair from a private key (deriving the public from the private), then signing
         // a message with it.
-        BigInteger privkey = new BigInteger.fromBytes(1, CryptoUtils.hexToBytes("180cb41c7c600be951b5d3d0a7334acc7506173875834f7a6c4c786a28fcbb19"));
+        BigInteger privkey = new BigInteger.fromBytes(
+            1,
+            CryptoUtils
+                .hexToBytes("180cb41c7c600be951b5d3d0a7334acc7506173875834f7a6c4c786a28fcbb19"));
         KeyPair key = new KeyPair.private(privkey);
         ECDSASignature output = key.sign(Hash256.ZERO_HASH);
         expect(key.verify(Hash256.ZERO_HASH.asBytes(), output), isTrue);
 
         // Test interop with a signature from elsewhere.
-        Uint8List sig = CryptoUtils.hexToBytes("3046022100dffbc26774fc841bbe1c1362fd643609c6e42dcb274763476d87af2c0597e89e022100c59e3c13b96b316cae9fa0ab0260612c7a133a6fe2b3445b6bf80b3123bf274d");
+        Uint8List sig = CryptoUtils.hexToBytes(
+            "3046022100dffbc26774fc841bbe1c1362fd643609c6e42dcb274763476d87af2c0597e89e022100c59e3c13b96b316cae9fa0ab0260612c7a133a6fe2b3445b6bf80b3123bf274d");
 
         expect(key.verify(Hash256.ZERO_HASH.asBytes(), new ECDSASignature.fromDER(sig)), isTrue);
       });
 
       test("signatureDERencoding", () {
-        String derSig = "304502206faa2ebc614bf4a0b31f0ce4ed9012eb193302ec2bcaccc7ae8bb40577f47549022100c73a1a1acc209f3f860bf9b9f5e13e9433db6f8b7bd527a088a0e0cd0a4c83e9";
+        String derSig =
+            "304502206faa2ebc614bf4a0b31f0ce4ed9012eb193302ec2bcaccc7ae8bb40577f47549022100c73a1a1acc209f3f860bf9b9f5e13e9433db6f8b7bd527a088a0e0cd0a4c83e9";
 
         ECDSASignature sig = new ECDSASignature.fromDER(CryptoUtils.hexToBytes(derSig));
         String encoded = CryptoUtils.bytesToHex(sig.encodeToDER());
@@ -118,8 +119,8 @@ void main() {
         expect(roundtripKey.privateKeyBytes, equals(decodedKey.privateKeyBytes));
 
         for (KeyPair key in [decodedKey, roundtripKey]) {
-          Uint8List message = utils.reverseBytes(CryptoUtils.hexToBytes(
-              "11da3761e86431e4a54c176789e41f1651b324d240d599a7067bee23d328ec2a"));
+          Uint8List message = utils.reverseBytes(CryptoUtils
+              .hexToBytes("11da3761e86431e4a54c176789e41f1651b324d240d599a7067bee23d328ec2a"));
           ECDSASignature output = key.sign(new Hash256(message));
           expect(key.verify(message, output), isTrue);
 
@@ -129,8 +130,8 @@ void main() {
         }
 
         // Try to sign with one key and verify with the other.
-        Uint8List message = utils.reverseBytes(CryptoUtils.hexToBytes(
-            "11da3761e86431e4a54c176789e41f1651b324d240d599a7067bee23d328ec2a"));
+        Uint8List message = utils.reverseBytes(CryptoUtils
+            .hexToBytes("11da3761e86431e4a54c176789e41f1651b324d240d599a7067bee23d328ec2a"));
         expect(roundtripKey.verify(message, decodedKey.sign(new Hash256(message))), isTrue);
         expect(decodedKey.verify(message, roundtripKey.sign(new Hash256(message))), isTrue);
       });
@@ -143,11 +144,11 @@ void main() {
         // Now re-encode and decode the ASN.1 to see if it is equivalent (it does not produce the exact same byte
         // sequence, some integers are padded now).
         KeyPair roundtripKey =
-        new KeyPair.private(decodedKey.privateKeyBytes, publicKey: decodedKey.publicKey);
+            new KeyPair.private(decodedKey.privateKeyBytes, publicKey: decodedKey.publicKey);
 
         for (KeyPair key in [decodedKey, roundtripKey]) {
-          Uint8List message = utils.reverseBytes(CryptoUtils.hexToBytes(
-              "11da3761e86431e4a54c176789e41f1651b324d240d599a7067bee23d328ec2a"));
+          Uint8List message = utils.reverseBytes(CryptoUtils
+              .hexToBytes("11da3761e86431e4a54c176789e41f1651b324d240d599a7067bee23d328ec2a"));
           ECDSASignature output = key.sign(new Hash256(message));
           expect(key.verify(message, output), isTrue);
 
@@ -157,8 +158,8 @@ void main() {
         }
 
         // Try to sign with one key and verify with the other.
-        Uint8List message = utils.reverseBytes(CryptoUtils.hexToBytes(
-            "11da3761e86431e4a54c176789e41f1651b324d240d599a7067bee23d328ec2a"));
+        Uint8List message = utils.reverseBytes(CryptoUtils
+            .hexToBytes("11da3761e86431e4a54c176789e41f1651b324d240d599a7067bee23d328ec2a"));
         expect(roundtripKey.verify(message, decodedKey.sign(new Hash256(message))), isTrue);
         expect(decodedKey.verify(message, roundtripKey.sign(new Hash256(message))), isTrue);
       });
@@ -175,7 +176,8 @@ void main() {
       test("verifyMessage", () {
         // Test vector generated by Bitcoin-Qt.
         String message = "hello";
-        String sigBase64 = "HxNZdo6ggZ41hd3mM3gfJRqOQPZYcO8z8qdX2BwmpbF11CaOQV+QiZGGQxaYOncKoNW61oRuSMMF8udfK54XqI8=";
+        String sigBase64 =
+            "HxNZdo6ggZ41hd3mM3gfJRqOQPZYcO8z8qdX2BwmpbF11CaOQV+QiZGGQxaYOncKoNW61oRuSMMF8udfK54XqI8=";
         Address expectedAddress = new Address("14YPSNPi6NSXnUxtPAsyJSuw3pv7AU3Cag");
         KeyPair key = KeyPair.signedMessageToKey(message, sigBase64);
         Address gotAddress = key.getAddress(NetworkParameters.MAIN_NET);
@@ -209,7 +211,8 @@ void main() {
         Uint8List originalPrivateKeyBytes = unencryptedKey.privateKeyBytes;
 
         // Encrypt the key.
-        KeyPair encryptedKey = unencryptedKey.encrypt(_keyCrypter, _keyCrypter.deriveKey(_PASSWORD1));
+        KeyPair encryptedKey =
+            unencryptedKey.encrypt(_keyCrypter, _keyCrypter.deriveKey(_PASSWORD1));
 
         // The key should now be encrypted.
         expect(encryptedKey.isEncrypted, isTrue);
@@ -242,8 +245,10 @@ void main() {
         // Copy the private key bytes for checking later.
         Uint8List originalPrivateKeyBytes = unencryptedKey.privateKeyBytes;
 
-        EncryptedPrivateKey encryptedPrivateKey = _keyCrypter.encrypt(unencryptedKey.privateKeyBytes, _keyCrypter.deriveKey(_PASSWORD1));
-        KeyPair encryptedKey = new KeyPair.encrypted(encryptedPrivateKey, unencryptedKey.publicKey, _keyCrypter);
+        EncryptedPrivateKey encryptedPrivateKey =
+            _keyCrypter.encrypt(unencryptedKey.privateKeyBytes, _keyCrypter.deriveKey(_PASSWORD1));
+        KeyPair encryptedKey =
+            new KeyPair.encrypted(encryptedPrivateKey, unencryptedKey.publicKey, _keyCrypter);
 
         // The key should initially be encrypted
         expect(encryptedKey.isEncrypted, isTrue);
@@ -252,7 +257,8 @@ void main() {
         _checkAllBytesAreZero(encryptedKey.privateKeyBytes);
 
         // Decrypt the key.
-        KeyPair rebornUnencryptedKey = encryptedKey.decrypt(_keyCrypter, _keyCrypter.deriveKey(_PASSWORD1));
+        KeyPair rebornUnencryptedKey =
+            encryptedKey.decrypt(_keyCrypter, _keyCrypter.deriveKey(_PASSWORD1));
 
         // The key should be unencrypted
         expect(rebornUnencryptedKey.isEncrypted, isFalse);
@@ -265,17 +271,25 @@ void main() {
 
       test("encryptionIsReversible", () {
         KeyPair originalUnencryptedKey = new KeyPair.generate();
-        EncryptedPrivateKey encryptedPrivateKey = _keyCrypter.encrypt(originalUnencryptedKey.privateKeyBytes, _keyCrypter.deriveKey(_PASSWORD1));
-        KeyPair encryptedKey = new KeyPair.encrypted(encryptedPrivateKey, originalUnencryptedKey.publicKey, _keyCrypter);
+        EncryptedPrivateKey encryptedPrivateKey = _keyCrypter.encrypt(
+            originalUnencryptedKey.privateKeyBytes, _keyCrypter.deriveKey(_PASSWORD1));
+        KeyPair encryptedKey = new KeyPair.encrypted(
+            encryptedPrivateKey, originalUnencryptedKey.publicKey, _keyCrypter);
 
         // The key should be encrypted
         expect(encryptedKey.isEncrypted, isTrue);
 
         // Check that the key can be successfully decrypted back to the original.
-        expect(KeyPair.encryptionIsReversible(originalUnencryptedKey, encryptedKey, _keyCrypter, _keyCrypter.deriveKey(_PASSWORD1)), isTrue);
+        expect(
+            KeyPair.encryptionIsReversible(originalUnencryptedKey, encryptedKey, _keyCrypter,
+                _keyCrypter.deriveKey(_PASSWORD1)),
+            isTrue);
 
         // Check that key encryption is not reversible if a password other than the original is used to generate the AES key.
-        expect(KeyPair.encryptionIsReversible(originalUnencryptedKey, encryptedKey, _keyCrypter, _keyCrypter.deriveKey(_WRONG_PASSWORD)), isFalse);
+        expect(
+            KeyPair.encryptionIsReversible(originalUnencryptedKey, encryptedKey, _keyCrypter,
+                _keyCrypter.deriveKey(_WRONG_PASSWORD)),
+            isFalse);
 
         // Change one of the encrypted key bytes (this is to simulate a faulty keyCrypter).
         // Encryption should not be reversible
@@ -283,21 +297,33 @@ void main() {
 
         // Break the encrypted private key and check it is broken.
         Uint8List badEncryptedPrivateKeyBytes = new Uint8List(goodEncryptedPrivateKeyBytes.length);
-        encryptedPrivateKey = new EncryptedPrivateKey(badEncryptedPrivateKeyBytes, encryptedPrivateKey.iv);
-        KeyPair badEncryptedKey = new KeyPair.encrypted(encryptedPrivateKey, originalUnencryptedKey.publicKey, _keyCrypter);
-        expect(KeyPair.encryptionIsReversible(originalUnencryptedKey, badEncryptedKey, _keyCrypter, _keyCrypter.deriveKey(_PASSWORD1)), isFalse);
+        encryptedPrivateKey =
+            new EncryptedPrivateKey(badEncryptedPrivateKeyBytes, encryptedPrivateKey.iv);
+        KeyPair badEncryptedKey = new KeyPair.encrypted(
+            encryptedPrivateKey, originalUnencryptedKey.publicKey, _keyCrypter);
+        expect(
+            KeyPair.encryptionIsReversible(originalUnencryptedKey, badEncryptedKey, _keyCrypter,
+                _keyCrypter.deriveKey(_PASSWORD1)),
+            isFalse);
       });
 
       test("toString", () {
-        KeyPair key = new KeyPair.private(new BigInteger(10), compressed: false); // An example private key.
+        KeyPair key =
+            new KeyPair.private(new BigInteger(10), compressed: false); // An example private key.
 
-        expect(key.toString(), equals("pub:04a0434d9e47f3c86235477c7b1ae6ae5d3442d49b1943c2b752a68e2a47e247c7893aba425419bc27a3b6c7e693a24c696f794c2ed877a1593cbee53b037368d7"));
-        expect(key.toStringWithPrivateKey(), equals("pub:04a0434d9e47f3c86235477c7b1ae6ae5d3442d49b1943c2b752a68e2a47e247c7893aba425419bc27a3b6c7e693a24c696f794c2ed877a1593cbee53b037368d7 priv:0a"));
+        expect(
+            key.toString(),
+            equals(
+                "pub:04a0434d9e47f3c86235477c7b1ae6ae5d3442d49b1943c2b752a68e2a47e247c7893aba425419bc27a3b6c7e693a24c696f794c2ed877a1593cbee53b037368d7"));
+        expect(
+            key.toStringWithPrivateKey(),
+            equals(
+                "pub:04a0434d9e47f3c86235477c7b1ae6ae5d3442d49b1943c2b752a68e2a47e247c7893aba425419bc27a3b6c7e693a24c696f794c2ed877a1593cbee53b037368d7 priv:0a"));
       });
 
       test("keyRecoveryWithExcryptedKey", () {
         KeyPair unencryptedKey = new KeyPair.generate();
-        KeyParameter aesKey =  _keyCrypter.deriveKey(_PASSWORD1);
+        KeyParameter aesKey = _keyCrypter.deriveKey(_PASSWORD1);
         KeyPair encryptedKey = unencryptedKey.encrypt(_keyCrypter, aesKey);
 
         String message = "Goodbye Jupiter!";
@@ -317,7 +343,8 @@ void main() {
 
       test("clear", () {
         KeyPair unencryptedKey = new KeyPair.generate();
-        KeyPair encryptedKey = new KeyPair.generate().encrypt(_keyCrypter, _keyCrypter.deriveKey(_PASSWORD1));
+        KeyPair encryptedKey =
+            new KeyPair.generate().encrypt(_keyCrypter, _keyCrypter.deriveKey(_PASSWORD1));
 
         _checkSomeBytesAreNonZero(unencryptedKey.privateKeyBytes);
         unencryptedKey.clearPrivateKey();
@@ -332,7 +359,7 @@ void main() {
         EncryptedPrivateKey epk = encryptedKey.encryptedPrivateKey;
         encryptedKey.clearPrivateKey();
         _checkAllBytesAreZero(encryptedKey.privateKeyBytes);
-        if(encryptedKey.encryptedPrivateKey != null) {
+        if (encryptedKey.encryptedPrivateKey != null) {
           _checkAllBytesAreZero(encryptedKey.encryptedPrivateKey.encryptedKey);
           _checkAllBytesAreZero(encryptedKey.encryptedPrivateKey.iv);
         }
@@ -345,15 +372,14 @@ void main() {
         // Tests that we will not generate non-canonical pubkeys or signatures
         // We dump failed data to error log because this test is not expected to be deterministic
         KeyPair key = new KeyPair.generate();
-        if(!key.isPubKeyCanonical) {
+        if (!key.isPubKeyCanonical) {
           print(CryptoUtils.bytesToHex(key.publicKey));
           fail("we must not generate non-canonical pubkeys");
         }
 
         Uint8List hash = new Uint8List(32);
         Random r = new Random();
-        for(int i = 0 ; i < 32 ; i++)
-          hash[i] = r.nextInt(255);
+        for (int i = 0; i < 32; i++) hash[i] = r.nextInt(255);
         Uint8List sigBytes = key.sign(new Hash256(hash)).encodeToDER();
         Uint8List encodedSig = new Uint8List(sigBytes.length + 1);
         encodedSig.setRange(0, sigBytes.length, sigBytes);
@@ -368,9 +394,8 @@ void main() {
         File f = new File.fromUri(new Uri.file("$RESOURCES/sig_canonical.json"));
         List<String> vectors = JSON.decode(f.readAsStringSync());
 
-        for(String vector in vectors) {
-          if(!utils.isHexString(vector))
-            continue;
+        for (String vector in vectors) {
+          if (!utils.isHexString(vector)) continue;
           expect(TransactionSignature.isEncodingCanonical(CryptoUtils.hexToBytes(vector)), isTrue,
               reason: "expected canonical: $vector");
         }
@@ -380,9 +405,8 @@ void main() {
         File f = new File.fromUri(new Uri.file("$RESOURCES/sig_noncanonical.json"));
         List<String> vectors = JSON.decode(f.readAsStringSync());
 
-        for(String vector in vectors) {
-          if(!utils.isHexString(vector))
-            continue;
+        for (String vector in vectors) {
+          if (!utils.isHexString(vector)) continue;
           expect(TransactionSignature.isEncodingCanonical(CryptoUtils.hexToBytes(vector)), isFalse,
               reason: "expected noncanonical: $vector");
         }
@@ -390,7 +414,6 @@ void main() {
     });
   });
 }
-
 
 //void _roundTripDumpedPrivKey() {
 //  KeyPair key = new KeyPair();
@@ -413,13 +436,3 @@ void _checkAllBytesAreZero(Uint8List bytes) {
   if (bytes == null) return;
   for (int b in bytes) if (b != 0) fail("checkAllBytesAreZero");
 }
-
-
-
-
-
-
-
-
-
-

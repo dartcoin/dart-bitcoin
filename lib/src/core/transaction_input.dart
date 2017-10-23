@@ -1,25 +1,23 @@
 part of dartcoin.core;
 
 class TransactionInput extends BitcoinSerializable {
-  
   static const int NO_SEQUENCE = 0xFFFFFFFF;
-  
+
   TransactionOutPoint outpoint;
   Script scriptSig;
   int sequence;
-  
+
   /**
    * Create a new [TransactionInput].
    * 
    * It's not possible to specify both the [output] parameter and the [outpoint] parameter. 
    */
-  TransactionInput({TransactionOutPoint this.outpoint,
-                    Script this.scriptSig,
-                    int this.sequence: NO_SEQUENCE}) {
+  TransactionInput(
+      {TransactionOutPoint this.outpoint, Script this.scriptSig, int this.sequence: NO_SEQUENCE}) {
     outpoint = outpoint ?? new TransactionOutPoint(index: NO_SEQUENCE);
     scriptSig = scriptSig ?? Script.EMPTY_SCRIPT;
   }
-  
+
   /**
    * Create a coinbase transaction input. 
    * 
@@ -36,24 +34,21 @@ class TransactionInput extends BitcoinSerializable {
     obj.bitcoinDeserialize(reader, pver);
     return obj;
   }
-  
+
   /// Create an empty instance.
   TransactionInput.empty();
-  
+
   bool get isCoinbase {
-    return outpoint.txid == Hash256.ZERO_HASH &&
-        (outpoint.index & 0xFFFFFFFF) == 0xFFFFFFFF;
+    return outpoint.txid == Hash256.ZERO_HASH && (outpoint.index & 0xFFFFFFFF) == 0xFFFFFFFF;
   }
-  
+
   @override
   operator ==(TransactionInput other) {
-    if(other is! TransactionInput) return false;
-    if(identical(this, other)) return true;
-    return outpoint == other.outpoint &&
-        scriptSig == other.scriptSig &&
-        sequence == other.sequence;
+    if (other is! TransactionInput) return false;
+    if (identical(this, other)) return true;
+    return outpoint == other.outpoint && scriptSig == other.scriptSig && sequence == other.sequence;
   }
-  
+
   @override
   int get hashCode {
     return outpoint.hashCode ^ scriptSig.hashCode ^ sequence.hashCode;
@@ -71,4 +66,3 @@ class TransactionInput extends BitcoinSerializable {
     sequence = readUintLE(reader);
   }
 }
-

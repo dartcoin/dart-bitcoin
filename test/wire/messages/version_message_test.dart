@@ -11,48 +11,53 @@ import "package:test/test.dart";
 import "package:dartcoin/core.dart";
 import "package:dartcoin/wire.dart";
 
-
 void main() {
   group("wire.messages.VersionMessage", () {
-
     test("decode", () {
+      VersionMessage ver = new VersionMessage.empty();
+      ver.bitcoinDeserialize(
+          new Reader(CryptoUtils.hexToBytes(
+              "71110100000000000000000048e5e95000000000000000000000000000000000000000000000ffff7f000001479d000000000000000000000000000000000000ffff7f000001479d0000000000000000172f426974436f696e4a3a302e372d534e415053484f542f0004000000")),
+          0);
+      expect(ver.relayBeforeFilter, isFalse);
+      expect(ver.lastHeight, equals(1024));
+      expect(ver.subVer, equals("/BitCoinJ:0.7-SNAPSHOT/"));
 
-        VersionMessage ver = new VersionMessage.empty();
-        ver.bitcoinDeserialize(new Reader(CryptoUtils.hexToBytes("71110100000000000000000048e5e95000000000000000000000000000000000000000000000ffff7f000001479d000000000000000000000000000000000000ffff7f000001479d0000000000000000172f426974436f696e4a3a302e372d534e415053484f542f0004000000"))
-            , 0);
-        expect(ver.relayBeforeFilter, isFalse);
-        expect(ver.lastHeight, equals(1024));
-        expect(ver.subVer, equals("/BitCoinJ:0.7-SNAPSHOT/"));
+      ver.bitcoinDeserialize(
+          new Reader(CryptoUtils.hexToBytes(
+              "71110100000000000000000048e5e95000000000000000000000000000000000000000000000ffff7f000001479d000000000000000000000000000000000000ffff7f000001479d0000000000000000172f426974436f696e4a3a302e372d534e415053484f542f00040000")),
+          0);
+      expect(ver.relayBeforeFilter, isTrue);
+      expect(ver.lastHeight, equals(1024));
+      expect(ver.subVer, equals("/BitCoinJ:0.7-SNAPSHOT/"));
 
-        ver.bitcoinDeserialize(new Reader(CryptoUtils.hexToBytes("71110100000000000000000048e5e95000000000000000000000000000000000000000000000ffff7f000001479d000000000000000000000000000000000000ffff7f000001479d0000000000000000172f426974436f696e4a3a302e372d534e415053484f542f00040000"))
-            , 0);
-        expect(ver.relayBeforeFilter, isTrue);
-        expect(ver.lastHeight, equals(1024));
-        expect(ver.subVer, equals("/BitCoinJ:0.7-SNAPSHOT/"));
+      ver.bitcoinDeserialize(
+          new Reader(CryptoUtils.hexToBytes(
+              "71110100000000000000000048e5e95000000000000000000000000000000000000000000000ffff7f000001479d000000000000000000000000000000000000ffff7f000001479d0000000000000000172f426974436f696e4a3a302e372d534e415053484f542f")),
+          0);
+      expect(ver.relayBeforeFilter, isTrue);
+      expect(ver.lastHeight, equals(0));
+      expect(ver.subVer, equals("/BitCoinJ:0.7-SNAPSHOT/"));
 
-        ver.bitcoinDeserialize(new Reader(CryptoUtils.hexToBytes("71110100000000000000000048e5e95000000000000000000000000000000000000000000000ffff7f000001479d000000000000000000000000000000000000ffff7f000001479d0000000000000000172f426974436f696e4a3a302e372d534e415053484f542f"))
-            , 0);
-        expect(ver.relayBeforeFilter, isTrue);
-        expect(ver.lastHeight, equals(0));
-        expect(ver.subVer, equals("/BitCoinJ:0.7-SNAPSHOT/"));
-
-        ver.bitcoinDeserialize(new Reader(CryptoUtils.hexToBytes("71110100000000000000000048e5e95000000000000000000000000000000000000000000000ffff7f000001479d000000000000000000000000000000000000ffff7f000001479d0000000000000000"))
-            , 0);
-        expect(ver.relayBeforeFilter, isTrue);
-        expect(ver.lastHeight, equals(0));
-        expect(ver.subVer, equals(""));
+      ver.bitcoinDeserialize(
+          new Reader(CryptoUtils.hexToBytes(
+              "71110100000000000000000048e5e95000000000000000000000000000000000000000000000ffff7f000001479d000000000000000000000000000000000000ffff7f000001479d0000000000000000")),
+          0);
+      expect(ver.relayBeforeFilter, isTrue);
+      expect(ver.lastHeight, equals(0));
+      expect(ver.subVer, equals(""));
     });
 
     test("bothways", () {
-    //  BigInteger this.services,
-    //  int this.time: 0,
-    //  PeerAddress this.myAddress,
-    //  PeerAddress this.theirAddress,
-    //  int this.nonce: 0,
-    //  String this.subVer,
-    //  int this.lastHeight: 0,
-    //  bool this.relayBeforeFilter: false,
-    //
+      //  BigInteger this.services,
+      //  int this.time: 0,
+      //  PeerAddress this.myAddress,
+      //  PeerAddress this.theirAddress,
+      //  int this.nonce: 0,
+      //  String this.subVer,
+      //  int this.lastHeight: 0,
+      //  bool this.relayBeforeFilter: false,
+      //
       var clientVersion = NetworkParameters.PROTOCOL_VERSION;
       var services = BigInteger.ONE;
       var time = new DateTime.now().millisecondsSinceEpoch ~/ 1000;
@@ -86,16 +91,6 @@ void main() {
       expect(newVer.subVer, equals(subVer));
       expect(newVer.lastHeight, equals(lastHeight));
       expect(newVer.relayBeforeFilter, equals(relay));
-
     });
   });
 }
-
-
-
-
-
-
-
-
-

@@ -27,41 +27,39 @@ part of dartcoin.core;
  * The size constraints follow from this.</pre></p>
  */
 class PartialMerkleTree extends BitcoinSerializable {
-    // the total number of transactions in the block
-    int transactionCount;
+  // the total number of transactions in the block
+  int transactionCount;
 
-    // node-is-parent-of-matched-txid bits
-    Uint8List matchedChildBits;
+  // node-is-parent-of-matched-txid bits
+  Uint8List matchedChildBits;
 
-    // txids and internal hashes
-    List<Hash256> hashes;
-    
-    PartialMerkleTree( { int this.transactionCount,
-                         Uint8List this.matchedChildBits,
-                         List<Hash256> this.hashes});
+  // txids and internal hashes
+  List<Hash256> hashes;
 
-    /// Create an empty instance.
-    PartialMerkleTree.empty();
+  PartialMerkleTree(
+      {int this.transactionCount, Uint8List this.matchedChildBits, List<Hash256> this.hashes});
 
-    void bitcoinSerialize(bytes.Buffer buffer, int pver) {
-      writeUintLE(buffer, transactionCount);
-      writeVarInt(buffer, hashes.length);
-      for(Hash256 hash in hashes)
-        writeSHA256(buffer, hash);
-      writeByteArray(buffer, matchedChildBits);
+  /// Create an empty instance.
+  PartialMerkleTree.empty();
+
+  void bitcoinSerialize(bytes.Buffer buffer, int pver) {
+    writeUintLE(buffer, transactionCount);
+    writeVarInt(buffer, hashes.length);
+    for (Hash256 hash in hashes) writeSHA256(buffer, hash);
+    writeByteArray(buffer, matchedChildBits);
+  }
+
+  void bitcoinDeserialize(bytes.Reader reader, int pver) {
+    transactionCount = readUintLE(reader);
+    int nbHashes = readVarInt(reader);
+    hashes = new List<Hash256>(nbHashes);
+    for (int i = 0; i < nbHashes; i++) {
+      hashes[i] = readSHA256(reader);
     }
+    matchedChildBits = readByteArray(reader);
+  }
 
-    void bitcoinDeserialize(bytes.Reader reader, int pver) {
-      transactionCount = readUintLE(reader);
-      int nbHashes = readVarInt(reader);
-      hashes = new List<Hash256>(nbHashes);
-      for(int i = 0 ; i < nbHashes ; i++) {
-        hashes[i] = readSHA256(reader);
-      }
-      matchedChildBits = readByteArray(reader);
-    }
-    
-    /**
+  /**
      * Extracts tx hashes that are in this merkle tree
      * and returns the merkle root of this tree.
      * 
@@ -72,69 +70,75 @@ class PartialMerkleTree extends BitcoinSerializable {
      *                      Required to be a LinkedHashSet in order to retain order or transactions in the block
      * @return the merkle root of this merkle tree
      */
-    Hash256 getTxnHashAndMerkleRoot(List<Hash256> matchedHashes) {
-      matchedHashes.clear();
-      
-      // An empty set will not work
-      if (transactionCount == 0)
-        throw new VerificationException("Got a CPartialMerkleTree with 0 transactions");
-      // check for excessively high numbers of transactions
-      if (transactionCount > Block.MAX_BLOCK_SIZE ~/ 60) // 60 is the lower bound for the size of a serialized CTransaction
-        throw new VerificationException("Got a CPartialMerkleTree with more transactions than is possible");
-      // there can never be more hashes provided than one for every txid
-      if (hashes.length > transactionCount)
-        throw new VerificationException("Got a CPartialMerkleTree with more hashes than transactions");
-      // there must be at least one bit per node in the partial tree, and at least one node per hash
-      if (matchedChildBits.length * 8 < hashes.length)
-        throw new VerificationException("Got a CPartialMerkleTree with fewer matched bits than hashes");
-      // calculate height of tree
-      int height = 0;
-      while (_getTreeWidth(height, transactionCount) > 1)
-        height++;
-      // traverse the partial tree
-      _ValuesUsedForPMT used = new _ValuesUsedForPMT();
-      Hash256 merkleRoot = new Hash256(_recursiveExtractHashes(height, 0, used, matchedHashes));
-      // verify that all bits were consumed (except for the padding caused by serializing it as a byte sequence)
-      if ((used.bitsUsed + 7) ~/ 8 != matchedChildBits.length ||
-          // verify that all hashes were consumed
-          used.hashesUsed != hashes.length)
-        throw new VerificationException("Got a CPartialMerkleTree that didn't need all the data it provided");
-      
-      return merkleRoot;
+  Hash256 getTxnHashAndMerkleRoot(List<Hash256> matchedHashes) {
+    matchedHashes.clear();
+
+    // An empty set will not work
+    if (transactionCount == 0)
+      throw new VerificationException("Got a CPartialMerkleTree with 0 transactions");
+    // check for excessively high numbers of transactions
+    if (transactionCount >
+        Block.MAX_BLOCK_SIZE ~/
+            60) // 60 is the lower bound for the size of a serialized CTransaction
+      throw new VerificationException(
+          "Got a CPartialMerkleTree with more transactions than is possible");
+    // there can never be more hashes provided than one for every txid
+    if (hashes.length > transactionCount)
+      throw new VerificationException(
+          "Got a CPartialMerkleTree with more hashes than transactions");
+    // there must be at least one bit per node in the partial tree, and at least one node per hash
+    if (matchedChildBits.length * 8 < hashes.length)
+      throw new VerificationException(
+          "Got a CPartialMerkleTree with fewer matched bits than hashes");
+    // calculate height of tree
+    int height = 0;
+    while (_getTreeWidth(height, transactionCount) > 1) height++;
+    // traverse the partial tree
+    _ValuesUsedForPMT used = new _ValuesUsedForPMT();
+    Hash256 merkleRoot = new Hash256(_recursiveExtractHashes(height, 0, used, matchedHashes));
+    // verify that all bits were consumed (except for the padding caused by serializing it as a byte sequence)
+    if ((used.bitsUsed + 7) ~/ 8 != matchedChildBits.length ||
+        // verify that all hashes were consumed
+        used.hashesUsed != hashes.length)
+      throw new VerificationException(
+          "Got a CPartialMerkleTree that didn't need all the data it provided");
+
+    return merkleRoot;
+  }
+
+  // helper function to efficiently calculate the number of nodes at given height in the merkle tree
+  static int _getTreeWidth(int height, int txCount) => (txCount + (1 << height) - 1) >> height;
+
+  // recursive function that traverses tree nodes, consuming the bits and hashes produced by TraverseAndBuild.
+  // it returns the hash of the respective node.
+  Uint8List _recursiveExtractHashes(
+      int height, int pos, _ValuesUsedForPMT used, List<Hash256> matchedHashes) {
+    if (used.bitsUsed >= matchedChildBits.length * 8) {
+      // overflowed the bits array - failure
+      throw new VerificationException("CPartialMerkleTree overflowed its bits array");
     }
-    
-    // helper function to efficiently calculate the number of nodes at given height in the merkle tree
-    static int _getTreeWidth(int height, int txCount) => (txCount + (1 << height) - 1) >> height;
-    
-    // recursive function that traverses tree nodes, consuming the bits and hashes produced by TraverseAndBuild.
-    // it returns the hash of the respective node.
-    Uint8List _recursiveExtractHashes(int height, int pos, _ValuesUsedForPMT used, List<Hash256> matchedHashes) {
-      if (used.bitsUsed >= matchedChildBits.length * 8) {
-        // overflowed the bits array - failure
-        throw new VerificationException("CPartialMerkleTree overflowed its bits array");
+    bool parentOfMatch = utils.checkBitLE(matchedChildBits, used.bitsUsed++);
+    if (height == 0 || !parentOfMatch) {
+      // if at height 0, or nothing interesting below, use stored hash and do not descend
+      if (used.hashesUsed >= hashes.length) {
+        // overflowed the hash array - failure
+        throw new VerificationException("CPartialMerkleTree overflowed its hash array");
       }
-      bool parentOfMatch = utils.checkBitLE(matchedChildBits, used.bitsUsed++);
-      if (height == 0 || !parentOfMatch) {
-        // if at height 0, or nothing interesting below, use stored hash and do not descend
-        if (used.hashesUsed >= hashes.length) {
-          // overflowed the hash array - failure
-          throw new VerificationException("CPartialMerkleTree overflowed its hash array");
-        }
-        if (height == 0 && parentOfMatch) // in case of height 0, we have a matched txid
-          matchedHashes.add(hashes[used.hashesUsed]);
-        return hashes[used.hashesUsed++].asBytes();
-      } else {
-        // otherwise, descend into the subtrees to extract matched txids and hashes
-        Uint8List left = _recursiveExtractHashes(height - 1, pos * 2, used, matchedHashes), right;
-        if (pos * 2 + 1 < _getTreeWidth(height - 1, transactionCount))
-          right = _recursiveExtractHashes(height - 1, pos * 2 + 1, used, matchedHashes);
-        else
-          right = left;
-        // and combine them before returning
-        return utils.reverseBytes(crypto.doubleDigestTwoInputs(
-            utils.reverseBytes(left), utils.reverseBytes(right)));
-      }
+      if (height == 0 && parentOfMatch) // in case of height 0, we have a matched txid
+        matchedHashes.add(hashes[used.hashesUsed]);
+      return hashes[used.hashesUsed++].asBytes();
+    } else {
+      // otherwise, descend into the subtrees to extract matched txids and hashes
+      Uint8List left = _recursiveExtractHashes(height - 1, pos * 2, used, matchedHashes), right;
+      if (pos * 2 + 1 < _getTreeWidth(height - 1, transactionCount))
+        right = _recursiveExtractHashes(height - 1, pos * 2 + 1, used, matchedHashes);
+      else
+        right = left;
+      // and combine them before returning
+      return utils.reverseBytes(
+          crypto.doubleDigestTwoInputs(utils.reverseBytes(left), utils.reverseBytes(right)));
     }
+  }
 }
 
 class _ValuesUsedForPMT {

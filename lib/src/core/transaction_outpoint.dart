@@ -1,7 +1,6 @@
 part of dartcoin.core;
 
 class TransactionOutPoint extends BitcoinSerializable {
-  
   static const int SERIALIZATION_LENGTH = 36;
 
   Hash256 txid;
@@ -9,14 +8,10 @@ class TransactionOutPoint extends BitcoinSerializable {
 
   /// Can be `null` when this object has been created by deserialization.
   Transaction transaction;
-  
-  TransactionOutPoint({ Transaction this.transaction,
-                        int this.index: 0,
-                      Hash256 this.txid}) {
-    if(transaction != null)
-      txid = transaction.hash;
-    if(index == -1)
-      index = 0xFFFFFFFF;
+
+  TransactionOutPoint({Transaction this.transaction, int this.index: 0, Hash256 this.txid}) {
+    if (transaction != null) txid = transaction.hash;
+    if (index == -1) index = 0xFFFFFFFF;
     txid = txid ?? Hash256.ZERO_HASH;
   }
 
@@ -26,24 +21,24 @@ class TransactionOutPoint extends BitcoinSerializable {
     obj.bitcoinDeserialize(reader, pver);
     return obj;
   }
-  
+
   /// Create an empty instance.
   TransactionOutPoint.empty();
-  
+
   TransactionOutput get connectedOutput {
-    if(transaction == null) return null;
+    if (transaction == null) return null;
     return transaction.outputs[index];
   }
-  
+
   @override
   operator ==(TransactionOutPoint other) {
-    if(other is! TransactionOutPoint) return false;
-    if(identical(this, other)) return true;
+    if (other is! TransactionOutPoint) return false;
+    if (identical(this, other)) return true;
     return txid == other.txid &&
         index == other.index &&
         (transaction == null || other.transaction == null || transaction == other.transaction);
   }
-  
+
   @override
   int get hashCode {
     return index.hashCode ^ txid.hashCode;

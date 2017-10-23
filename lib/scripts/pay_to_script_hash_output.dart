@@ -8,7 +8,6 @@ import "package:dartcoin/core.dart";
 import "package:dartcoin/script.dart";
 
 class PayToScriptHashOutputScript extends Script {
-  
   /**
    * Create a new P2SH output script.
    * 
@@ -16,28 +15,30 @@ class PayToScriptHashOutputScript extends Script {
    * performance when the script is intended for execution.
    */
   factory PayToScriptHashOutputScript(Hash160 scriptHash) {
-    if(scriptHash == null || scriptHash.lengthInBytes != 20)
+    if (scriptHash == null || scriptHash.lengthInBytes != 20)
       throw new ScriptException("The script hash must be of size 20!");
-    return new PayToScriptHashOutputScript.convert(new ScriptBuilder()
-      .op(ScriptOpCodes.OP_HASH160)
-      .data(scriptHash.asBytes())
-      .op(ScriptOpCodes.OP_EQUAL)
-      .build(), true);
+    return new PayToScriptHashOutputScript.convert(
+        new ScriptBuilder()
+            .op(ScriptOpCodes.OP_HASH160)
+            .data(scriptHash.asBytes())
+            .op(ScriptOpCodes.OP_EQUAL)
+            .build(),
+        true);
   }
 
   factory PayToScriptHashOutputScript.withAddress(Address address) =>
       new PayToScriptHashOutputScript(address.hash160);
-  
+
   PayToScriptHashOutputScript.convert(Script script, [bool skipCheck = false])
       : super(script.program) {
-    if(!skipCheck && !matchesType(script)) 
+    if (!skipCheck && !matchesType(script))
       throw new ScriptException("Given script is not an instance of this script type.");
   }
-  
+
   Uint8List get scriptHash => new Uint8List.fromList(program.getRange(2, 22));
-  
+
   Address getAddress([NetworkParameters params = NetworkParameters.MAIN_NET]) =>
-      new Address.fromHash160(program.getRange(3,  23), params.p2shHeader);
+      new Address.fromHash160(program.getRange(3, 23), params.p2shHeader);
 
   /**
    * <p>Whether or not this is a scriptPubKey representing a pay-to-script-hash output. In such outputs, the logic that
@@ -58,6 +59,4 @@ class PayToScriptHashOutputScript extends Script {
         script.program[1] == 0x14 &&
         script.program[22] == ScriptOpCodes.OP_EQUAL;
   }
-  
-  
 }

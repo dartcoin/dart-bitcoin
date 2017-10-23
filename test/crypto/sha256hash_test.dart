@@ -1,6 +1,5 @@
 library dartcoin.test.core.sha256hash;
 
-
 import "package:test/test.dart";
 import "package:cryptoutils/cryptoutils.dart";
 
@@ -12,15 +11,12 @@ import "dart:convert";
 Map vectors = {
   "single": [
     [
-      UTF8.encode("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"),
+      UTF8.encode(
+          "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"),
       "475dbd9278ce464097f8dd241b088ac96615bfdea9e496bc05828aca94aabfca"
     ],
-    [
-      UTF8.encode("x"),
-      "2d711642b726b04401627ca9fbac32f5c8530fb1903cc4db02258717921a4881"
-    ]
+    [UTF8.encode("x"), "2d711642b726b04401627ca9fbac32f5c8530fb1903cc4db02258717921a4881"]
   ],
-
   "double": [
     [
       "00010966776006953D5567439E5E39F86A0D273BEE",
@@ -37,11 +33,9 @@ Map vectors = {
   ],
 };
 
-
 void main() {
   group("crypto.SHA-256", () {
-
-    test("Hash256",   () {
+    test("Hash256", () {
       var hashBytes = CryptoUtils.hexToBytes(vectors["single"][0][1]);
       var hash = new Hash256(hashBytes);
       expect(hash.asBytes(), equals(hashBytes));
@@ -58,7 +52,7 @@ void main() {
       for (List vector in vectors["single"]) {
         var input = vector[0];
         var output = vector[1];
-        if(input is String) {
+        if (input is String) {
           input = CryptoUtils.hexToBytes(input);
         }
 
@@ -72,7 +66,7 @@ void main() {
       for (List vector in vectors["double"]) {
         var input = vector[0];
         var output = vector[1];
-        if(input is String) {
+        if (input is String) {
           input = CryptoUtils.hexToBytes(input);
         }
 
@@ -86,7 +80,7 @@ void main() {
       for (List vector in vectors["double"]) {
         var input = vector[0];
         var output = vector[1];
-        if(input is String) {
+        if (input is String) {
           input = CryptoUtils.hexToBytes(input);
         }
 
@@ -98,7 +92,5 @@ void main() {
         expect(hashString, equalsIgnoringCase(output));
       }
     });
-
-
   });
 }

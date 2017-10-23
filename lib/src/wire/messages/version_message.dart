@@ -1,12 +1,11 @@
 part of dartcoin.wire;
 
 class VersionMessage extends Message {
-
   @override
   String get command => Message.CMD_VERSION;
-  
+
   static final BigInteger SERVICE_NODE_NETWORK = BigInteger.ONE;
-  
+
   int clientVersion;
   BigInteger services;
   int time;
@@ -21,22 +20,23 @@ class VersionMessage extends Message {
   static final String DARTCOIN_VERSION = "0.0.0-alpha";
   /** The value that is prepended to the subVer field of this application. */
   static final String LIBRARY_SUBVER = "/Dartcoin:" + DARTCOIN_VERSION + "/";
-  
+
   /**
    * Create a new VersionMessage.
    * 
    * Most parameters can be left blank, the most important ones are
    * [lastHeight] and [relayBeforeFilter], all others most probably have the default value.
    */
-  VersionMessage({ int this.lastHeight: 0,
-                   bool this.relayBeforeFilter: false,
-                   int this.clientVersion: NetworkParameters.PROTOCOL_VERSION,
-                   BigInteger this.services,
-                   int this.time: 0,
-                   PeerAddress this.myAddress,
-                   PeerAddress this.theirAddress,
-                   int this.nonce,
-                   String this.subVer}) {
+  VersionMessage(
+      {int this.lastHeight: 0,
+      bool this.relayBeforeFilter: false,
+      int this.clientVersion: NetworkParameters.PROTOCOL_VERSION,
+      BigInteger this.services,
+      int this.time: 0,
+      PeerAddress this.myAddress,
+      PeerAddress this.theirAddress,
+      int this.nonce,
+      String this.subVer}) {
     services = services ?? BigInteger.ZERO;
     nonce = nonce ?? new Random().nextInt(0xffffffff);
     subVer = subVer ?? LIBRARY_SUBVER;
@@ -44,10 +44,10 @@ class VersionMessage extends Message {
     myAddress = myAddress ?? new PeerAddress.localhost(services: services);
     theirAddress = theirAddress ?? new PeerAddress.localhost(services: services);
   }
-  
+
   /// Create an empty instance.
   VersionMessage.empty();
-  
+
   /**
    * Appends the given user-agent information to the subVer field. The subVer is composed of a series of
    * name:version pairs separated by slashes in the form of a path. For example a typical subVer field for BitCoinJ
@@ -69,7 +69,9 @@ class VersionMessage extends Message {
    * @throws IllegalArgumentException if name, version or comments contains invalid characters.
    */
   void appendToSubVer(String name, String version, [String comments]) {
-    if(!isValidSubVerComponent(name) || !isValidSubVerComponent(version) || (comments != null && !isValidSubVerComponent(comments)))
+    if (!isValidSubVerComponent(name) ||
+        !isValidSubVerComponent(version) ||
+        (comments != null && !isValidSubVerComponent(comments)))
       throw new Exception("Invalid format");
     if (comments != null)
       subVer += "$name:$version($comments)/";
@@ -78,7 +80,7 @@ class VersionMessage extends Message {
   }
 
   static bool isValidSubVerComponent(String component) =>
-    !(component.contains("/") || component.contains("(") || component.contains(")"));
+      !(component.contains("/") || component.contains("(") || component.contains(")"));
 
   /**
    * Returns true if the clientVersion field is >= Pong.MIN_PROTOCOL_VERSION. If it is then ping() is usable.
@@ -96,7 +98,7 @@ class VersionMessage extends Message {
    * or if it's running in client mode (only has the headers).
    */
   bool get hasBlockChain => (services & SERVICE_NODE_NETWORK) == SERVICE_NODE_NETWORK;
-  
+
   @override
   bool operator ==(VersionMessage other) {
     return other is VersionMessage &&
@@ -109,21 +111,26 @@ class VersionMessage extends Message {
         other.theirAddress == theirAddress &&
         other.relayBeforeFilter == relayBeforeFilter;
   }
-  
+
   @override
   int get hashCode {
-    return lastHeight ^ clientVersion ^ services.hashCode ^ time ^ subVer.hashCode ^ myAddress.hashCode
-        ^ theirAddress.hashCode * (relayBeforeFilter ? 1 : 2);
+    return lastHeight ^
+        clientVersion ^
+        services.hashCode ^
+        time ^
+        subVer.hashCode ^
+        myAddress.hashCode ^
+        theirAddress.hashCode * (relayBeforeFilter ? 1 : 2);
   }
 
   @override
   void bitcoinDeserialize(bytes.Reader reader, int pver) {
     clientVersion = readUintLE(reader);
-    services = utils.bytesToUBigIntLE(readBytes(reader, 8));//_readUintLE(8);
+    services = utils.bytesToUBigIntLE(readBytes(reader, 8)); //_readUintLE(8);
     time = readUintLE(reader, 8);
     // for PeerAddresses in the version message, the protocolVersion must be hard coded to 0
     myAddress = readObject(reader, new PeerAddress.empty(), 0);
-    if(clientVersion < 106) return;
+    if (clientVersion < 106) return;
     // only when protocolVersion >= 106
     theirAddress = readObject(reader, new PeerAddress.empty(), 0);
     nonce = readUintLE(reader, 8);
@@ -131,13 +138,13 @@ class VersionMessage extends Message {
     subVer = "";
     lastHeight = 0;
     relayBeforeFilter = true;
-    if(reader.remainingLength > 0) {
+    if (reader.remainingLength > 0) {
       subVer = readVarStr(reader);
     }
-    if(reader.remainingLength > 0) {
+    if (reader.remainingLength > 0) {
       lastHeight = readUintLE(reader);
     }
-    if(reader.remainingLength > 0) {
+    if (reader.remainingLength > 0) {
       relayBeforeFilter = readUintLE(reader, 1) != 0;
     }
   }
@@ -156,9 +163,3 @@ class VersionMessage extends Message {
     writeBytes(buffer, [relayBeforeFilter ? 1 : 0]);
   }
 }
-
-
-
-
-
-

@@ -1,15 +1,13 @@
 part of dartcoin.wire;
 
 class TransactionMessage extends Message {
-
   @override
   String get command => Message.CMD_TX;
-  
+
   Transaction transaction;
-  
-  TransactionMessage(Transaction this.transaction) {
-  }
-  
+
+  TransactionMessage(Transaction this.transaction) {}
+
   /// Create an empty instance.
   TransactionMessage.empty();
 

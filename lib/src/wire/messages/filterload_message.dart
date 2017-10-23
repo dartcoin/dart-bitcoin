@@ -1,14 +1,13 @@
 part of dartcoin.wire;
 
 class FilterLoadMessage extends Message {
-
   @override
   String get command => Message.CMD_FILTERLOAD;
-  
+
   BloomFilter filter;
-  
+
   FilterLoadMessage(BloomFilter this.filter);
-  
+
   /// Create an empty instance.
   FilterLoadMessage.empty();
 
@@ -21,5 +20,4 @@ class FilterLoadMessage extends Message {
   void bitcoinSerialize(bytes.Buffer buffer, int pver) {
     writeObject(buffer, filter, pver);
   }
-  
 }

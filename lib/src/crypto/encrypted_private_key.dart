@@ -1,8 +1,6 @@
 part of dartcoin.core;
 
-
 class EncryptedPrivateKey {
-  
   // the actual key
   Uint8List _encryptedKey;
   // the initialisation vector
@@ -14,12 +12,12 @@ class EncryptedPrivateKey {
   }
 
   Uint8List get encryptedKey {
-    if(_encryptedKey == null) return null;
+    if (_encryptedKey == null) return null;
     return new Uint8List.fromList(_encryptedKey);
   }
 
   Uint8List get iv {
-    if(_iv == null) return null;
+    if (_iv == null) return null;
     return new Uint8List.fromList(_iv);
   }
 
@@ -30,8 +28,8 @@ class EncryptedPrivateKey {
 
   @override
   operator ==(EncryptedPrivateKey other) {
-    if(other is! EncryptedPrivateKey) return false;
-    if(identical(this, other)) return true;
+    if (other is! EncryptedPrivateKey) return false;
+    if (identical(this, other)) return true;
     return _iv == other._iv && _encryptedKey == other._encryptedKey;
   }
 
@@ -39,7 +37,8 @@ class EncryptedPrivateKey {
   int get hashCode => utils.listHashCode(_encryptedKey) ^ utils.listHashCode(_iv);
 
   @override
-  String toString() => "EncryptedPrivateKey [initialisationVector=$_iv, encryptedPrivateBytes=$_encryptedKey]";
+  String toString() =>
+      "EncryptedPrivateKey [initialisationVector=$_iv, encryptedPrivateBytes=$_encryptedKey]";
 
   /**
    * Clear this private key.

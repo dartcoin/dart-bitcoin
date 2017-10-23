@@ -8,10 +8,8 @@ import "package:cryptoutils/cryptoutils.dart";
 
 import "package:dartcoin/src/utils.dart" as utils;
 
-
 /// This interface defines the minimal functions required to support Bitcoin serialization.
 abstract class BitcoinSerializable {
-
   void bitcoinDeserialize(bytes.Reader reader, int pver);
 
   void bitcoinSerialize(bytes.Buffer buffer, int pver);
@@ -21,12 +19,10 @@ abstract class BitcoinSerializable {
     bitcoinSerialize(buffer, pver);
     return buffer.asBytes();
   }
-
 }
 
 //TODO rename to BitcoinSerializationException
 class SerializationException implements Exception {
-
   final String message;
 
   SerializationException([String this.message]);
@@ -36,11 +32,8 @@ class SerializationException implements Exception {
 
   @override
   bool operator ==(SerializationException other) =>
-      other is SerializationException &&
-          message == other.message;
+      other is SerializationException && message == other.message;
 }
-
-
 
 /////////////
 // READING //
@@ -62,13 +55,13 @@ Hash256 readSHA256(bytes.Reader reader) {
 
 int readVarInt(bytes.Reader reader) {
   int firstByte = readUintLE(reader, 1);
-  if(firstByte == 0xfd) {
+  if (firstByte == 0xfd) {
     return readUintLE(reader, 2);
   }
-  if(firstByte == 0xfe) {
+  if (firstByte == 0xfe) {
     return readUintLE(reader, 4);
   }
-  if(firstByte == 0xff) {
+  if (firstByte == 0xff) {
     return readUintLE(reader, 8);
   }
   return firstByte;
@@ -88,7 +81,6 @@ BitcoinSerializable readObject(bytes.Reader reader, BitcoinSerializable obj, int
   return obj;
 }
 
-
 /////////////
 // WRITING //
 /////////////
@@ -107,12 +99,12 @@ void writeSHA256(bytes.Buffer buffer, Hash256 hash) {
 }
 
 void writeVarInt(bytes.Buffer buffer, int value) {
-  if(value < 0xfd) {
+  if (value < 0xfd) {
     writeBytes(buffer, [value]);
-  } else if(value <= 0xffff) {
+  } else if (value <= 0xffff) {
     writeBytes(buffer, [0xfd]);
     writeUintLE(buffer, value, 2);
-  } else if(value <= 0xffffffff) {
+  } else if (value <= 0xffffffff) {
     writeBytes(buffer, [0xfe]);
     writeUintLE(buffer, value, 4);
   } else {
@@ -133,6 +125,3 @@ void writeVarStr(bytes.Buffer buffer, String string) {
 void writeObject(bytes.Buffer buffer, BitcoinSerializable obj, int pver) {
   obj.bitcoinSerialize(buffer, pver);
 }
-
-
-

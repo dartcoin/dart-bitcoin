@@ -8,12 +8,10 @@ import "package:pointycastle/api.dart";
 
 /// A [Reader] implementation that checksums all data read from it.
 class ChecksumReader extends ReaderBase {
-
   final Reader reader;
   final Digest digest;
 
   ChecksumReader(Reader this.reader, Digest this.digest);
-
 
   Uint8List checksum() {
     Uint8List sum = new Uint8List(digest.digestSize);

@@ -1,14 +1,13 @@
 part of dartcoin.wire;
 
 class BlockMessage extends Message {
-
   @override
   String get command => Message.CMD_BLOCK;
-  
+
   Block block;
-  
+
   BlockMessage(Block this.block);
-  
+
   /// Create an empty instance.
   BlockMessage.empty();
 

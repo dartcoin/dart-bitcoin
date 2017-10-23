@@ -1,9 +1,8 @@
 part of dartcoin.core;
 
 class Block extends BlockHeader {
-  
   static const int BLOCK_VERSION = 1;
-  
+
   static const int HEADER_SIZE = 80;
 
   /**
@@ -18,39 +17,40 @@ class Block extends BlockHeader {
    * expensive/slow to verify.
    */
   static const int MAX_BLOCK_SIGOPS = MAX_BLOCK_SIZE ~/ 50;
-  
+
   static const int ALLOWED_TIME_DRIFT = 2 * 60 * 60; // Same value as official client.
-  
+
   /** A value for difficultyTarget (nBits) that allows half of all possible hash solutions. Used in unit testing. */
   static const int EASIEST_DIFFICULTY_TARGET = 0x207fFFFF;
-
 
   List<Transaction> transactions;
 
   int height;
-  
-  Block({ Hash256 hash,
-          int version: BLOCK_VERSION,
-          Hash256 previousBlock,
-          Hash256 merkleRoot,
-          int timestamp,
-          int difficultyTarget,
-          int nonce: 0,
-          List<Transaction> this.transactions,
-          int this.height})
-      : super._header(hash, version, previousBlock, merkleRoot, timestamp, difficultyTarget, nonce) {
+
+  Block(
+      {Hash256 hash,
+      int version: BLOCK_VERSION,
+      Hash256 previousBlock,
+      Hash256 merkleRoot,
+      int timestamp,
+      int difficultyTarget,
+      int nonce: 0,
+      List<Transaction> this.transactions,
+      int this.height})
+      : super._header(
+            hash, version, previousBlock, merkleRoot, timestamp, difficultyTarget, nonce) {
     transactions = transactions ?? new List<Transaction>();
   }
 
-  Block.fromHeader(BlockHeader header) : this(
-      hash: header.hash,
-      version: header.version,
-      previousBlock: header.previousBlock,
-      merkleRoot: header.merkleRoot,
-      timestamp: header.timestamp,
-      difficultyTarget: header.difficultyTarget,
-      nonce: header.nonce
-  );
+  Block.fromHeader(BlockHeader header)
+      : this(
+            hash: header.hash,
+            version: header.version,
+            previousBlock: header.previousBlock,
+            merkleRoot: header.merkleRoot,
+            timestamp: header.timestamp,
+            difficultyTarget: header.difficultyTarget,
+            nonce: header.nonce);
 
   factory Block.fromBitcoinSerialization(Uint8List serialization, int pver) {
     var reader = new bytes.Reader(serialization);
@@ -61,7 +61,7 @@ class Block extends BlockHeader {
 
   /// Create an empty instance.
   Block.empty() : super.empty();
-  
+
   bool get hasTransactions {
     return transactions != null && transactions.isNotEmpty;
   }
@@ -71,7 +71,7 @@ class Block extends BlockHeader {
    * hash.
    */
   static final BigInteger _LARGEST_HASH = (BigInteger.ONE << 256);
-  
+
   BlockHeader cloneAsHeader() => new BlockHeader(
       hash: _hash,
       previousBlock: previousBlock,
@@ -88,7 +88,8 @@ class Block extends BlockHeader {
       transactions = new List<Transaction>();
     }
     if (runSanityChecks && transactions.length == 0 && !tx.isCoinbase)
-      throw new Exception("Attempted to add a non-coinbase transaction as the first transaction: $tx");
+      throw new Exception(
+          "Attempted to add a non-coinbase transaction as the first transaction: $tx");
     else if (runSanityChecks && transactions.length > 0 && tx.isCoinbase)
       throw new Exception("Attempted to add a coinbase transaction when there already is one: $tx");
     transactions.add(tx);
@@ -99,7 +100,7 @@ class Block extends BlockHeader {
   Hash256 calculateMerkleRoot() {
     // first add all tx hashes to the tree
     List<Uint8List> tree = new List<Uint8List>();
-    for(Transaction tx in transactions) {
+    for (Transaction tx in transactions) {
       tree.add(tx.hash.asBytes());
     }
     // then complete the tree
@@ -148,7 +149,7 @@ class Block extends BlockHeader {
         // The right hand node can be the same as the left hand, in the case where we don't have enough
         // transactions.
         int right = min(left + 1, levelSize - 1);
-        Uint8List leftHash  = utils.reverseBytes(tree[levelOffset + left]);
+        Uint8List leftHash = utils.reverseBytes(tree[levelOffset + left]);
         Uint8List rightHash = utils.reverseBytes(tree[levelOffset + right]);
         tree.add(utils.reverseBytes(crypto.doubleDigestTwoInputs(leftHash, rightHash)));
       }
@@ -173,10 +174,11 @@ class Block extends BlockHeader {
       throw new VerificationException("Difficulty target is bad: $target");
 
     BigInteger h = hash.asBigInteger();
-    if(h > target) {
+    if (h > target) {
       // Proof of work check failed!
-      if(throwException)
-        throw new VerificationException("Hash is higher than target: $hash vs ${target.toString(16)}");
+      if (throwException)
+        throw new VerificationException(
+            "Hash is higher than target: $hash vs ${target.toString(16)}");
       else
         return false;
     }
@@ -186,7 +188,7 @@ class Block extends BlockHeader {
   void _checkTimestamp() {
     // Allow injection of a fake clock to allow unit testing.
     int currentTime = new DateTime.now().millisecondsSinceEpoch ~/ 1000;
-    if(timestamp > currentTime + ALLOWED_TIME_DRIFT)
+    if (timestamp > currentTime + ALLOWED_TIME_DRIFT)
       throw new VerificationException("Block too far in future");
   }
 
@@ -194,9 +196,8 @@ class Block extends BlockHeader {
     // Check there aren't too many signature verifications in the block. This is an anti-DoS measure, see the
     // comments for MAX_BLOCK_SIGOPS.
     int sigOps = 0;
-    for(Transaction tx in transactions)
-      sigOps += tx.sigOpCount;
-    if(sigOps > MAX_BLOCK_SIGOPS)
+    for (Transaction tx in transactions) sigOps += tx.sigOpCount;
+    if (sigOps > MAX_BLOCK_SIGOPS)
       throw new VerificationException("Block had too many Signature Operations");
   }
 
@@ -209,8 +210,7 @@ class Block extends BlockHeader {
 
   void _checkTransactions() {
     // The first transaction in a block must always be a coinbase transaction.
-    if (!transactions[0].isCoinbase)
-      throw new VerificationException("First tx is not coinbase");
+    if (!transactions[0].isCoinbase) throw new VerificationException("First tx is not coinbase");
     // The rest must not be.
     for (int i = 1; i < transactions.length; i++) {
       if (transactions[i].isCoinbase)
@@ -233,8 +233,7 @@ class Block extends BlockHeader {
     // Firstly we need to ensure this block does in fact represent real work done. If the difficulty is high
     // enough, it's probably been done by the network.
     _checkProofOfWork(params, true);
-    if(checkTimestamp)
-      _checkTimestamp();
+    if (checkTimestamp) _checkTimestamp();
   }
 
   /**
@@ -247,15 +246,14 @@ class Block extends BlockHeader {
     // an invalid block, but if we didn't validate this then an untrusted man-in-the-middle could obtain the next
     // valid block from the network and simply replace the transactions in it with their own fictional
     // transactions that reference spent or non-existant inputs.
-    if(transactions == null || transactions.isEmpty)
+    if (transactions == null || transactions.isEmpty)
       throw new VerificationException("Block had no transactions");
-    if(bitcoinSerializedBytes(0).length > MAX_BLOCK_SIZE)
+    if (bitcoinSerializedBytes(0).length > MAX_BLOCK_SIZE)
       throw new VerificationException("Block larger than MAX_BLOCK_SIZE");
     _checkTransactions();
     _checkMerkleRoot();
     _checkSigOps();
-    for(Transaction tx in transactions)
-      tx.verify();
+    for (Transaction tx in transactions) tx.verify();
   }
 
   /**
@@ -274,10 +272,9 @@ class Block extends BlockHeader {
    * extraNonce.</p>
    */
   void solve(NetworkParameters params) {
-    while(true) {
+    while (true) {
       // Is our proof of work valid yet?
-      if(_checkProofOfWork(params, false))
-        return;
+      if (_checkProofOfWork(params, false)) return;
       // No, so increment the nonce and try again.
       nonce++;
     }
@@ -285,8 +282,8 @@ class Block extends BlockHeader {
 
   @override
   bool operator ==(Block other) {
-    if(other.runtimeType != Block) return false;
-    if(identical(this, other)) return true;
+    if (other.runtimeType != Block) return false;
+    if (identical(this, other)) return true;
     return hash == other.hash;
   }
 
@@ -296,12 +293,11 @@ class Block extends BlockHeader {
   void bitcoinSerialize(bytes.Buffer buffer, int pver) {
     // serialize header
     super.bitcoinSerialize(buffer, pver);
-    if(!hasTransactions) {
+    if (!hasTransactions) {
       buffer.addByte(0);
     } else {
       writeVarInt(buffer, transactions.length);
-      for(Transaction tx in transactions)
-        writeObject(buffer, tx, pver);
+      for (Transaction tx in transactions) writeObject(buffer, tx, pver);
     }
   }
 
@@ -314,15 +310,10 @@ class Block extends BlockHeader {
   void _deserializeTransactions(bytes.Reader reader, int pver) {
     List<Transaction> txs = new List<Transaction>();
     int nbTx = readVarInt(reader);
-    for(int i = 0 ; i < nbTx ; i++) {
+    for (int i = 0; i < nbTx; i++) {
       Transaction tx = readObject(reader, new Transaction.empty(), pver);
       txs.add(tx);
     }
     transactions = txs.length > 0 ? txs : null;
   }
 }
-
-
-
-
-

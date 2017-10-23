@@ -1,9 +1,8 @@
 part of dartcoin.core;
 
-
 class SigHash {
-  static const SigHash ALL    = const SigHash._(1);
-  static const SigHash NONE   = const SigHash._(2);
+  static const SigHash ALL = const SigHash._(1);
+  static const SigHash NONE = const SigHash._(2);
   static const SigHash SINGLE = const SigHash._(3);
 
   static const int ANYONE_CAN_PAY = 0x80;
@@ -19,8 +18,7 @@ class SigHash {
 
   static int sigHashFlagsValue(SigHash sh, bool anyoneCanPay) {
     int val = sh.value;
-    if(anyoneCanPay)
-      val |= ANYONE_CAN_PAY;
+    if (anyoneCanPay) val |= ANYONE_CAN_PAY;
     return val;
   }
 }

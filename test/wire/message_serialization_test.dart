@@ -1,6 +1,5 @@
 library dartcoin.test.wire.serialization;
 
-
 import "dart:typed_data";
 
 import "package:cryptoutils/cryptoutils.dart";
@@ -10,12 +9,11 @@ import "package:test/test.dart";
 import "package:dartcoin/core.dart";
 import "package:dartcoin/wire.dart";
 
-
 final Uint8List _addrMessage = CryptoUtils.hexToBytes("f9beb4d96164647200000000000000001f000000" +
-        "ed52399b01e215104d010000000000000000000000000000000000ffff0a000001208d");
+    "ed52399b01e215104d010000000000000000000000000000000000ffff0a000001208d");
 
 final Uint8List _txMessage = CryptoUtils.hexToBytes(
-        "F9 BE B4 D9 74 78 00 00  00 00 00 00 00 00 00 00" +
+    "F9 BE B4 D9 74 78 00 00  00 00 00 00 00 00 00 00" +
         "02 01 00 00 E2 93 CD BE  01 00 00 00 01 6D BD DB" +
         "08 5B 1D 8A F7 51 84 F0  BC 01 FA D5 8D 12 66 E9" +
         "B6 3B 50 88 19 90 E4 B4  0D 6A EE 36 29 00 00 00" +
@@ -43,7 +41,6 @@ final int pver = 70001;
 
 void main() {
   group("wire.MessageSerialization", () {
-    
     test("addr", () {
       // the actual data from https://en.bitcoin.it/wiki/Protocol_specification#addr
       AddressMessage a = Message.decode(_addrMessage, magic, pver);
@@ -51,36 +48,39 @@ void main() {
       PeerAddress pa = a.addresses[0];
       expect(pa.port, equals(8333));
       expect(pa.address.sublist(12, 16), equals(Uri.parseIPv4Address("10.0.0.1")));
-    });//
-    
+    }); //
+
     test("txVsTxmDeseri", () {
       TransactionMessage txm = Message.decode(_txMessage, magic, pver);
       Transaction tx = txm.transaction;
       Transaction tx2 = new Transaction.fromBitcoinSerialization(_txBytes, pver);
       expect(tx2, equals(tx));
     });
-    
+
     test("headers1", () {
-    
-      HeadersMessage hm = Message.decode(CryptoUtils.hexToBytes("f9beb4d9686561" +
+      HeadersMessage hm = Message.decode(
+          CryptoUtils.hexToBytes("f9beb4d9686561" +
               "646572730000000000520000005d4fab8101010000006fe28c0ab6f1b372c1a6a246ae6" +
               "3f74f931e8365e15a089c68d6190000000000982051fd1e4ba744bbbe680e1fee14677b" +
-              "a1a3c3540bf7b1cdb606e857233e0e61bc6649ffff001d01e3629900"), magic, pver);
-    
+              "a1a3c3540bf7b1cdb606e857233e0e61bc6649ffff001d01e3629900"),
+          magic,
+          pver);
+
       // The first block after the genesis
       // http://blockexplorer.com/b/1
       Block block = hm.headers[0];
       String hash = block.hash.toString();
       expect(hash, equals("00000000839a8e6886ab5951d76f411475428afc90947ee320161bbf18eb6048"));
-    
+
       expect(block.transactions, isNull);
-    
-      expect(block.merkleRoot.toHex(), equals("0e3e2357e806b6cdb1f70b54c3a3a17b6714ee1f0e68bebb44a74b1efd512098"));
+
+      expect(block.merkleRoot.toHex(),
+          equals("0e3e2357e806b6cdb1f70b54c3a3a17b6714ee1f0e68bebb44a74b1efd512098"));
     });
-    
+
     test("headers2", () {
-    
-      HeadersMessage hm = Message.decode(CryptoUtils.hexToBytes("f9beb4d96865616465"
+      HeadersMessage hm = Message.decode(
+          CryptoUtils.hexToBytes("f9beb4d96865616465"
               "72730000000000e701000085acd4ea06010000006fe28c0ab6f1b372c1a6a246ae63f74f931e"
               "8365e15a089c68d6190000000000982051fd1e4ba744bbbe680e1fee14677ba1a3c3540bf7b1c"
               "db606e857233e0e61bc6649ffff001d01e3629900010000004860eb18bf1b1620e37e9490fc8a"
@@ -93,41 +93,41 @@ void main() {
               "a88d221c8bd6c059da090e88f8a2c99690ee55dbba4e00000000e11c48fecdd9e72510ca84f023"
               "370c9a38bf91ac5cae88019bee94d24528526344c36649ffff001d1d03e4770001000000fc33f5"
               "96f822a0a1951ffdbf2a897b095636ad871707bf5d3162729b00000000379dfb96a5ea8c81700ea4"
-              "ac6b97ae9a9312b2d4301a29580e924ee6761a2520adc46649ffff001d189c4c9700"), magic, pver);
-    
+              "ac6b97ae9a9312b2d4301a29580e924ee6761a2520adc46649ffff001d189c4c9700"),
+          magic,
+          pver);
+
       int nBlocks = hm.headers.length;
       expect(nBlocks, equals(6));
-    
+
       // index 0 block is the number 1 block in the block chain
       // http://blockexplorer.com/b/1
       Block zeroBlock = hm.headers[0];
       String zeroBlockHash = zeroBlock.hash.toString();
-    
-      expect(zeroBlockHash, equals("00000000839a8e6886ab5951d76f411475428afc90947ee320161bbf18eb6048"));
+
+      expect(zeroBlockHash,
+          equals("00000000839a8e6886ab5951d76f411475428afc90947ee320161bbf18eb6048"));
       expect(zeroBlock.nonce, equals(2573394689));
-    
+
       Block thirdBlock = hm.headers[3];
       String thirdBlockHash = thirdBlock.hash.toString();
-    
+
       // index 3 block is the number 4 block in the block chain
       // http://blockexplorer.com/b/4
-      expect(thirdBlockHash, equals("000000004ebadb55ee9096c9a2f8880e09da59c0d68b1c228da88e48844a1485"));
+      expect(thirdBlockHash,
+          equals("000000004ebadb55ee9096c9a2f8880e09da59c0d68b1c228da88e48844a1485"));
       expect(thirdBlock.nonce, equals(2850094635));
     });
-    
+
     test("packetHeader", () {
-      expect(() => Message.decode(new Uint8List(0), magic, pver), throwsA(new isInstanceOf<SerializationException>()));
-    
+      expect(() => Message.decode(new Uint8List(0), magic, pver),
+          throwsA(new isInstanceOf<SerializationException>()));
+
       // Message with a Message size which is 1 too big, in little endian format.
-      Uint8List wrongMessageLength = CryptoUtils.hexToBytes("000000000000000000000000010000020000000000");
-      expect(() => Message.decode(wrongMessageLength, magic, pver), throwsA(new isInstanceOf<SerializationException>()));
+      Uint8List wrongMessageLength =
+          CryptoUtils.hexToBytes("000000000000000000000000010000020000000000");
+      expect(() => Message.decode(wrongMessageLength, magic, pver),
+          throwsA(new isInstanceOf<SerializationException>()));
     });
-    
   });
 }
-
-
-
-
-
-

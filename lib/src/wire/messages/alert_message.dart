@@ -1,15 +1,14 @@
 part of dartcoin.wire;
 
 class AlertMessage extends Message {
-
   @override
   String get command => Message.CMD_ALERT;
-  
+
   static const int ALERT_VERSION = 1;
-  
+
   // Chosen arbitrarily to avoid memory blowups.
   static const int MAX_SET_SIZE = 100;
-  
+
   int version; // specific version for alert messages
   DateTime relayUntil;
   DateTime expiration;
@@ -26,15 +25,14 @@ class AlertMessage extends Message {
 
   Uint8List messageChecksum;
   ECDSASignature signature;
-  
+
   AlertMessage();
-  
+
   /// Create an empty instance.
   AlertMessage.empty();
-  
+
   bool isSignatureValid(Uint8List key) =>
       KeyPair.verifySignatureForPubkey(messageChecksum, signature, key);
-
 
   @override
   void bitcoinDeserialize(bytes.Reader reader, int pver) {
@@ -52,15 +50,14 @@ class AlertMessage extends Message {
     cancel = readUintLE(reader);
     int cancelSetSize = readVarInt(reader);
     cancelSet = new HashSet<int>();
-    for(int i = 0 ; i < cancelSetSize ; i++) {
+    for (int i = 0; i < cancelSetSize; i++) {
       cancelSet.add(readUintLE(reader));
     }
     minVer = readUintLE(reader);
     maxVer = readUintLE(reader);
     int subVerSetSize = readVarInt(reader);
     matchingSubVer = new HashSet<String>();
-    for(int i = 0 ; i < subVerSetSize ; i++)
-      matchingSubVer.add(readVarStr(reader));
+    for (int i = 0; i < subVerSetSize; i++) matchingSubVer.add(readVarStr(reader));
     priority = readUintLE(reader);
     comment = readVarStr(reader);
     statusBar = readVarStr(reader);
@@ -69,12 +66,11 @@ class AlertMessage extends Message {
 
   @override
   void bitcoinSerialize(bytes.Buffer buffer, int pver) {
-    if(signature == null)
-      throw new Exception("Cannot sign AlertMessages ourselves");
+    if (signature == null) throw new Exception("Cannot sign AlertMessages ourselves");
     _writeMessage(buffer);
     writeByteArray(buffer, signature.encodeToDER());
   }
-  
+
   void _writeMessage(bytes.Buffer buffer) {
     writeBytes(buffer, utils.uintToBytesLE(version, 4));
     writeBytes(buffer, utils.uintToBytesLE(relayUntil.millisecondsSinceEpoch ~/ 1000, 8));
@@ -91,7 +87,3 @@ class AlertMessage extends Message {
     writeVarStr(buffer, reserved);
   }
 }
-
-
-
-

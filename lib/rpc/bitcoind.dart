@@ -1,6 +1,5 @@
 library dartcoin.rpc.bitcoind;
 
-
 import "package:json_rpc_2/json_rpc_2.dart" as json_rpc;
 
 import "package:dartcoin/core.dart";
@@ -8,9 +7,7 @@ import "package:dartcoin/json.dart";
 
 import "bitcoin_core_api.dart";
 
-
 abstract class BitcoinAPI {
-
   json_rpc.Client _proxy;
 
   BitcoinAPI(var rpcProxy) {
@@ -19,13 +16,10 @@ abstract class BitcoinAPI {
 
   BitcoinAPI.withURI(Uri uri) {
     var stream;
-    if(uri.scheme == "ws") {
+    if (uri.scheme == "ws") {
 //      stream =
     }
   }
-
-
-
 
   //void addMultiSigAddress(int nRequired, ...) //TODO when public keys ready
 
@@ -57,7 +51,8 @@ abstract class BitcoinAPI {
     _proxy.encryptwallet(passphrase);
   }
 
-  String getAccount(Address address) { //TODO is String return type correct?
+  String getAccount(Address address) {
+    //TODO is String return type correct?
     return _proxy.getaccount(address.toString());
   }
 
@@ -157,7 +152,5 @@ abstract class BitcoinAPI {
   }
 
 //TODO continue
-
-
 
 }

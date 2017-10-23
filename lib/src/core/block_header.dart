@@ -1,8 +1,6 @@
 part of dartcoin.core;
 
-
 class BlockHeader extends BitcoinSerializable {
-
   int version;
   Hash256 previousBlock;
   Hash256 merkleRoot;
@@ -12,13 +10,14 @@ class BlockHeader extends BitcoinSerializable {
 
   Hash256 _hash;
 
-  BlockHeader({ Hash256 hash,
-                int this.version: Block.BLOCK_VERSION,
-                Hash256 this.previousBlock,
-                Hash256 this.merkleRoot,
-                int this.timestamp,
-                int this.difficultyTarget,
-                int this.nonce: 0}) {
+  BlockHeader(
+      {Hash256 hash,
+      int this.version: Block.BLOCK_VERSION,
+      Hash256 this.previousBlock,
+      Hash256 this.merkleRoot,
+      int this.timestamp,
+      int this.difficultyTarget,
+      int this.nonce: 0}) {
     this._hash = hash;
     previousBlock = previousBlock ?? Hash256.ZERO_HASH;
     difficultyTarget = difficultyTarget ?? Block.EASIEST_DIFFICULTY_TARGET;
@@ -35,17 +34,15 @@ class BlockHeader extends BitcoinSerializable {
   BlockHeader.empty();
 
   /// Used only as superconstructor in Block
-  BlockHeader._header(hash, version, previousBlock, merkleRoot, timestamp,
-      difficultyTarget, nonce) : this(
-    hash: hash,
-    version: version,
-    previousBlock: previousBlock,
-    merkleRoot: merkleRoot,
-    timestamp: timestamp,
-    difficultyTarget: difficultyTarget,
-    nonce: nonce
-  );
-
+  BlockHeader._header(hash, version, previousBlock, merkleRoot, timestamp, difficultyTarget, nonce)
+      : this(
+            hash: hash,
+            version: version,
+            previousBlock: previousBlock,
+            merkleRoot: merkleRoot,
+            timestamp: timestamp,
+            difficultyTarget: difficultyTarget,
+            nonce: nonce);
 
   Hash256 get hash {
     if (_hash == null) {
@@ -70,8 +67,7 @@ class BlockHeader extends BitcoinSerializable {
    * hash values. Then the work of the block will be 20. As the target gets
    * lower, the amount of work goes up.
    */
-  BigInteger get work =>
-      Block._LARGEST_HASH / (difficultyTargetAsInteger + BigInteger.ONE);
+  BigInteger get work => Block._LARGEST_HASH / (difficultyTargetAsInteger + BigInteger.ONE);
 
   Hash256 calculateHash() {
     var buffer = new bytes.Buffer();
@@ -82,16 +78,15 @@ class BlockHeader extends BitcoinSerializable {
 
   @override
   bool operator ==(BlockHeader other) {
-    if(other.runtimeType != BlockHeader) return false;
-    if(identical(this, other)) return true;
+    if (other.runtimeType != BlockHeader) return false;
+    if (identical(this, other)) return true;
     return hash == other.hash;
   }
 
   @override
   int get hashCode => (BlockHeader).hashCode ^ hash.hashCode;
 
-  void bitcoinSerialize(bytes.Buffer buffer, int pver) =>
-      _serializeHeaderOnly(buffer);
+  void bitcoinSerialize(bytes.Buffer buffer, int pver) => _serializeHeaderOnly(buffer);
 
   void _serializeHeaderOnly(bytes.Buffer buffer) {
     writeUintLE(buffer, version);
@@ -107,7 +102,6 @@ class BlockHeader extends BitcoinSerializable {
     buffer.addByte(0);
   }
 
-
   void bitcoinDeserialize(bytes.Reader reader, int pver) {
     version = readUintLE(reader);
     previousBlock = readSHA256(reader);
@@ -116,6 +110,4 @@ class BlockHeader extends BitcoinSerializable {
     difficultyTarget = readUintLE(reader);
     nonce = readUintLE(reader);
   }
-
-
 }

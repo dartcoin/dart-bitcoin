@@ -1,6 +1,5 @@
 library dartcoin.core;
 
-
 import "package:cryptoutils/cryptoutils.dart";
 
 import "dart:collection";
@@ -10,7 +9,7 @@ import "dart:math";
 import "package:bignum/bignum.dart";
 import "package:bytes/bytes.dart" as bytes;
 import "package:collection/equality.dart";
-import "package:collection/algorithms.dart" show binarySearch;//TODO remove
+import "package:collection/algorithms.dart" show binarySearch; //TODO remove
 import "package:crypto/crypto.dart" hide CryptoUtils, Hash;
 
 import "package:pointycastle/api.dart";
@@ -24,7 +23,6 @@ import "package:pointycastle/ecc/curves/secp256k1.dart";
 // tmp
 import "package:asn1lib/asn1lib.dart";
 
-
 import "package:dartcoin/src/utils.dart" as utils;
 import "package:dartcoin/src/crypto.dart" as crypto;
 
@@ -33,10 +31,8 @@ import "package:dartcoin/scripts/common.dart";
 
 import "package:dartcoin/src/wire/serialization.dart";
 
-
 // utils
 part "src/core/units.dart";
-
 
 // addresses and private keys
 part "src/core/address.dart";

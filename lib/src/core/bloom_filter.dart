@@ -1,6 +1,5 @@
 part of dartcoin.core;
 
-
 /**
  * <p>A Bloom filter is a probabilistic data structure which can be sent to another client so that it can avoid
  * sending us transactions that aren't relevant to our set of keys. This allows for significantly more efficient
@@ -12,18 +11,17 @@ part of dartcoin.core;
  * gets a noisy picture of what transactions are relevant to your wallet.</p>
  */
 class BloomFilter extends BitcoinSerializable {
-    
-    Uint8List data;
-    int hashFuncs;
-    int nTweak;
-    int nFlags;
+  Uint8List data;
+  int hashFuncs;
+  int nTweak;
+  int nFlags;
 
-    // Same value as the reference client
+  // Same value as the reference client
   // A filter of 20,000 items and a false positive rate of 0.1% or one of 10,000 items and 0.0001% is just under 36,000 bytes
   static const int MAX_FILTER_SIZE = 36000;
   // There is little reason to ever have more hash functions than 50 given a limit of 36,000 bytes
   static const int MAX_HASH_FUNCS = 50;
-  
+
   /**
    * <p>Constructs a new Bloom Filter which will provide approximately the given false positive
    * rate when the given number of elements have been inserted.</p>
@@ -55,13 +53,15 @@ class BloomFilter extends BitcoinSerializable {
    * 
    * <p>updateFlag is used to control filter behavior</p>
    */
-  BloomFilter(int elements, double falsePositiveRate, int randomNonce, [BloomUpdate updateFlag = BloomUpdate.UPDATE_P2PUBKEY_ONLY]) {
-    if(elements == null || falsePositiveRate == null || randomNonce == null)
+  BloomFilter(int elements, double falsePositiveRate, int randomNonce,
+      [BloomUpdate updateFlag = BloomUpdate.UPDATE_P2PUBKEY_ONLY]) {
+    if (elements == null || falsePositiveRate == null || randomNonce == null)
       throw new ArgumentError("The required arguments should not be null");
     // The following formulas were stolen from Wikipedia's page on Bloom Filters (with the addition of min(..., MAX_...))
     //                        Size required for a given number of elements and false-positive rate
-    int size = min(( -1  / (pow(log(2), 2)) * elements * log(falsePositiveRate)).floor(),
-                        MAX_FILTER_SIZE * 8) ~/ 8;
+    int size = min((-1 / (pow(log(2), 2)) * elements * log(falsePositiveRate)).floor(),
+            MAX_FILTER_SIZE * 8) ~/
+        8;
     data = new Uint8List(size <= 0 ? 1 : size);
     // Optimal number of hash functions for a given filter size and element count.
     hashFuncs = min((data.length * 8 / elements * log(2)).floor(), MAX_HASH_FUNCS);
@@ -71,7 +71,7 @@ class BloomFilter extends BitcoinSerializable {
 
   /// Create an empty instance.
   BloomFilter.empty();
-  
+
   /**
    * Returns the theoretical false positive rate of this filter if were to contain the given number of elements.
    */
@@ -100,10 +100,10 @@ class BloomFilter extends BitcoinSerializable {
     writeBytes(buffer, [nFlags]);
   }
 
-  static int _rotateLeft32 (int x, int r) {
+  static int _rotateLeft32(int x, int r) {
     return (x << r) | utils.lsr(x, 32 - r);
   }
-  
+
   int _hash(int hashNum, Uint8List object) {
     // The following is MurmurHash3 (x86_32), see http://code.google.com/p/smhasher/source/browse/trunk/MurmurHash3.cpp
     // implementation copied from BitcoinJ
@@ -114,29 +114,30 @@ class BloomFilter extends BitcoinSerializable {
 
     int numBlocks = (object.length ~/ 4) * 4;
     // body
-    for(int i = 0; i < numBlocks; i += 4) {
+    for (int i = 0; i < numBlocks; i += 4) {
       int k1 = (object[i] & 0xFF) |
-            ((object[i+1] & 0xFF) << 8) |
-            ((object[i+2] & 0xFF) << 16) |
-            ((object[i+3] & 0xFF) << 24);
-      
+          ((object[i + 1] & 0xFF) << 8) |
+          ((object[i + 2] & 0xFF) << 16) |
+          ((object[i + 3] & 0xFF) << 24);
+
       k1 *= c1;
       k1 = _rotateLeft32(k1, 15);
       k1 *= c2;
 
       h1 ^= k1;
-      h1 = _rotateLeft32(h1, 13); 
+      h1 = _rotateLeft32(h1, 13);
       h1 = h1 * 5 + 0xe6546b64;
     }
-    
+
     int k1 = 0;
-    if((object.length & 3) >= 3)
-      k1 ^= (object[numBlocks + 2] & 0xff) << 16;
-    if((object.length & 3) >= 2)
-      k1 ^= (object[numBlocks + 1] & 0xff) << 8;
-    if((object.length & 3) >= 1) {
+    if ((object.length & 3) >= 3) k1 ^= (object[numBlocks + 2] & 0xff) << 16;
+    if ((object.length & 3) >= 2) k1 ^= (object[numBlocks + 1] & 0xff) << 8;
+    if ((object.length & 3) >= 1) {
       k1 ^= (object[numBlocks] & 0xff);
-      k1 *= c1; k1 = _rotateLeft32(k1, 15); k1 *= c2; h1 ^= k1;
+      k1 *= c1;
+      k1 = _rotateLeft32(k1, 15);
+      k1 *= c2;
+      h1 ^= k1;
     }
 
     // finalization
@@ -146,27 +147,26 @@ class BloomFilter extends BitcoinSerializable {
     h1 ^= utils.lsr(h1, 13);
     h1 *= 0xc2b2ae35;
     h1 ^= utils.lsr(h1, 16);
-    
+
     return ((h1 & 0xFFFFFFFF) % (data.length * 8));
   }
-  
+
   /**
    * Returns true if the given object matches the filter
    * (either because it was inserted, or because we have a false-positive)
    */
   bool contains(Uint8List object) {
     for (int i = 0; i < hashFuncs; i++) {
-      if (!utils.checkBitLE(data, _hash(i, object)))
-        return false;
+      if (!utils.checkBitLE(data, _hash(i, object))) return false;
     }
     return true;
   }
-  
+
   /**
    * Insert the given arbitrary data into the filter
    */
   void insert(Uint8List object) {
-    for(int i = 0; i < hashFuncs; i++) {
+    for (int i = 0; i < hashFuncs; i++) {
       utils.setBitLE(data, _hash(i, object));
     }
   }
@@ -188,13 +188,12 @@ class BloomFilter extends BitcoinSerializable {
    */
   void merge(BloomFilter filter) {
     if (!this.matchesAll() && !filter.matchesAll()) {
-      if(!(filter.data.length == data.length &&
+      if (!(filter.data.length == data.length &&
           filter.hashFuncs == hashFuncs &&
           filter.nTweak == nTweak)) {
         throw new Exception("Invalid filter passed as parameter; read the docs.");
       }
-      for (int i = 0; i < data.length; i++)
-        data[i] |= filter.data[i];
+      for (int i = 0; i < data.length; i++) data[i] |= filter.data[i];
     } else {
       data = new Uint8List.fromList([0xff]);
     }
@@ -205,21 +204,21 @@ class BloomFilter extends BitcoinSerializable {
    * for when this can be a useful thing to do.
    */
   bool matchesAll() {
-    for(int b in data) {
+    for (int b in data) {
       if (b != 0xff) {
         return false;
       }
     }
     return true;
   }
-  
+
   @override
   bool operator ==(BloomFilter other) {
-    if(other is! BloomFilter) return false;
-    if(identical(this, other)) return true;
+    if (other is! BloomFilter) return false;
+    if (identical(this, other)) return true;
     return other.hashFuncs == this.hashFuncs &&
-           other.nTweak == this.nTweak &&
-           utils.equalLists(other.data, this.data);
+        other.nTweak == this.nTweak &&
+        utils.equalLists(other.data, this.data);
   }
 
   @override
@@ -235,7 +234,7 @@ class BloomUpdate {
   static const BloomUpdate UPDATE_ALL = const BloomUpdate._(1);
   /** Only adds outpoints to the filter if the output is a pay-to-pubkey/pay-to-multisig script */
   static const BloomUpdate UPDATE_P2PUBKEY_ONLY = const BloomUpdate._(2);
-  
+
   final int index;
   const BloomUpdate._(int this.index);
 }

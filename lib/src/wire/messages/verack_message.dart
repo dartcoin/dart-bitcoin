@@ -1,10 +1,9 @@
 part of dartcoin.wire;
 
 class VerackMessage extends Message {
-
   @override
   String get command => Message.CMD_VERACK;
-  
+
   VerackMessage();
 
   /// Create an empty instance.
