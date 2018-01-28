@@ -213,8 +213,8 @@ class BloomFilter extends BitcoinSerializable {
   }
 
   @override
-  bool operator ==(BloomFilter other) {
-    if (other is! BloomFilter) return false;
+  bool operator ==(dynamic other) {
+    if (other.runtimeType != BloomFilter) return false;
     if (identical(this, other)) return true;
     return other.hashFuncs == this.hashFuncs &&
         other.nTweak == this.nTweak &&

@@ -281,7 +281,7 @@ class Block extends BlockHeader {
   }
 
   @override
-  bool operator ==(Block other) {
+  bool operator ==(dynamic other) {
     if (other.runtimeType != Block) return false;
     if (identical(this, other)) return true;
     return hash == other.hash;

@@ -31,8 +31,8 @@ class TransactionOutPoint extends BitcoinSerializable {
   }
 
   @override
-  operator ==(TransactionOutPoint other) {
-    if (other is! TransactionOutPoint) return false;
+  operator ==(dynamic other) {
+    if (other.runtimeType != TransactionOutPoint) return false;
     if (identical(this, other)) return true;
     return txid == other.txid &&
         index == other.index &&

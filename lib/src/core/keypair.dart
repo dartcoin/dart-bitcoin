@@ -190,8 +190,8 @@ class KeyPair {
     _keyCrypter = null;
   }
 
-  bool operator ==(KeyPair other) {
-    if (other is! KeyPair) return false;
+  bool operator ==(dynamic other) {
+    if (other.runtimeType != KeyPair) return false;
     return utils.equalLists(_pub, other._pub);
   }
 

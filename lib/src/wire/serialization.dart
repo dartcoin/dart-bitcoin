@@ -31,8 +31,10 @@ class SerializationException implements Exception {
   String toString() => "SerializationException: $message";
 
   @override
-  bool operator ==(SerializationException other) =>
-      other is SerializationException && message == other.message;
+  bool operator ==(dynamic other) {
+    if (other.runtimeType != SerializationException) return false;
+    return message == other.message;
+  }
 }
 
 /////////////
@@ -76,7 +78,8 @@ String readVarStr(bytes.Reader reader) {
   return UTF8.decode(readByteArray(reader));
 }
 
-BitcoinSerializable readObject(bytes.Reader reader, BitcoinSerializable obj, int pver) {
+BitcoinSerializable readObject(
+    bytes.Reader reader, BitcoinSerializable obj, int pver) {
   obj.bitcoinDeserialize(reader, pver);
   return obj;
 }

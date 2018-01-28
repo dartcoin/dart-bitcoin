@@ -34,8 +34,8 @@ class ScriptChunk {
   }
 
   @override
-  bool operator ==(ScriptChunk other) {
-    if (other is! ScriptChunk) return false;
+  bool operator ==(dynamic other) {
+    if (other.runtimeType != ScriptChunk) return false;
     return isOpCode == other.isOpCode && utils.equalLists(serialize(), other.serialize());
   }
 

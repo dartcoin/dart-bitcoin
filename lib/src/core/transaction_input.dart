@@ -43,8 +43,8 @@ class TransactionInput extends BitcoinSerializable {
   }
 
   @override
-  operator ==(TransactionInput other) {
-    if (other is! TransactionInput) return false;
+  operator ==(dynamic other) {
+    if (other.runtimeType != TransactionInput) return false;
     if (identical(this, other)) return true;
     return outpoint == other.outpoint && scriptSig == other.scriptSig && sequence == other.sequence;
   }

@@ -72,8 +72,8 @@ class Script {
   }
 
   @override
-  operator ==(Script other) {
-    if (other is! Script) return false;
+  operator ==(dynamic other) {
+    if (other.runtimeType != Script) return false;
     if (identical(this, other)) return true;
     return utils.equalLists(this.program, other.program);
   }

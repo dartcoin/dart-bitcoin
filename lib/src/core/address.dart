@@ -108,8 +108,8 @@ class Address {
   String toString() => address;
 
   @override
-  bool operator ==(Address other) {
-    if (other is! Address) return false;
+  bool operator ==(dynamic other) {
+    if (other.runtimeType != Address) return false;
     return _version == other._version && _hash160 == other._hash160;
   }
 

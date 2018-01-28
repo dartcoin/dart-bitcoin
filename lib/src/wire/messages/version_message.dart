@@ -18,12 +18,13 @@ class VersionMessage extends Message {
 
   /** The version of this library release, as a string. */
   static final String DARTCOIN_VERSION = "0.0.0-alpha";
+
   /** The value that is prepended to the subVer field of this application. */
   static final String LIBRARY_SUBVER = "/Dartcoin:" + DARTCOIN_VERSION + "/";
 
   /**
    * Create a new VersionMessage.
-   * 
+   *
    * Most parameters can be left blank, the most important ones are
    * [lastHeight] and [relayBeforeFilter], all others most probably have the default value.
    */
@@ -42,7 +43,8 @@ class VersionMessage extends Message {
     subVer = subVer ?? LIBRARY_SUBVER;
     // make sure a PeerAddress instance with protocolVersion = 0 is used
     myAddress = myAddress ?? new PeerAddress.localhost(services: services);
-    theirAddress = theirAddress ?? new PeerAddress.localhost(services: services);
+    theirAddress =
+        theirAddress ?? new PeerAddress.localhost(services: services);
   }
 
   /// Create an empty instance.
@@ -80,29 +82,34 @@ class VersionMessage extends Message {
   }
 
   static bool isValidSubVerComponent(String component) =>
-      !(component.contains("/") || component.contains("(") || component.contains(")"));
+      !(component.contains("/") ||
+          component.contains("(") ||
+          component.contains(")"));
 
   /**
    * Returns true if the clientVersion field is >= Pong.MIN_PROTOCOL_VERSION. If it is then ping() is usable.
    */
-  bool get isPingPongSupported => clientVersion >= PongMessage.MIN_PROTOCOL_VERSION;
+  bool get isPingPongSupported =>
+      clientVersion >= PongMessage.MIN_PROTOCOL_VERSION;
 
   /**
    * Returns true if the clientVersion field is >= FilteredBlock.MIN_PROTOCOL_VERSION. If it is then Bloom filtering
    * is available and the memory pool of the remote peer will be queried when the downloadData property is true.
    */
-  bool get isBloomFilteringSupported => clientVersion >= FilteredBlock.MIN_PROTOCOL_VERSION;
+  bool get isBloomFilteringSupported =>
+      clientVersion >= FilteredBlock.MIN_PROTOCOL_VERSION;
 
   /**
    * Returns true if the version message indicates the sender has a full copy of the block chain,
    * or if it's running in client mode (only has the headers).
    */
-  bool get hasBlockChain => (services & SERVICE_NODE_NETWORK) == SERVICE_NODE_NETWORK;
+  bool get hasBlockChain =>
+      (services & SERVICE_NODE_NETWORK) == SERVICE_NODE_NETWORK;
 
   @override
-  bool operator ==(VersionMessage other) {
-    return other is VersionMessage &&
-        other.lastHeight == lastHeight &&
+  bool operator ==(dynamic other) {
+    if (other.runtimeType != VersionMessage) return false;
+    return other.lastHeight == lastHeight &&
         other.clientVersion == clientVersion &&
         other.services == services &&
         other.time == time &&

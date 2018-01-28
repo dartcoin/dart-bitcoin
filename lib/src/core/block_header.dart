@@ -77,7 +77,7 @@ class BlockHeader extends BitcoinSerializable {
   }
 
   @override
-  bool operator ==(BlockHeader other) {
+  bool operator ==(dynamic other) {
     if (other.runtimeType != BlockHeader) return false;
     if (identical(this, other)) return true;
     return hash == other.hash;

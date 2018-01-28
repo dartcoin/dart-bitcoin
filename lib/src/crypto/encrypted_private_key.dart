@@ -27,8 +27,8 @@ class EncryptedPrivateKey {
   EncryptedPrivateKey clone() => new EncryptedPrivateKey(this._encryptedKey, this._iv);
 
   @override
-  operator ==(EncryptedPrivateKey other) {
-    if (other is! EncryptedPrivateKey) return false;
+  operator ==(dynamic other) {
+    if (other.runtimeType != EncryptedPrivateKey) return false;
     if (identical(this, other)) return true;
     return _iv == other._iv && _encryptedKey == other._encryptedKey;
   }

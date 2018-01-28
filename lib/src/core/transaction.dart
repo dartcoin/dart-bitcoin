@@ -169,8 +169,8 @@ class Transaction extends BitcoinSerializable {
   }
 
   @override
-  operator ==(Transaction other) {
-    if (other is! Transaction) return false;
+  operator ==(dynamic other) {
+    if (other.runtimeType != Transaction) return false;
     if (identical(this, other)) return true;
     return hash == other.hash;
   }

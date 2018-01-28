@@ -46,8 +46,8 @@ class InventoryItem extends BitcoinSerializable {
   }
 
   @override
-  bool operator ==(InventoryItem other) {
-    if (!(other is InventoryItem)) return false;
+  bool operator ==(dynamic other) {
+    if (other.runtimeType != InventoryItem) return false;
     return type == other.type && hash == other.hash;
   }
 }

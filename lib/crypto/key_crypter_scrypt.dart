@@ -116,8 +116,8 @@ class KeyCrypterScrypt implements KeyCrypter {
   String toString() => "Scrypt/AES";
 
   @override
-  operator ==(KeyCrypterScrypt other) {
-    if (other is! KeyCrypterScrypt) return false;
+  operator ==(dynamic other) {
+    if (other.runtimeType != KeyCrypterScrypt) return false;
     if (identical(this, other)) return true;
     return _scryptParams == other._scryptParams;
   }

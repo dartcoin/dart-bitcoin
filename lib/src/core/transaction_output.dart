@@ -37,8 +37,8 @@ class TransactionOutput extends BitcoinSerializable {
   }
 
   @override
-  operator ==(TransactionOutput other) {
-    if (other is! TransactionOutput) return false;
+  operator ==(dynamic other) {
+    if (other.runtimeType != TransactionOutput) return false;
     if (identical(this, other)) return true;
     return value == other.value && scriptPubKey == other.scriptPubKey;
   }

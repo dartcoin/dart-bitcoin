@@ -61,8 +61,8 @@ class PeerAddress extends BitcoinSerializable {
   }
 
   @override
-  bool operator ==(PeerAddress other) {
-    if (!(other is PeerAddress)) return false;
+  bool operator ==(dynamic other) {
+    if (other.runtimeType != PeerAddress) return false;
     return address == other.address &&
         port == other.port &&
         services == other.services &&
