@@ -68,7 +68,7 @@ class KeyCrypterScrypt implements KeyCrypter {
   }
 
   KeyParameter deriveKey(String passphrase) {
-    Uint8List passBytes = utils.stringToUTF8(passphrase);
+    Uint8List passBytes = utils.utf8Encode(passphrase);
     Uint8List keyBytes = new Uint8List(_scryptParams.desiredKeyLength);
     try {
       Scrypt scrypt = new Scrypt()..init(_scryptParams);

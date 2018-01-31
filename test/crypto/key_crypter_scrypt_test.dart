@@ -92,14 +92,14 @@ void main() {
         String password = uuid.v4();
 
         EncryptedPrivateKey encryptedPrivateKey =
-            keyCrypter.encrypt(utils.stringToUTF8(plainText), keyCrypter.deriveKey(password));
+            keyCrypter.encrypt(utils.utf8Encode(plainText), keyCrypter.deriveKey(password));
 
         expect(encryptedPrivateKey, isNotNull);
 
         Uint8List reconstructedPlainBytes =
             keyCrypter.decrypt(encryptedPrivateKey, keyCrypter.deriveKey(password));
         expect(CryptoUtils.bytesToHex(reconstructedPlainBytes),
-            equals(CryptoUtils.bytesToHex(utils.stringToUTF8(plainText))));
+            equals(CryptoUtils.bytesToHex(utils.utf8Encode(plainText))));
         print('.');
       }
       print(" Done.");
@@ -115,11 +115,11 @@ void main() {
       }
 
       EncryptedPrivateKey encryptedPrivateKey = keyCrypter.encrypt(
-          utils.stringToUTF8(stringBuffer.toString()), keyCrypter.deriveKey(_PASSWORD2));
+          utils.utf8Encode(stringBuffer.toString()), keyCrypter.deriveKey(_PASSWORD2));
       expect(encryptedPrivateKey, isNotNull);
 
       expect(() => keyCrypter.decrypt(encryptedPrivateKey, keyCrypter.deriveKey(_WRONG_PASSWORD)),
-          throws);
+          throwsA(anything));
     });
 
     test("EncryptDecryptBytes1", () {

@@ -267,7 +267,7 @@ Script parseScriptString(String string) {
     } else if (w.length >= 2 && w.startsWith("'") && w.endsWith("'")) {
       // Single-quoted string, pushed as data. NOTE: this is poor-man's
       // parsing, spaces/tabs/newlines in single-quoted strings won't work.
-      out.addAll(Script.encodeData(utils.stringToUTF8(w.substring(1, w.length - 1))));
+      out.addAll(Script.encodeData(utils.utf8Encode(w.substring(1, w.length - 1))));
       //Script.writeBytes(out, w.substring(1, w.length() - 1).getBytes(Charset.forName("UTF-8")));
     } else if (ScriptOpCodes.getOpCode(w) != ScriptOpCodes.OP_INVALIDOPCODE) {
       // opcode, e.g. OP_ADD or OP_1:

@@ -1,16 +1,15 @@
 library bitcoin.core;
 
-import "package:cryptoutils/cryptoutils.dart";
-
 import "dart:collection";
 import "dart:typed_data";
 import "dart:math";
 
+import "package:cryptoutils/cryptoutils.dart";
+
+import "package:base58check/base58check.dart";
 import "package:bignum/bignum.dart";
 import "package:bytes/bytes.dart" as bytes;
-import "package:collection/equality.dart";
-import "package:collection/algorithms.dart" show binarySearch; //TODO remove
-import "package:crypto/crypto.dart" hide CryptoUtils, Hash;
+import "package:collection/collection.dart";
 
 import "package:pointycastle/api.dart";
 import "package:pointycastle/ecc/ecc_fp.dart" as fp;

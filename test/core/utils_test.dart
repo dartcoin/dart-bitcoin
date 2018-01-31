@@ -57,7 +57,7 @@ void main() {
 
     test("isHexString", () {
       expect(utils.isHexString("11"), isTrue, reason: "11");
-      expect(utils.isHexString(CryptoUtils.bytesToHex(utils.stringToUTF8("Steven"))), isTrue,
+      expect(utils.isHexString(CryptoUtils.bytesToHex(utils.utf8Encode("Steven"))), isTrue,
           reason: "steven to utf8");
       expect(utils.isHexString(" abd DFB109"), isTrue, reason: " abd DFB109");
       expect(utils.isHexString("Steven"), isFalse, reason: "Steven");

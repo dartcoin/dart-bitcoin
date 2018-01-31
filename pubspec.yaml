@@ -5,14 +5,11 @@ description: A Bitcoin library for Dart. Pub-test release.
 homepage: http://www.dartcoin.org/
 dependencies:
   asn1lib: ">=0.3.1"
-  base58check: "0.1.0"
+  base58check: ^1.0.0
   bignum: ">=0.0.4"
   bytes: ">=0.2.0 <0.3.0"
   collection: any
-  crypto: any
   cryptoutils: ">=0.1.8"
-  json: any
-  json_rpc: any
   pointycastle: any
 dev_dependencies:
   browser: any

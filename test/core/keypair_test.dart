@@ -187,7 +187,7 @@ void main() {
       test("keyRecovery", () {
         KeyPair key = new KeyPair.generate();
         String message = "Hello World!";
-        Hash256 hash = new Hash256(crypto.singleDigest(utils.stringToUTF8(message)));
+        Hash256 hash = new Hash256(crypto.singleDigest(utils.utf8Encode(message)));
         ECDSASignature sig = key.sign(hash);
         key = new KeyPair.public(key.publicKey);
         bool found = false;
@@ -327,7 +327,7 @@ void main() {
         KeyPair encryptedKey = unencryptedKey.encrypt(_keyCrypter, aesKey);
 
         String message = "Goodbye Jupiter!";
-        Hash256 hash = new Hash256(crypto.singleDigest(utils.stringToUTF8(message)));
+        Hash256 hash = new Hash256(crypto.singleDigest(utils.utf8Encode(message)));
         ECDSASignature sig = encryptedKey.sign(hash, aesKey);
         unencryptedKey = new KeyPair.public(unencryptedKey.publicKey);
         bool found = false;

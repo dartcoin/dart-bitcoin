@@ -5,12 +5,10 @@ import "dart:math";
 import "dart:typed_data";
 
 import "package:bignum/bignum.dart";
-import "package:base58check/base58check.dart";
 import "package:bytes/bytes.dart" as bytes;
 import "package:collection/collection.dart";
 
 import "package:bitcoin/src/wire/serialization.dart";
-import "package:bitcoin/src/crypto.dart" as crypto;
 
 export "package:base58check/base58check.dart" show Base58CheckPayload;
 
@@ -39,33 +37,16 @@ Uint8List toBytes(List<int> bytes, [int start = 0, int end = -1]) {
   return result;
 }
 
-/// Base58Check
 
-const String _BASE58_ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
-Base58CheckCodec _base58CheckCodec = new Base58CheckCodec(_BASE58_ALPHABET, crypto.singleDigest);
-
-String encodeBase58Check(int version, List<int> bytes) =>
-    _base58CheckCodec.encode(new Base58CheckPayload(version, bytes));
-
-Base58CheckPayload decodeBase58Check(String encoded) => _base58CheckCodec.decode(encoded);
-
-Uint8List stringToUTF8(String string) {
-  Uint8List ret = new Uint8List(string.length);
-  for (int i = 0; i < string.length; i++) {
-    ret[i] = string.codeUnitAt(i);
-  }
-  return ret;
+Uint8List utf8Encode(String string) {
+  List<int> encoded = UTF8.encode(string);
+  return encoded is Uint8List ? encoded : new Uint8List.fromList(encoded);
 }
 
-String UTF8ToString(Uint8List bytes) {
-  return new String.fromCharCodes(bytes);
-}
+String utf8Decode(Uint8List bytes) => UTF8.decode(bytes);
 
-/**
- * Converts a hex string to a list of bytes.
- */
+
 const String _BYTE_ALPHABET = "0123456789ABCDEF";
-final RegExp HEX_REGEXP = new RegExp(r'/^[0-9A-Fa-f]+$/');
 
 //  bool isHexString(String maybeHexString) => HEX_REGEXP.hasMatch(maybeHexString);
 bool isHexString(String hex) {
@@ -136,6 +117,34 @@ bool equalLists(List list1, List list2) =>
  * Generate a valid hashcode for the list.
  */
 int listHashCode(List<int> list) => new ListEquality().hash(list);
+
+
+/// Returns a position of the [value] in [sortedList], if it is there.
+///
+/// If the list isn't sorted according to the [compare] function, the result
+/// is unpredictable.
+///
+/// If [compare] is omitted, this defaults to calling [Comparable.compareTo] on
+/// the objects. If any object is not [Comparable], this throws a [CastError].
+///
+/// Returns -1 if [value] is not in the list by default.
+int binarySearch<T>(List<T> sortedList, T value, {int compare(T a, T b)}) {
+  compare ??= (value1, value2) => (value1 as Comparable).compareTo(value2);
+  int min = 0;
+  int max = sortedList.length;
+  while (min < max) {
+    int mid = min + ((max - min) >> 1);
+    var element = sortedList[mid];
+    int comp = compare(element, value);
+    if (comp == 0) return mid;
+    if (comp < 0) {
+      min = mid + 1;
+    } else {
+      max = mid;
+    }
+  }
+  return -1;
+}
 
 /**
  * The regular BigInteger.toByteArray() method isn't quite what we often need:

@@ -3,7 +3,6 @@ library bitcoin.crypto.mnemonic_code;
 import "dart:convert" show UTF8;
 import "dart:typed_data";
 
-import "package:collection/algorithms.dart" show binarySearch;
 import "package:cryptoutils/cryptoutils.dart";
 import "package:pointycastle/api.dart";
 import "package:pointycastle/digests/sha256.dart";
@@ -66,8 +65,8 @@ class MnemonicCode {
     // used as a pseudo-random function. Desired length of the
     // derived key is 512 bits (= 64 bytes).
     //
-    Uint8List pass = utils.stringToUTF8(words.join(" "));
-    Uint8List salt = utils.stringToUTF8("mnemonic" + passphrase);
+    Uint8List pass = utils.utf8Encode(words.join(" "));
+    Uint8List salt = utils.utf8Encode("mnemonic" + passphrase);
 
     KeyDerivator deriv = new PBKDF2KeyDerivator(new HMac(new SHA512Digest(), 128));
     deriv.init(new Pbkdf2Parameters(salt, _PBKDF2_ROUNDS, 64));
@@ -91,7 +90,7 @@ class MnemonicCode {
     for (String word in words) {
       // Find the words index in the wordlist.
 
-      int ndx = binarySearch(_wordList, word);
+      int ndx = utils.binarySearch(_wordList, word);
       if (ndx < 0) throw new MnemonicException.word(word);
 
       // Set the next 11 bits to the value of the index.
