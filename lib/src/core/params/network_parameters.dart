@@ -17,7 +17,6 @@ abstract class NetworkParameters {
   static const List<NetworkParameters> SUPPORTED_PARAMS = const [MAIN_NET, TEST_NET];
 
   // GLOBAL PARAMETERS
-
   static const int PROTOCOL_VERSION = 70001;
   static final Uint8List SATOSHI_KEY = CryptoUtils.hexToBytes(
       "04fc9702847840aaf195de8442ebecedf5b095cdbb9bc716bda9110971b28a49e0ead8564ff0db22209e0374782c093bb899692d524e9d6a6956e7c5ecbcd68284");
@@ -29,6 +28,7 @@ abstract class NetworkParameters {
 
   // NETWORK-SPECIFIC PARAMETERS
 
+  final int min_peers = 1;
   final int addressHeader;
   final int p2shHeader;
   final int magicValue;
@@ -44,7 +44,7 @@ abstract class NetworkParameters {
       int this.port});
 
   Block get genesisBlock;
-  BigInteger get proofOfWorkLimit;
+  BigInt get proofOfWorkLimit;
   Uint8List get alertSigningKey => SATOSHI_KEY;
 
   List<int> get acceptableAddressHeaders => [addressHeader, p2shHeader];

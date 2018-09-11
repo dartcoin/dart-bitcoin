@@ -7,7 +7,7 @@ class _MainNetParams extends NetworkParameters {
       : super._(
             addressHeader: 0,
             p2shHeader: 5,
-            magicValue: 0xD9B4BEF9,
+            magicValue: 0xF9BEB4D9, // 0xD9B4BEF9
             id: "org.bitcoin.production",
             port: 8333);
 
@@ -22,5 +22,5 @@ class _MainNetParams extends NetworkParameters {
     return _genesis;
   }
 
-  BigInteger get proofOfWorkLimit => utils.decodeCompactBits(0x1d00ffff);
+  BigInt get proofOfWorkLimit => BigInt.parse("00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff", radix: 16);
 }

@@ -5,14 +5,13 @@ import "dart:typed_data";
 import "dart:io";
 import 'dart:convert';
 
-import "package:bignum/bignum.dart";
 import "package:cryptoutils/cryptoutils.dart";
 import "package:pointycastle/pointycastle.dart";
 
 import "package:test/test.dart";
 
 import "package:bitcoin/core.dart";
-import "package:bitcoin/crypto/key_crypter_scrypt.dart";
+import "package:bitcoin/src/crypto/key_crypter_scrypt.dart";
 import "package:bitcoin/src/crypto.dart" as crypto;
 import "package:bitcoin/src/utils.dart" as utils;
 
@@ -83,7 +82,7 @@ void main() {
       test("signatures", () {
         // Test that we can construct an KeyPair from a private key (deriving the public from the private), then signing
         // a message with it.
-        BigInteger privkey = new BigInteger.fromBytes(
+        BigInt privkey = CryptoUtils.bigIntFromBytes(
             1,
             CryptoUtils
                 .hexToBytes("180cb41c7c600be951b5d3d0a7334acc7506173875834f7a6c4c786a28fcbb19"));
@@ -309,7 +308,7 @@ void main() {
 
       test("toString", () {
         KeyPair key =
-            new KeyPair.private(new BigInteger(10), compressed: false); // An example private key.
+            new KeyPair.private(new BigInt.from(10), compressed: false); // An example private key.
 
         expect(
             key.toString(),
@@ -392,7 +391,7 @@ void main() {
 
       test("canonicalSigs", () {
         File f = new File.fromUri(new Uri.file("$RESOURCES/sig_canonical.json"));
-        List<String> vectors = JSON.decode(f.readAsStringSync());
+        List<String> vectors = json.decode(f.readAsStringSync());
 
         for (String vector in vectors) {
           if (!utils.isHexString(vector)) continue;
@@ -403,7 +402,7 @@ void main() {
 
       test("nonCanonicalSigs", () {
         File f = new File.fromUri(new Uri.file("$RESOURCES/sig_noncanonical.json"));
-        List<String> vectors = JSON.decode(f.readAsStringSync());
+        List<String> vectors = json.decode(f.readAsStringSync());
 
         for (String vector in vectors) {
           if (!utils.isHexString(vector)) continue;

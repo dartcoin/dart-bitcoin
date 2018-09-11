@@ -7,7 +7,7 @@ class _UnitTestParams extends NetworkParameters {
       : super._(
             addressHeader: 111,
             p2shHeader: 196,
-            magicValue: 0x0b110907,
+            magicValue: 0x0B110907,
             // copied from bitcoinj to indicate that we use the same params as bitcoinj
             id: "com.google.bitcoin.unittest",
             port: 18333);
@@ -23,6 +23,6 @@ class _UnitTestParams extends NetworkParameters {
     return _genesis;
   }
 
-  BigInteger get proofOfWorkLimit =>
-      new BigInteger("00ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", 16);
+  BigInt get proofOfWorkLimit =>
+      BigInt.parse("00ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", radix: 16);
 }

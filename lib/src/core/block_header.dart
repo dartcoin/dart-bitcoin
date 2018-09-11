@@ -57,7 +57,7 @@ class BlockHeader extends BitcoinSerializable {
     timestamp = time.millisecondsSinceEpoch ~/ 1000;
   }
 
-  BigInteger get difficultyTargetAsInteger => utils.decodeCompactBits(difficultyTarget);
+  BigInt get difficultyTargetAsInteger => utils.decodeCompactBits(difficultyTarget);
 
   /**
    * Returns the work represented by this block.
@@ -67,7 +67,7 @@ class BlockHeader extends BitcoinSerializable {
    * hash values. Then the work of the block will be 20. As the target gets
    * lower, the amount of work goes up.
    */
-  BigInteger get work => Block._LARGEST_HASH / (difficultyTargetAsInteger + BigInteger.ONE);
+  BigInt get work => new BigInt.from(Block._LARGEST_HASH / (difficultyTargetAsInteger + BigInt.one));
 
   Hash256 calculateHash() {
     var buffer = new bytes.Buffer();

@@ -32,7 +32,9 @@ class ScriptBuilder {
   Uint8List buildBytes() {
     var buffer = new bytes.Buffer();
     for (ScriptChunk chunk in _chunks) {
-      buffer.add(chunk.data);
+      if (chunk.data != null) { // Skipping opcodes
+        buffer.add(chunk.data);
+      }
     }
     return buffer.asBytes();
   }

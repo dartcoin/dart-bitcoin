@@ -7,7 +7,7 @@ class _TestNetParams extends NetworkParameters {
       : super._(
             addressHeader: 111,
             p2shHeader: 196,
-            magicValue: 0x0709110B,
+            magicValue: 0x0B110907,
             id: "org.bitcoin.test",
             port: 18333);
 
@@ -22,5 +22,5 @@ class _TestNetParams extends NetworkParameters {
     return _genesis;
   }
 
-  BigInteger get proofOfWorkLimit => utils.decodeCompactBits(0x1d00ffff);
+  BigInt get proofOfWorkLimit => BigInt.parse("0000000fffffffffffffffffffffffffffffffffffffffffffffffffffffffff", radix: 16);
 }

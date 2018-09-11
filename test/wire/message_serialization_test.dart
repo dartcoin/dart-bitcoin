@@ -2,6 +2,7 @@ library bitcoin.test.wire.serialization;
 
 import "dart:typed_data";
 
+import 'package:bitcoin/src/wire/serialization.dart';
 import "package:cryptoutils/cryptoutils.dart";
 
 import "package:test/test.dart";
@@ -51,7 +52,7 @@ void main() {
     }); //
 
     test("txVsTxmDeseri", () {
-      TransactionMessage txm = Message.decode(_txMessage, magic, pver);
+      TransactionBroadcast txm = Message.decode(_txMessage, magic, pver);
       Transaction tx = txm.transaction;
       Transaction tx2 = new Transaction.fromBitcoinSerialization(_txBytes, pver);
       expect(tx2, equals(tx));
@@ -68,11 +69,11 @@ void main() {
 
       // The first block after the genesis
       // http://blockexplorer.com/b/1
-      Block block = hm.headers[0];
+      BlockHeader block = hm.headers[0];
       String hash = block.hash.toString();
       expect(hash, equals("00000000839a8e6886ab5951d76f411475428afc90947ee320161bbf18eb6048"));
 
-      expect(block.transactions, isNull);
+//      expect(block.transactions, isNull);
 
       expect(block.merkleRoot.toHex(),
           equals("0e3e2357e806b6cdb1f70b54c3a3a17b6714ee1f0e68bebb44a74b1efd512098"));
@@ -102,14 +103,14 @@ void main() {
 
       // index 0 block is the number 1 block in the block chain
       // http://blockexplorer.com/b/1
-      Block zeroBlock = hm.headers[0];
+      BlockHeader zeroBlock = hm.headers[0];
       String zeroBlockHash = zeroBlock.hash.toString();
 
       expect(zeroBlockHash,
           equals("00000000839a8e6886ab5951d76f411475428afc90947ee320161bbf18eb6048"));
       expect(zeroBlock.nonce, equals(2573394689));
 
-      Block thirdBlock = hm.headers[3];
+      BlockHeader thirdBlock = hm.headers[3];
       String thirdBlockHash = thirdBlock.hash.toString();
 
       // index 3 block is the number 4 block in the block chain

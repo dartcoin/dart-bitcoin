@@ -42,7 +42,7 @@ abstract class Message extends BitcoinSerializable {
     CMD_NOTFOUND: () => new NotFoundMessage.empty(),
     CMD_PING: () => new PingMessage.empty(),
     CMD_PONG: () => new PongMessage.empty(),
-    CMD_TX: () => new TransactionMessage.empty(),
+    CMD_TX: () => new TransactionBroadcast.empty(),
     CMD_VERACK: () => new VerackMessage.empty(),
     CMD_VERSION: () => new VersionMessage.empty(),
   };
@@ -134,11 +134,11 @@ abstract class Message extends BitcoinSerializable {
   static String _readCommand(Uint8List bytes) {
     int word = COMMAND_LENGTH;
     while (bytes[word - 1] == 0) word--;
-    return ASCII.decode(bytes.sublist(0, word));
+    return ascii.decode(bytes.sublist(0, word));
   }
 
   static List<int> _encodeCommand(String command) {
-    List<int> commandBytes = new List.from(ASCII.encode(command));
+    List<int> commandBytes = new List.from(ascii.encode(command));
     while (commandBytes.length < COMMAND_LENGTH) commandBytes.add(0);
     return commandBytes;
   }

@@ -23,7 +23,7 @@ abstract class RequestMessage extends Message {
   @override
   void bitcoinDeserialize(bytes.Reader reader, int pver) {
     protocolVersion = readUintLE(reader);
-    int nbLocators = readVarInt(reader);
+    int nbLocators = readVarInt(reader).toInt();
     locators = new List<Hash256>(nbLocators);
     for (int i = 0; i < nbLocators; i++) {
       locators.add(readSHA256(reader));
@@ -34,7 +34,7 @@ abstract class RequestMessage extends Message {
   @override
   void bitcoinSerialize(bytes.Buffer buffer, int pver) {
     writeUintLE(buffer, protocolVersion);
-    writeVarInt(buffer, locators.length);
+    writeVarInt(buffer, new BigInt.from(locators.length));
     for (Hash256 hash in locators) {
       writeSHA256(buffer, hash);
     }

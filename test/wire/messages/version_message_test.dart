@@ -2,7 +2,6 @@ library bitcoin.test.wire.version_message;
 
 import "dart:typed_data";
 
-import "package:bignum/bignum.dart";
 import "package:bytes/bytes.dart";
 import "package:cryptoutils/cryptoutils.dart";
 
@@ -49,7 +48,7 @@ void main() {
     });
 
     test("bothways", () {
-      //  BigInteger this.services,
+      //  BigInt this.services,
       //  int this.time: 0,
       //  PeerAddress this.myAddress,
       //  PeerAddress this.theirAddress,
@@ -59,7 +58,7 @@ void main() {
       //  bool this.relayBeforeFilter: false,
       //
       var clientVersion = NetworkParameters.PROTOCOL_VERSION;
-      var services = BigInteger.ONE;
+      var services = BigInt.one;
       var time = new DateTime.now().millisecondsSinceEpoch ~/ 1000;
       var myAddress = new PeerAddress.localhost(services: services, port: 8333);
       var theirAddress = new PeerAddress("192.168.3.3", port: 8333, services: services, time: time);

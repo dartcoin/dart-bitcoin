@@ -43,7 +43,7 @@ abstract class InventoryItemContainerMessage extends Message {
 
   @override
   void bitcoinDeserialize(bytes.Reader reader, int pver) {
-    int nbItems = readVarInt(reader);
+    int nbItems = readVarInt(reader).toInt();
     kaka = new List<InventoryItem>();
     for (int i = 0; i < nbItems; i++) {
       kaka.add(readObject(reader, new InventoryItem.empty(), pver));
@@ -52,7 +52,7 @@ abstract class InventoryItemContainerMessage extends Message {
 
   @override
   void bitcoinSerialize(bytes.Buffer buffer, int pver) {
-    writeVarInt(buffer, kaka.length);
+    writeVarInt(buffer, new BigInt.from(kaka.length));
     for (InventoryItem item in kaka) {
       writeObject(buffer, item, pver);
     }

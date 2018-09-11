@@ -102,7 +102,7 @@ class ScriptExecutor {
             break;
 
           case ScriptOpCodes.OP_1NEGATE:
-            stack.add(utils.reverseBytes(utils.encodeMPI(BigInteger.ONE.negate_op(), false)));
+            stack.add(utils.reverseBytes(utils.encodeMPI(-BigInt.one, false)));
             break;
 
           case ScriptOpCodes.OP_1:
@@ -122,7 +122,7 @@ class ScriptExecutor {
           case ScriptOpCodes.OP_15:
           case ScriptOpCodes.OP_16:
             stack.add(utils.reverseBytes(
-                utils.encodeMPI(new BigInteger(Script.decodeFromOpN(opcode)), false)));
+                utils.encodeMPI(new BigInt.from(Script.decodeFromOpN(opcode)), false)));
             break;
 
           case ScriptOpCodes.OP_NOP:
@@ -229,7 +229,7 @@ class ScriptExecutor {
             break;
 
           case ScriptOpCodes.OP_DEPTH:
-            stack.add(utils.reverseBytes(utils.encodeMPI(new BigInteger(stack.length), false)));
+            stack.add(utils.reverseBytes(utils.encodeMPI(new BigInt.from(stack.length), false)));
             break;
 
           case ScriptOpCodes.OP_DROP:
@@ -266,7 +266,7 @@ class ScriptExecutor {
             if (stack.length < 1)
               throw new ScriptException(
                   "Attempted OP_PICK/OP_ROLL on an empty stack", script, opcode);
-            int val = castToBigInteger(stack.removeLast()).intValue();
+            int val = castToBigInt(stack.removeLast()).toInt(); // TODO test .toInt
             if (val < 0 || val >= stack.length)
               throw new ScriptException(
                   "OP_PICK/OP_ROLL attempted to get data deeper than stack size", script, opcode);
@@ -320,7 +320,7 @@ class ScriptExecutor {
             if (stack.length < 1)
               throw new ScriptException("Attempted OP_SIZE on an empty stack", script, opcode);
             stack
-                .add(utils.reverseBytes(utils.encodeMPI(new BigInteger(stack.last.length), false)));
+                .add(utils.reverseBytes(utils.encodeMPI(new BigInt.from(stack.last.length), false)));
             break;
 
           case ScriptOpCodes.OP_INVERT:
@@ -354,7 +354,7 @@ class ScriptExecutor {
           case ScriptOpCodes.OP_0NOTEQUAL:
             if (stack.length < 1)
               throw new ScriptException("Attempted a numeric op on an empty stack", script, opcode);
-            int numericOPnum = castToBigInteger(stack.removeLast()).intValue();
+            int numericOPnum = castToBigInt(stack.removeLast()).toInt(); // TODO test .toInt
 
             switch (opcode) {
               case ScriptOpCodes.OP_1ADD:
@@ -385,7 +385,7 @@ class ScriptExecutor {
                 throw new ScriptException("Unreacheable.", script, opcode);
             }
 
-            stack.add(utils.reverseBytes(utils.encodeMPI(new BigInteger(numericOPnum), false)));
+            stack.add(utils.reverseBytes(utils.encodeMPI(new BigInt.from(numericOPnum), false)));
             break;
 
           case ScriptOpCodes.OP_2MUL:
@@ -407,8 +407,8 @@ class ScriptExecutor {
             if (stack.length < 2)
               throw new ScriptException(
                   "Attempted a numeric op on a stack with size < 2", script, opcode);
-            int numericOPnum2 = castToBigInteger(stack.removeLast()).intValue();
-            int numericOPnum1 = castToBigInteger(stack.removeLast()).intValue();
+            int numericOPnum2 = castToBigInt(stack.removeLast()).toInt(); // TODO test .toInt
+            int numericOPnum1 = castToBigInt(stack.removeLast()).toInt(); // TODO test .toInt
 
             int numericOPresult;
             switch (opcode) {
@@ -482,7 +482,7 @@ class ScriptExecutor {
                 throw new ScriptException("Opcode switched at runtime?", script, opcode);
             }
 
-            stack.add(utils.reverseBytes(utils.encodeMPI(new BigInteger(numericOPresult), false)));
+            stack.add(utils.reverseBytes(utils.encodeMPI(new BigInt.from(numericOPresult), false)));
             break;
 
           case ScriptOpCodes.OP_MUL:
@@ -496,8 +496,8 @@ class ScriptExecutor {
             if (stack.length < 2)
               throw new ScriptException(
                   "Attempted OP_NUMEQUALVERIFY on a stack with size < 2", script, opcode);
-            int OPNUMEQUALVERIFYnum2 = castToBigInteger(stack.removeLast()).intValue();
-            int OPNUMEQUALVERIFYnum1 = castToBigInteger(stack.removeLast()).intValue();
+            int OPNUMEQUALVERIFYnum2 = castToBigInt(stack.removeLast()).toInt(); // TODO test .toInt
+            int OPNUMEQUALVERIFYnum1 = castToBigInt(stack.removeLast()).toInt(); // TODO test .toInt
 
             if (OPNUMEQUALVERIFYnum1 != OPNUMEQUALVERIFYnum2)
               throw new ScriptException("OP_NUMEQUALVERIFY failed", script, opcode);
@@ -507,13 +507,13 @@ class ScriptExecutor {
             if (stack.length < 3)
               throw new ScriptException(
                   "Attempted OP_WITHIN on a stack with size < 3", script, opcode);
-            int OPWITHINnum3 = castToBigInteger(stack.removeLast()).intValue();
-            int OPWITHINnum2 = castToBigInteger(stack.removeLast()).intValue();
-            int OPWITHINnum1 = castToBigInteger(stack.removeLast()).intValue();
+            int OPWITHINnum3 = castToBigInt(stack.removeLast()).toInt(); // TODO test .toInt
+            int OPWITHINnum2 = castToBigInt(stack.removeLast()).toInt(); // TODO test .toInt
+            int OPWITHINnum1 = castToBigInt(stack.removeLast()).toInt(); // TODO test .toInt
             if (OPWITHINnum2 <= OPWITHINnum1 && OPWITHINnum1 < OPWITHINnum3)
-              stack.add(utils.reverseBytes(utils.encodeMPI(BigInteger.ONE, false)));
+              stack.add(utils.reverseBytes(utils.encodeMPI(BigInt.one, false)));
             else
-              stack.add(utils.reverseBytes(utils.encodeMPI(BigInteger.ZERO, false)));
+              stack.add(utils.reverseBytes(utils.encodeMPI(BigInt.zero, false)));
             break;
 
           case ScriptOpCodes.OP_RIPEMD160:
@@ -619,7 +619,7 @@ class ScriptExecutor {
       throw new ScriptException(
           "Attempted OP_CHECKMULTISIG(VERIFY) on a stack with size < 2", script, opcode);
 
-    int pubKeyCount = castToBigInteger(stack.removeLast()).intValue();
+    int pubKeyCount = castToBigInt(stack.removeLast()).toInt(); // TODO test .toInt
     if (pubKeyCount < 0 || pubKeyCount > 20)
       throw new ScriptException(
           "OP_CHECKMULTISIG(VERIFY) with pubkey count out of range", script, opcode);
@@ -642,7 +642,7 @@ class ScriptExecutor {
       pubkeys.add(pubKey);
     }
 
-    int sigCount = castToBigInteger(stack.removeLast()).intValue();
+    int sigCount = castToBigInt(stack.removeLast()).toInt(); // TODO test .toInt
     if (sigCount < 0 || sigCount > pubKeyCount)
       throw new ScriptException(
           "OP_CHECKMULTISIG(VERIFY) with sig count out of range", script, opcode);
@@ -750,7 +750,7 @@ class ScriptExecutor {
     return false;
   }
 
-  static BigInteger castToBigInteger(Uint8List data) {
+  static BigInt castToBigInt(Uint8List data) {
     if (data.length > 4)
       throw new ScriptException("Script attempted to use an integer larger than 4 bytes");
     return utils.decodeMPI(utils.reverseBytes(data), false);

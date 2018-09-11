@@ -1,0 +1,222 @@
+syntax = "proto3";
+
+package com.paycoin.data.part;
+
+import "proto/blockchain.proto";
+
+message Message {
+    enum MessageType {
+        UNKNWON = 0;
+		ADDR = 1;
+		ALERT = 2;
+		BLOCK = 3;
+		FILTERADD = 4;
+		FILTERCLEAR = 5;
+		FILTERLOAD = 6;
+		GETADDR = 7;
+		GETBLOCKS = 8;
+		GETDATA = 9;
+		GETHEADERS = 10;
+		HEADERS = 11;
+		INV = 12;
+		MEMPOOL = 13;
+		MERKLEBLOCK = 14;
+		NOTFOUND = 15;
+		PING = 16;
+		PONG = 17;
+		TX = 18;
+		VERACK = 19;
+		VERSION = 20;
+    }
+
+    MessageType type = 1;
+    fixed32 magic = 2;
+}
+
+message AddressMessage {
+    Message header = 1;
+    repeated PeerAddress addresses = 2;
+}
+
+
+message AlertMessage {
+    Message header = 1;
+    uint32 version = 2; // specific version for alert messages
+    uint64 relayUntil = 3;
+    uint64 expiration = 4;
+    uint32 id = 5;
+    uint32 cancel = 6;
+    repeated uint32 cancelSet = 7;
+    uint32 minVer = 8;
+    uint32 maxVer = 9;
+    repeated uint32 matchingSubVer = 10;
+    uint32 priority = 11;
+    string comment = 12;
+    string statusBar = 13;
+    string reserved = 14;
+}
+
+
+message BlockMessage {
+    Message header = 1;
+    BlockMessage block = 2;
+}
+
+
+message FilterAddMessage {
+    Message header = 1;
+    bytes data  = 2;
+}
+
+
+message FilterClearMessage {
+    Message header = 1;
+}
+
+
+message FilterLoadMessage {
+    Message header = 1;
+    BloomFilterMessage filter = 2;
+}
+
+
+message GetAddressMessage {
+    Message header = 1;
+}
+
+
+message GetBlocksMessage {
+    Message header = 1;
+    repeated bytes block_locator_hashes = 2;
+    bytes hash_stop = 3;
+}
+
+
+message GetDataMessage {
+    Message header = 1;
+}
+
+
+message GetHeadersMessage {
+    Message header = 1;
+    repeated bytes block_locator_hashes = 2;
+    bytes hash_stop = 3;
+}
+
+
+message HeadersMessage {
+    Message header = 1;
+    repeated BlockHeaderMessage headers = 2;
+}
+
+
+message InventoryMessage {
+    Message header = 1;
+}
+
+
+message MemPoolMessage {
+    Message header = 1;
+}
+
+
+message MerkleBlockMessage {
+    Message header = 1;
+    FilteredBlockMessage block = 2;
+}
+
+
+message NotFoundMessage {
+    Message header = 1;
+}
+
+
+message PingMessage {
+    Message header = 1;
+    uint64 nonce = 2;
+}
+
+
+message PongMessage {
+    Message header = 1;
+    uint64 nonce = 2;
+}
+
+
+message TransactionBroadcastMessage {
+    Message header = 1;
+    TransactionMessage transaction = 2; // TODO actual transaction vs transaction broadcast
+}
+
+
+message VerackMessage {
+    Message header = 1;
+}
+
+
+message VersionMessage {
+    Message header = 1;
+    uint32 clientVersion = 2;
+    uint64 services = 3;
+    uint64 time = 4;
+    PeerAddress myAddress = 5;
+    PeerAddress theirAddress = 6;
+    uint64 nonce = 7;
+    string subVer = 8;
+    uint32 lastHeight = 9;
+    bool relayBeforeFilter = 10;
+}
+
+
+message RejectMessage {
+    enum Reason {
+        UNDEFINED = 0;
+        MALFORMED = 1;
+        INVALID = 2;
+        OBSOLETE = 3;
+        DUPLICATE = 4;
+        NONSTANDARD = 5;
+        DUST = 6;
+        INSUFFIENT_FEE = 7;
+        CHECKPOINT = 8;
+    }
+    string message = 1;
+    Reason ccode = 2;
+}
+
+message InventoryItem {
+    enum InventoryItemType {
+        ERROR = 0;
+        MSG_TX = 1;
+        MSG_BLOCK = 2;
+    }
+
+    InventoryItemType type = 1;
+    bytes hash = 2;
+}
+
+
+message PeerAddressData {
+    string ip_address = 1;
+    uint32 port = 2;
+    uint32 services = 3;
+}
+
+message PeerAddress {
+    repeated PeerAddressData seed = 1;
+    uint64 timestamp = 2;   // seconds since UNIX epoch
+    string net = 3;
+}
+
+message SignedPeerAddress {
+    bytes peer_seeds = 1;
+    bytes signature = 2;
+    bytes pubkey = 3;
+}
+
+
+message NodeState {
+    bytes genesis_block = 1;
+    bytes current_block = 2;
+    uint32 block_height = 3;
+}

@@ -1,6 +1,6 @@
 library bitcoin.crypto.mnemonic_code;
 
-import "dart:convert" show UTF8;
+import "dart:convert" show utf8;
 import "dart:typed_data";
 
 import "package:cryptoutils/cryptoutils.dart";
@@ -42,7 +42,7 @@ class MnemonicCode {
     _wordList = new List<String>();
     SHA256Digest md = new SHA256Digest();
     for (String word in wordList) {
-      List<int> wordBytes = UTF8.encode(word);
+      List<int> wordBytes = utf8.encode(word);
       md.update(wordBytes, 0, wordBytes.length);
       _wordList.add(word);
     }

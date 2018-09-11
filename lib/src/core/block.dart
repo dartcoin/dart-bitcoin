@@ -21,7 +21,7 @@ class Block extends BlockHeader {
   static const int ALLOWED_TIME_DRIFT = 2 * 60 * 60; // Same value as official client.
 
   /** A value for difficultyTarget (nBits) that allows half of all possible hash solutions. Used in unit testing. */
-  static const int EASIEST_DIFFICULTY_TARGET = 0x207fFFFF;
+  static const int EASIEST_DIFFICULTY_TARGET = 0x207FFFFF;
 
   List<Transaction> transactions;
 
@@ -70,7 +70,7 @@ class Block extends BlockHeader {
    * The number that is one greater than the largest representable SHA-256
    * hash.
    */
-  static final BigInteger _LARGEST_HASH = (BigInteger.ONE << 256);
+  static final BigInt _LARGEST_HASH = (BigInt.one << 256);
 
   BlockHeader cloneAsHeader() => new BlockHeader(
       hash: _hash,
@@ -169,16 +169,16 @@ class Block extends BlockHeader {
     //
     // To prevent this attack from being possible, elsewhere we check that the difficultyTarget
     // field is of the right value. This requires us to have the preceeding blocks.
-    BigInteger target = difficultyTargetAsInteger;
-    if (target <= BigInteger.ZERO || target > params.proofOfWorkLimit)
+    BigInt target = difficultyTargetAsInteger;
+    if (target <= BigInt.zero || target > params.proofOfWorkLimit)
       throw new VerificationException("Difficulty target is bad: $target");
 
-    BigInteger h = hash.asBigInteger();
+    BigInt h = hash.asBigInt();
     if (h > target) {
       // Proof of work check failed!
       if (throwException)
         throw new VerificationException(
-            "Hash is higher than target: $hash vs ${target.toString(16)}");
+            "Hash is higher than target: $hash vs ${target.toString()}");
       else
         return false;
     }
@@ -296,7 +296,7 @@ class Block extends BlockHeader {
     if (!hasTransactions) {
       buffer.addByte(0);
     } else {
-      writeVarInt(buffer, transactions.length);
+      writeVarInt(buffer, new BigInt.from(transactions.length));
       for (Transaction tx in transactions) writeObject(buffer, tx, pver);
     }
   }
@@ -309,11 +309,16 @@ class Block extends BlockHeader {
 
   void _deserializeTransactions(bytes.Reader reader, int pver) {
     List<Transaction> txs = new List<Transaction>();
-    int nbTx = readVarInt(reader);
+    int nbTx = readVarInt(reader).toInt();
     for (int i = 0; i < nbTx; i++) {
       Transaction tx = readObject(reader, new Transaction.empty(), pver);
       txs.add(tx);
     }
     transactions = txs.length > 0 ? txs : null;
+  }
+
+
+  Block toBuffer() {
+//    BlockMessage message = BlockMessage.create();
   }
 }

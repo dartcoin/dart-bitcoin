@@ -288,21 +288,21 @@ class Transaction extends BitcoinSerializable {
 
   void bitcoinSerialize(bytes.Buffer buffer, int pver) {
     writeUintLE(buffer, version);
-    writeVarInt(buffer, inputs.length);
+    writeVarInt(buffer, new BigInt.from(inputs.length));
     for (TransactionInput input in inputs) writeObject(buffer, input, pver);
-    writeVarInt(buffer, outputs.length);
+    writeVarInt(buffer, new BigInt.from(outputs.length));
     for (TransactionOutput output in outputs) writeObject(buffer, output, pver);
     writeUintLE(buffer, lockTime);
   }
 
   void bitcoinDeserialize(bytes.Reader reader, int pver) {
     version = readUintLE(reader);
-    int nbInputs = readVarInt(reader);
+    int nbInputs = readVarInt(reader).toInt();
     inputs = new List<TransactionInput>();
     for (int i = 0; i < nbInputs; i++) {
       inputs.add(readObject(reader, new TransactionInput.empty(), pver));
     }
-    int nbOutputs = readVarInt(reader);
+    int nbOutputs = readVarInt(reader).toInt();
     outputs = new List<TransactionOutput>();
     for (int i = 0; i < nbOutputs; i++) {
       outputs.add(readObject(reader, new TransactionOutput.empty(), pver));

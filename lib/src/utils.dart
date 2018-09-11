@@ -4,11 +4,19 @@ import "dart:convert";
 import "dart:math";
 import "dart:typed_data";
 
-import "package:bignum/bignum.dart";
+import 'package:bitcoin/core.dart';
 import "package:bytes/bytes.dart" as bytes;
 import "package:collection/collection.dart";
+import 'package:convert/convert.dart';
+import "package:cryptoutils/cryptoutils.dart";
 
 import "package:bitcoin/src/wire/serialization.dart";
+
+import 'package:pointycastle/api.dart';
+import 'package:pointycastle/digests/sha512.dart';
+import 'package:pointycastle/ecc/curves/secp256k1.dart';
+import 'package:pointycastle/macs/hmac.dart';
+import 'package:pointycastle/src/utils.dart' as p_utils;
 
 export "package:base58check/base58check.dart" show Base58CheckPayload;
 
@@ -39,11 +47,11 @@ Uint8List toBytes(List<int> bytes, [int start = 0, int end = -1]) {
 
 
 Uint8List utf8Encode(String string) {
-  List<int> encoded = UTF8.encode(string);
+  List<int> encoded = utf8.encode(string);
   return encoded is Uint8List ? encoded : new Uint8List.fromList(encoded);
 }
 
-String utf8Decode(Uint8List bytes) => UTF8.decode(bytes);
+String utf8Decode(Uint8List bytes) => utf8.decode(bytes);
 
 
 const String _BYTE_ALPHABET = "0123456789ABCDEF";
@@ -88,14 +96,14 @@ Uint8List formatMessageForSigning(String message) {
   buffer.addByte(BITCOIN_SIGNED_MESSAGE_HEADER_BYTES.length);
   buffer.add(BITCOIN_SIGNED_MESSAGE_HEADER_BYTES);
   Uint8List messageBytes = new Utf8Encoder().convert(message);
-  writeVarInt(buffer, messageBytes.length);
+  writeVarInt(buffer, new BigInt.from(messageBytes.length));
   buffer.add(messageBytes);
   return buffer.asBytes();
 }
 
 /**
  * Mimics Java's System.arraycopy() method.
- * 
+ *
  * Uint8List.replaceRange doesn't work.
  */
 void arrayCopy(Uint8List src, int srcPos, Uint8List dest, int destPos, [int length]) {
@@ -107,7 +115,7 @@ void arrayCopy(Uint8List src, int srcPos, Uint8List dest, int destPos, [int leng
 
 /**
  * Compare two lists, returns true if lists contain the same elements.
- * 
+ *
  * "==" operator is used to compare the elements in the lists.
  */
 bool equalLists(List list1, List list2) =>
@@ -147,16 +155,16 @@ int binarySearch<T>(List<T> sortedList, T value, {int compare(T a, T b)}) {
 }
 
 /**
- * The regular BigInteger.toByteArray() method isn't quite what we often need:
+ * The regular BigInt.toByteArray() method isn't quite what we often need:
  * it appends a leading zero to indicate that the number is positive and may
  * need padding.
  */
-Uint8List bigIntegerToBytes(BigInteger b, int numBytes) {
+Uint8List BigIntToBytes(BigInt b, int numBytes) {
   if (b == null) {
     return null;
   }
   Uint8List bytes = new Uint8List(numBytes);
-  Uint8List biBytes = new Uint8List.fromList(b.toByteArray());
+  Uint8List biBytes = new Uint8List.fromList(CryptoUtils.bigIntToByteArray(b));
   int start = (biBytes.length == numBytes + 1) ? 1 : 0;
   int length = min(biBytes.length, numBytes);
   bytes.setRange(numBytes - length, numBytes, biBytes.sublist(start, start + length));
@@ -173,6 +181,24 @@ Uint8List uintToBytesLE(int val, [int size = -1]) {
     int mod = val & 0xff;
     val = val >> 8;
     result.add(mod);
+  }
+  if (size >= 0 && result.length > size) throw new Exception("Value doesn't fit in given size.");
+  while (result.length < size) result.add(0);
+  return new Uint8List.fromList(result);
+}
+
+
+/**
+ * Converts the integer to a byte array in little endian. Ony positive integers allowed.
+ */
+Uint8List bigIntToBytesLE(BigInt val, [int size = -1]) {
+  if (val.sign < 0) throw new Exception("Only positive values allowed.");
+  List<int> result = new List();
+  BigInt xff = new BigInt.from(0xff);
+  while (val.sign > 0) {
+    BigInt mod = val & xff;
+    val = val >> 8;
+    result.add(mod.toInt());
   }
   if (size >= 0 && result.length > size) throw new Exception("Value doesn't fit in given size.");
   while (result.length < size) result.add(0);
@@ -197,10 +223,10 @@ Uint8List uintToBytesBE(int val, [int size = -1]) {
 }
 
 /**
- * Converts the [BigInteger] to a byte array in little endian.
+ * Converts the [BigInt] to a byte array in little endian.
  */
-Uint8List uBigIntToBytesLE(BigInteger val, [int size = -1]) {
-  List<int> bytes = val.toByteArray();
+Uint8List uBigIntToBytesLE(BigInt val, [int size = -1]) {
+  List<int> bytes = CryptoUtils.bigIntToByteArray(val);
   if (bytes.length > size && size >= 0) {
     throw new Exception("Input too large to encode into a uint64");
   }
@@ -212,11 +238,11 @@ Uint8List uBigIntToBytesLE(BigInteger val, [int size = -1]) {
 }
 
 /**
- * Converts the byte array to a [BigInteger] in little endian.
+ * Converts the byte array to a [BigInt] in little endian.
  */
-BigInteger bytesToUBigIntLE(Uint8List bytes, [int size = -1]) {
+BigInt bytesToUBigIntLE(Uint8List bytes, [int size = -1]) {
   if (size < 0) size = bytes.length;
-  return new BigInteger(reverseBytes(bytes.sublist(0, size)));
+  return bytesToBigInt(reverseBytes(bytes.sublist(0, size)));
 }
 
 /**
@@ -243,9 +269,22 @@ int bytesToUintLE(Uint8List bytes, [int size]) {
   return result;
 }
 
+
+/**
+ * Converts the little endian byte array to a BigInt.
+ */
+BigInt bytesToBigInt(Uint8List bytes, [int size]) {
+  if (size == null) size = bytes.length;
+  BigInt result = BigInt.zero;
+  for (int i = 0; i < size; i++) {
+    result += new BigInt.from(bytes[i]) << (8 * i);
+  }
+  return result;
+}
+
 /**
  * Converts the BE endian two's complement encoded bytes to an integer.
- * 
+ *
  * Size in number of bytes, not bits;
  */
 //TODO not a quite satisfactory implementation
@@ -296,7 +335,7 @@ int bytesTo2CInt(Uint8List bytes, [int size]) {
  * the number in big endian format (with a sign bit).
  * @param hasLength can be set to false if the given array is missing the 4 byte length field
  */
-BigInteger decodeMPI(Uint8List mpi, bool hasLength) {
+BigInt decodeMPI(Uint8List mpi, bool hasLength) {
   Uint8List buf;
   if (hasLength) {
     int length = bytesToUintBE(mpi, 4);
@@ -305,11 +344,11 @@ BigInteger decodeMPI(Uint8List mpi, bool hasLength) {
   } else {
     buf = mpi;
   }
-  if (buf.length == 0) return BigInteger.ZERO;
+  if (buf.length == 0) return BigInt.zero;
   bool isNegative = (buf[0] & 0x80) == 0x80;
   if (isNegative) buf[0] &= 0x7f;
-  BigInteger result = new BigInteger(buf);
-  return isNegative ? result.negate_op() : result;
+  BigInt result = CryptoUtils.bigIntFromByteArray(buf);
+  return isNegative ? -result : result;
 }
 
 /**
@@ -318,16 +357,16 @@ BigInteger decodeMPI(Uint8List mpi, bool hasLength) {
  * the number in big endian format (with a sign bit).
  * @param includeLength indicates whether the 4 byte length field should be included
  */
-Uint8List encodeMPI(BigInteger value, bool includeLength) {
-  if (value == BigInteger.ZERO) {
+Uint8List encodeMPI(BigInt value, bool includeLength) {
+  if (value == BigInt.zero) {
     if (!includeLength)
       return new Uint8List(0);
     else
       return new Uint8List(4);
   }
-  bool isNegative = value < BigInteger.ZERO;
-  if (isNegative) value = value.negate_op();
-  List<int> array = value.toByteArray();
+  bool isNegative = value < BigInt.zero;
+  if (isNegative) value = -value;
+  List<int> array = CryptoUtils.bigIntToByteArray(value);
   int length = array.length;
   if ((array[0] & 0x80) == 0x80) length++;
   if (includeLength) {
@@ -351,8 +390,9 @@ Uint8List encodeMPI(BigInteger value, bool includeLength) {
 
 // The representation of nBits uses another home-brew encoding, as a way to represent a large
 // hash value in only 32 bits.
-BigInteger decodeCompactBits(int compact) {
-  int size = (compact >> 24) & 0xFF;
+BigInt decodeCompactBits(int compact) {
+//  int size = (compact >> 24) & 0xFF;
+  int size = compact >> 24;
   Uint8List bytes = new Uint8List(4 + size);
   bytes[3] = size;
   if (size >= 1) bytes[4] = (compact >> 16) & 0xFF;
@@ -387,4 +427,132 @@ final Uint8List _bitMask = new Uint8List.fromList([0x01, 0x02, 0x04, 0x08, 0x10,
  */
 void setBitLE(Uint8List data, int index) {
   data[lsr(index, 3)] |= _bitMask[7 & index];
+}
+
+
+Uint8List intToByteArray(int data) {
+  Uint8List result = new Uint8List(4);
+
+  result[0] = ((data & 0xFF000000) >> 24);
+  result[1] = ((data & 0x00FF0000) >> 16);
+  result[2] = ((data & 0x0000FF00) >> 8);
+  result[3] = ((data & 0x000000FF) >> 0);
+
+  return result;
+}
+
+Uint8List hmacSha512(List<int> seed, List<int> passphraseByteArray) {
+  var hmac = new HMac(new SHA512Digest(), 128);
+
+  var rootSeed = new Uint8List(hmac.macSize);
+
+  hmac.init(new KeyParameter(passphraseByteArray));
+
+  hmac.update(seed, 0, seed.length);
+
+  hmac.doFinal(rootSeed, 0);
+  return rootSeed;
+}
+
+String getCompressedPubKey(String publicKey) {
+
+  var curve_secp256k1 = new ECCurve_secp256k1();
+
+  var ecPoint = curve_secp256k1.curve.decodePoint(hexToBytes(publicKey));
+
+  if (ecPoint.y.toBigInteger().isEven) {
+
+    return "02" + ecPoint.x.toBigInteger().toRadixString(16);
+
+  } else if(ecPoint.y.toBigInteger().isOdd) {
+
+    return "03" + ecPoint.x.toBigInteger().toRadixString(16);
+
+  }
+  return publicKey;
+}
+
+/// If present, removes the 0x from the start of a hex-string.
+String strip0x(String hex) {
+  if (hex.startsWith("0x"))
+    return hex.substring(2);
+  return hex;
+}
+
+/// Converts the [number], which can either be a dart [int] or a [BigInt],
+/// into a hexadecimal representation. The number needs to be positive or zero.
+///
+/// When [pad] is set to true, this method will prefix a zero so that the result
+/// will have an even length. Further, if [forcePadLen] is not null and the
+/// result has a length smaller than [forcePadLen], the rest will be left-padded
+/// with zeroes. Note that [forcePadLen] refers to the string length, meaning
+/// that one byte has a length of 2. When [include0x] is set to true, the
+/// output wil have "0x" prepended to it after any padding is done.
+String toHex(dynamic number, {bool pad = false, bool include0x = false, int forcePadLen}) {
+  String toHexSimple() {
+    if (number is int)
+      return number.toRadixString(16);
+    else if (number is BigInt)
+      return number.toRadixString(16);
+    else
+      throw new TypeError();
+  }
+
+  var hexString = toHexSimple();
+  if (pad && !hexString.length.isEven)
+    hexString = "0$hexString";
+  if (forcePadLen != null)
+    hexString = hexString.padLeft(forcePadLen, "0");
+  if (include0x)
+    hexString = "0x$hexString";
+
+  return hexString;
+}
+
+/// Converts the [bytes] given as a list of integers into a hexadecimal
+/// representation.
+///
+/// If any of the bytes is outside of the range [0, 256], the method will throw.
+/// The outcome of this function will prefix a 0 if it would otherwise not be
+/// of even length. If [include0x] is set, it will prefix "0x" to the hexadecimal
+/// representation.
+String bytesToHex(List<int> bytes, {bool include0x = false}) {
+  return (include0x ? "0x" : "") + hex.encode(bytes);
+}
+
+
+/// Converts the given number, either a [int] or a [BigInt] to a list of
+/// bytes representing the same value.
+List<int> numberToBytes(dynamic number) {
+  if (number is BigInt)
+    return p_utils.encodeBigInt(number);
+
+  var hexString = toHex(number, pad: true);
+  return hex.decode(hexString);
+}
+
+/// Converts the hexadecimal string, which can be prefixed with 0x, to a byte
+/// sequence.
+List<int> hexToBytes(String hexStr) {
+  return hex.decode(strip0x(hexStr));
+}
+
+///Converts the bytes from that list (big endian) to a BigInt.
+BigInt bytesToInt(List<int> bytes) => p_utils.decodeBigInt(bytes);
+
+List<int> intToBytes(BigInt number) => p_utils.encodeBigInt(number);
+
+///Takes the hexadecimal input and creates a BigInt.
+BigInt hexToInt(String hex) {
+  return BigInt.parse(strip0x(hex), radix: 16);
+}
+
+/// Generates a public key for the given private key using the ecdsa curve which
+/// Ethereum uses.
+Uint8List privateKeyToPublic(Uint8List privateKey) {
+  var privateKeyNum = bytesToInt(privateKey);
+  var p = KeyPair.EC_PARAMS.G * privateKeyNum;
+
+  //skip the type flag, https://github.com/ethereumjs/ethereumjs-util/blob/master/index.js#L319
+  return p.getEncoded(false).sublist(1);
 }

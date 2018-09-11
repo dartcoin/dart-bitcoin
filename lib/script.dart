@@ -3,7 +3,6 @@ library bitcoin.script;
 import "dart:collection";
 import "dart:typed_data";
 
-import "package:bignum/bignum.dart";
 import "package:bytes/bytes.dart" as bytes;
 import "package:cryptoutils/cryptoutils.dart";
 

@@ -11,7 +11,7 @@ import "package:test/test.dart";
 
 import "package:bitcoin/core.dart";
 import "package:bitcoin/src/utils.dart" as utils;
-import "package:bitcoin/crypto/key_crypter_scrypt.dart";
+import "package:bitcoin/src/crypto/key_crypter_scrypt.dart";
 
 // Nonsense bytes for encryption test.
 final Uint8List _TEST_BYTES1 = new Uint8List.fromList([

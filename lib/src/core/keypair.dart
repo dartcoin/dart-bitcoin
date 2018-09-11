@@ -3,22 +3,22 @@ part of bitcoin.core;
 class KeyPair {
   //TODO remove once tested
   // EC curve definition "secp256k1"
-//  static final _ec_q = new BigInteger("fffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2f", 16);
-//  static final _ec_a = new BigInteger("0", 16);
-//  static final _ec_b = new BigInteger("7", 16);
-//  static final _ec_g = new BigInteger("0479be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8", 16);
-//  static final _ec_n = new BigInteger("fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141", 16);
-//  static final _ec_h = new BigInteger("1", 16);
+//  static final _ec_q = BigInt.parse("fffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2f", radix: 16);
+//  static final _ec_a = BigInt.parse("0", radix: 16);
+//  static final _ec_b = BigInt.parse("7", radix: 16);
+//  static final _ec_g = BigInt.parse("0479be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8", radix: 16);
+//  static final _ec_n = BigInt.parse("fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141", radix: 16);
+//  static final _ec_h = BigInt.parse("1", radix: 16);
 //  static final ECCurve _EC_CURVE = new fp.ECCurve(_ec_q, _ec_a, _ec_b);
 //  static final ECDomainParameters EC_PARAMS = new ECDomainParametersImpl(
 //      "secp256k1", _EC_CURVE, _EC_CURVE.decodePoint(_ec_g.toByteArray()), _ec_n, _ec_h, null);
 
   static final ECDomainParameters EC_PARAMS = new ECCurve_secp256k1();
 
-  static final BigInteger HALF_CURVE_ORDER = EC_PARAMS.n.shiftRight(1);
+  static final BigInt HALF_CURVE_ORDER = EC_PARAMS.n >> 1;
 
   // instance variables
-  BigInteger _priv;
+  BigInt _priv;
   Uint8List _pub;
   // chache
   Hash160 _pubKeyHash;
@@ -38,12 +38,12 @@ class KeyPair {
   /**
    * Create a new private key.
    *
-   * Pass either a [Uint8List] or [BigInteger] to use as a private key.
+   * Pass either a [Uint8List] or [BigInt] to use as a private key.
    */
   factory KeyPair.private(dynamic privateKey, {Uint8List publicKey, bool compressed: true}) {
-    if (privateKey is Uint8List) privateKey = new BigInteger.fromBytes(1, privateKey);
-    if (privateKey is! BigInteger)
-      throw new ArgumentError("Private key must be either of type BigInteger or Uint8List");
+    if (privateKey is Uint8List) privateKey = CryptoUtils.bigIntFromBytes(1, privateKey);
+    if (privateKey is! BigInt)
+      throw new ArgumentError("Private key must be either of type BigInt or Uint8List");
     if (publicKey != null && publicKey is! Uint8List)
       throw new ArgumentError("Public key must be of type Uint8List");
     if (publicKey == null) publicKey = publicKeyFromPrivateKey(privateKey, compressed);
@@ -71,7 +71,7 @@ class KeyPair {
   factory KeyPair.generate([Uint8List entropy]) {
     // ensure that at least 50 bytes of entropy are available
     Random rand = new Random(); //TODO make real entropy
-    BigInteger pk;
+    BigInt pk;
     do {
       var buffer = new bytes.Buffer();
       buffer.add(entropy ?? []);
@@ -79,8 +79,8 @@ class KeyPair {
         buffer.add(new List.generate(50 - buffer.length, (_) => rand.nextInt(255)));
       }
       entropy = crypto.doubleDigest(buffer.asBytes());
-      pk = new BigInteger.fromBytes(1, entropy.sublist(0, EC_PARAMS.n.bitLength() ~/ 8));
-    } while (pk == BigInteger.ZERO || pk >= EC_PARAMS.n);
+      pk = CryptoUtils.bigIntFromBytes(1, entropy.sublist(0, EC_PARAMS.n.bitLength ~/ 8));
+    } while (pk == BigInt.zero || pk >= EC_PARAMS.n);
     return new KeyPair._internal(pk, publicKeyFromPrivateKey(pk, true));
   }
 
@@ -97,7 +97,7 @@ class KeyPair {
   /**
    * Intended for internal use only.
    */
-  KeyPair._internal(BigInteger this._priv, Uint8List this._pub);
+  KeyPair._internal(BigInt this._priv, Uint8List this._pub);
 
   Uint8List get publicKey => new Uint8List.fromList(_pub);
 
@@ -123,11 +123,9 @@ class KeyPair {
   /**
    * 32-bytes private key
    */
-  BigInteger get privateKey {
+  BigInt get privateKey {
     if (_priv == null) return null;
-    BigInteger copy = new BigInteger();
-    _priv.copyTo(copy);
-    return copy;
+    return new BigInt.from(_priv.toInt()); // TODO
   }
 
   /**
@@ -135,7 +133,7 @@ class KeyPair {
    */
   Uint8List get privateKeyBytes {
     if (_priv == null) return null;
-    return utils.bigIntegerToBytes(_priv, 32);
+    return utils.BigIntToBytes(_priv, 32);
   }
 
   /**
@@ -171,7 +169,7 @@ class KeyPair {
     StringBuffer sb = new StringBuffer()
       ..write(toString())
       ..write(" priv:")
-      ..write(CryptoUtils.bytesToHex(_priv.toByteArray()));
+      ..write(CryptoUtils.bytesToHex(CryptoUtils.bigIntToByteArray(_priv)));
     return sb.toString();
   }
 
@@ -203,7 +201,7 @@ class KeyPair {
   }
 
   /**
-   * Signs the given hash and returns the R and S components as BigIntegers. In the Bitcoin protocol, they are
+   * Signs the given hash and returns the R and S components as BigInts. In the Bitcoin protocol, they are
    * usually encoded using DER format, so you want [ECDSASignature#encodeToDER()]
    * instead. However sometimes the independent components can be useful, for instance, if you're doing to do further
    * EC maths on them.
@@ -212,7 +210,7 @@ class KeyPair {
    */
   ECDSASignature sign(Hash256 input, [KeyParameter aesKey]) {
     // The private key bytes to use for signing.
-    BigInteger privateKeyForSigning;
+    BigInt privateKeyForSigning;
 
     if (isEncrypted) {
       // The private key needs decrypting before use.
@@ -223,7 +221,7 @@ class KeyPair {
         throw new Exception("There is no KeyCrypter to decrypt the private key for signing.");
 
       privateKeyForSigning =
-          new BigInteger.fromBytes(1, keyCrypter.decrypt(_encryptedPrivateKey, aesKey));
+          CryptoUtils.bigIntFromBytes(1, keyCrypter.decrypt(_encryptedPrivateKey, aesKey));
       // Check encryption was correct.
       if (!utils.equalLists(_pub, publicKeyFromPrivateKey(privateKeyForSigning, isCompressed)))
         throw new Exception("Could not decrypt bytes");
@@ -284,8 +282,8 @@ class KeyPair {
     Uint8List sigData = new Uint8List(65);
     // 1 header + 32 bytes for R + 32 bytes for S
     sigData[0] = headerByte;
-    sigData.setRange(1, 1 + 32, utils.bigIntegerToBytes(sig.r, 32));
-    sigData.setRange(33, 33 + 32, utils.bigIntegerToBytes(sig.s, 32));
+    sigData.setRange(1, 1 + 32, utils.BigIntToBytes(sig.r, 32));
+    sigData.setRange(33, 33 + 32, utils.BigIntToBytes(sig.s, 32));
     return CryptoUtils.bytesToBase64(sigData);
   }
 
@@ -310,8 +308,8 @@ class KeyPair {
     // The header byte: 0x1B = first key with even y, 0x1C = first key with odd y,
     //                  0x1D = second key with even y, 0x1E = second key with odd y
     if (header < 27 || header > 34) throw new Exception("Header byte out of range: $header");
-    BigInteger r = new BigInteger.fromBytes(1, new List.from(signatureEncoded.getRange(1, 33)));
-    BigInteger s = new BigInteger.fromBytes(1, new List.from(signatureEncoded.getRange(33, 65)));
+    BigInt r = utils.bytesToBigInt(signatureEncoded.getRange(1, 33).toList());
+    BigInt s = utils.bytesToBigInt(signatureEncoded.getRange(33, 65).toList());
     ECDSASignature sig = new ECDSASignature(r, s);
     Uint8List messageBytes = utils.formatMessageForSigning(message);
     // Note that the C++ code doesn't actually seem to specify any character encoding. Presumably it's whatever
@@ -366,14 +364,14 @@ class KeyPair {
   static KeyPair recoverFromSignature(int recId, ECDSASignature sig, Hash256 message,
       [bool compressed = true]) {
     if (recId < 0) throw new Exception("recId must be positive");
-    if (sig.r.compareTo(BigInteger.ZERO) < 0 || sig.s.compareTo(BigInteger.ZERO) < 0)
+    if (sig.r.compareTo(BigInt.zero) < 0 || sig.s.compareTo(BigInt.zero) < 0)
       throw new Exception("r and s must be possitive");
     if (message == null) throw new Exception("Message is null");
     // 1.0 For j from 0 to h   (h == recId here and the loop is outside this function)
     //   1.1 Let x = r + jn
-    BigInteger n = EC_PARAMS.n; // Curve order.
-    BigInteger i = new BigInteger(recId / 2);
-    BigInteger x = sig.r + (i * n);
+    BigInt n = EC_PARAMS.n; // Curve order.
+    BigInt i = new BigInt.from(recId / 2);
+    BigInt x = sig.r + (i * n);
     //   1.2. Convert the integer x to an octet string X of length mlen using the conversion routine
     //        specified in Section 2.3.7, where mlen = [omitted due to weird encoding]
     //   1.3. Convert the octet string (16 set binary digits)||X to an elliptic curve point R using the
@@ -383,7 +381,7 @@ class KeyPair {
     // More concisely, what these points mean is to use X as a compressed public key.
     fp.ECCurve curve = EC_PARAMS.curve;
 
-    BigInteger prime = curve.q;
+    BigInt prime = curve.q;
     // Bouncy Castle is not consistent about the letter it uses for the prime.
     if (x.compareTo(prime) >= 0) {
       // Cannot have point co-ordinates larger than this as everything takes place modulo Q.
@@ -395,7 +393,7 @@ class KeyPair {
     //   1.4. If nR != point at infinity, then do another iteration of Step 1 (callers responsibility).
     if (!(R * n).isInfinity) return null;
     //   1.5. Compute e from M using Steps 2 and 3 of ECDSA signature verification.
-    BigInteger e = message.asBigInteger();
+    BigInt e = message.asBigInt();
     //   1.6. For k from 1 to 2 do the following.   (loop is outside this function via iterating recId)
     //   1.6.1. Compute a candidate public key as:
     //               Q = mi(r) * (sR - eG)
@@ -407,10 +405,10 @@ class KeyPair {
     //
     // We can find the additive inverse by subtracting e from zero then taking the mod. For example the additive
     // inverse of 3 modulo 11 is 8 because 3 + 8 mod 11 = 0, and -3 mod 11 = 8.
-    BigInteger eInv = BigInteger.ZERO.subtract(e).mod(n);
-    BigInteger rInv = sig.r.modInverse(n);
-    BigInteger srInv = rInv.multiply(sig.s).mod(n);
-    BigInteger eInvrInv = rInv.multiply(eInv).mod(n);
+    BigInt eInv = BigInt.zero - e % n;
+    BigInt rInv = sig.r.modInverse(n);
+    BigInt srInv = rInv * sig.s % n;
+    BigInt eInvrInv = rInv * eInv % n;
     ECPoint p1 = EC_PARAMS.G * eInvrInv;
     ECPoint p2 = R * srInv;
     fp.ECPoint q = p2 + p1;
@@ -453,7 +451,7 @@ class KeyPair {
           "The keyCrypter being used to decrypt the key is different to the one that was used to encrypt it");
     }
     Uint8List unencryptedPrivateKey = keyCrypter.decrypt(encryptedPrivateKey, decryptionKey);
-    KeyPair key = new KeyPair.private(new BigInteger.fromBytes(1, unencryptedPrivateKey),
+    KeyPair key = new KeyPair.private(CryptoUtils.bigIntFromBytes(1, unencryptedPrivateKey),
         compressed: isCompressed);
     if (!utils.equalLists(key._pub, _pub)) throw new ArgumentError("Provided AES key is wrong");
     return key;
@@ -492,9 +490,9 @@ class KeyPair {
 
   /**
    * Retrieve the public key from the given private key.
-   * Use `new BigInteger.fromBytes(signum, magnitude)` to convert a byte array into a BigInteger.
+   * Use `CryptoUtils.bigIntFromBytes(signum, magnitude)` to convert a byte array into a BigInt.
    */
-  static Uint8List publicKeyFromPrivateKey(BigInteger privateKey, [bool compressed = false]) {
+  static Uint8List publicKeyFromPrivateKey(BigInt privateKey, [bool compressed = false]) {
     ECPoint point = EC_PARAMS.G * privateKey;
     return point.getEncoded(compressed);
   }
@@ -519,7 +517,7 @@ class KeyPair {
   }
 
   /** Decompress a compressed public key (x co-ord and low-bit of y-coord). */
-  static ECPoint _decompressKey(BigInteger xBN, bool yBit) {
+  static ECPoint _decompressKey(BigInt xBN, bool yBit) {
     // This code is adapted from Bouncy Castle ECCurve.Fp.decodePoint(), but it wasn't easily re-used.
     fp.ECCurve curve = EC_PARAMS.curve;
     ECFieldElement x = new fp.ECFieldElement(curve.q, xBN);
@@ -527,7 +525,7 @@ class KeyPair {
     ECFieldElement beta = alpha.sqrt();
     // If we can't find a sqrt we haven't got a point on the curve - invalid inputs.
     if (beta == null) throw new Exception("Invalid point compression");
-    if (beta.toBigInteger().testBit(0) == yBit) {
+    if (CryptoUtils.bigIntTestBit(beta.toBigInteger(), 0) == yBit) {
       return new fp.ECPoint(curve, x, beta, true);
     } else {
       fp.ECFieldElement y = new fp.ECFieldElement(curve.q, curve.q - beta.toBigInteger());
@@ -535,7 +533,7 @@ class KeyPair {
     }
   }
 
-  static BigInteger extractPrivateKeyFromASN1(Uint8List asn1privkey) {
+  static BigInt extractPrivateKeyFromASN1(Uint8List asn1privkey) {
     // To understand this code, see the definition of the ASN.1 format for EC private keys in the OpenSSL source
     // code in ec_asn1.c:
     //
@@ -550,11 +548,11 @@ class KeyPair {
     ASN1Sequence seq = parser.nextObject() as ASN1Sequence;
     if (seq is! ASN1Sequence || seq.elements.length != 4)
       throw new ArgumentError("Priv key was not encoded as a Sequence with 4 elements.");
-    BigInteger version = (seq.elements[0] as ASN1Integer).valueAsBigInteger;
-    if (version != BigInteger.ONE)
+    BigInt version = (seq.elements[0] as ASN1Integer).valueAsBigInteger;
+    if (version != BigInt.one)
       throw new ArgumentError("The private is encoded using a different encoding version.");
     Uint8List bits = (seq.elements[1] as ASN1OctetString).octets;
-    return new BigInteger.fromBytes(1, bits);
+    return CryptoUtils.bigIntFromBytes(1, bits);
   }
 
   /**
@@ -564,19 +562,19 @@ class KeyPair {
   Uint8List toASN1() {
     if (!hasPrivateKey) throw new Exception("KeyPair has no private key!");
     ASN1Sequence seq = new ASN1Sequence()
-      ..add(new ASN1Integer(1))
+      ..add(new ASN1Integer(BigInt.one))
       ..add(new ASN1OctetString(privateKeyBytes))
-      ..add(new ASN1Integer(0)) // dummy
+      ..add(new ASN1Integer(BigInt.zero)) // dummy
       ..add(new ASN1BitString(_pub, tag: 1));
     return seq.encodedBytes;
   }
 }
 
 class ECDSASignature {
-  BigInteger r;
-  BigInteger s;
+  BigInt r;
+  BigInt s;
 
-  ECDSASignature(BigInteger this.r, BigInteger this.s);
+  ECDSASignature(BigInt this.r, BigInt this.s);
 
   void ensureCanonical() {
     if (s > KeyPair.HALF_CURVE_ORDER) {
@@ -599,8 +597,8 @@ class ECDSASignature {
   factory ECDSASignature.fromDER(Uint8List bytes) {
     ASN1Parser parser = new ASN1Parser(bytes);
     ASN1Sequence seq = parser.nextObject() as ASN1Sequence;
-    BigInteger r = (seq.elements[0] as ASN1Integer).valueAsPositiveBigInteger;
-    BigInteger s = (seq.elements[1] as ASN1Integer).valueAsPositiveBigInteger;
+    BigInt r = (seq.elements[0] as ASN1Integer).valueAsBigInteger.abs();
+    BigInt s = (seq.elements[1] as ASN1Integer).valueAsBigInteger.abs();
     return new ECDSASignature(r, s);
   }
 }

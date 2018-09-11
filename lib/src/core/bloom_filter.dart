@@ -76,7 +76,7 @@ class BloomFilter extends BitcoinSerializable {
    * Returns the theoretical false positive rate of this filter if were to contain the given number of elements.
    */
   double getFalsePositiveRate(int elements) {
-    return pow(1 - pow(E, -1.0 * (hashFuncs * elements) / (data.length * 8)), hashFuncs);
+    return pow(1 - pow(e, -1.0 * (hashFuncs * elements) / (data.length * 8)), hashFuncs);
   }
 
   @override

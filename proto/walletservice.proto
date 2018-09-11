@@ -1,0 +1,42 @@
+syntax = "proto3";
+
+package com.paycoin.data;
+
+import "proto/blockchain.proto";
+
+//option java_package = "org.bitcoin.api"; //Specify the name of the package that generated the Java file
+//option java_outer_classname = "GrpcAPI"; //Specify the class name of the generated Java file
+
+service Wallet {
+    rpc GetBalance (Empty) returns (Balance) {
+    };
+    rpc CreateTransaction (Coin) returns (TransactionMessage) {
+    };
+    rpc BroadcastTransaction (TransactionMessage) returns (Return) {
+    };
+};
+
+message Empty {
+}
+
+message Balance {
+    int32 amount = 1;
+}
+
+message Return {
+    bool result = 1;
+}
+message Coin {
+    bytes from = 1;
+    bytes to = 2;
+    int32 amount = 3;
+};
+
+// Account
+message Account {
+    bytes address = 1;
+    int64 balance = 2;
+    repeated string votes = 3;
+    map<string, int64> asset = 4;
+    int32 type = 5;
+}
