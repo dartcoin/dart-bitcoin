@@ -5,9 +5,7 @@ import "dart:typed_data";
 import "dart:math";
 
 import "package:cryptoutils/cryptoutils.dart";
-
 import "package:base58check/base58check.dart";
-import "package:bignum/bignum.dart";
 import "package:bytes/bytes.dart" as bytes;
 import "package:collection/collection.dart";
 

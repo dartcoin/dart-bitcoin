@@ -5,7 +5,7 @@ class PeerAddress extends BitcoinSerializable {
 
   Uint8List address;
   int port;
-  BigInteger services;
+  BigInt services;
   int time;
 
   /**
@@ -13,12 +13,12 @@ class PeerAddress extends BitcoinSerializable {
    * 
    * The [address] parameter should either by a [String] or [Uint8List].
    */
-  PeerAddress(dynamic address, {int this.port, BigInteger this.services, int this.time}) {
+  PeerAddress(dynamic address, {int this.port, BigInt this.services, int this.time}) {
     this.address = _formatAddress(address);
-    services = services ?? BigInteger.ZERO;
+    services = services ?? BigInt.zero;
   }
 
-  factory PeerAddress.localhost({BigInteger services, int port}) =>
+  factory PeerAddress.localhost({BigInt services, int port}) =>
       new PeerAddress("127.0.0.1", port: port, services: services);
 
   factory PeerAddress.fromBitcoinSerialization(Uint8List serialization, int pver) {
@@ -26,6 +26,13 @@ class PeerAddress extends BitcoinSerializable {
     var obj = new PeerAddress.empty();
     obj.bitcoinDeserialize(reader, pver);
     return obj;
+  }
+
+  factory PeerAddress.fromBuffer(var msg) { // TODO
+    return new PeerAddress(
+      msg.address,
+      port: msg.port
+    );
   }
 
   /// Create an empty instance.

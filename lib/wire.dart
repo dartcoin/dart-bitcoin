@@ -5,7 +5,6 @@ import "dart:convert";
 import "dart:math";
 import "dart:typed_data";
 
-import "package:bignum/bignum.dart";
 import "package:bytes/bytes.dart" as bytes;
 import "package:cryptoutils/cryptoutils.dart";
 
@@ -16,7 +15,7 @@ import "src/wire/serialization.dart";
 import "src/crypto.dart" as crypto;
 import "src/utils.dart" as utils;
 
-export "src/wire/serialization.dart" show BitcoinSerializable, SerializationException;
+import 'generated/proto/blockchain.pb.dart' as data;
 
 // wire
 part "src/wire/inventory_item.dart";

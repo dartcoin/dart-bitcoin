@@ -45,6 +45,11 @@ Uint8List readBytes(bytes.Reader reader, int length) {
   return reader.readBytes(length);
 }
 
+BigInt readBigIntLE(bytes.Reader reader, [int length = 4]) {
+  BigInt result = utils.bytesToBigInt(readBytes(reader, length), length);
+  return result;
+}
+
 int readUintLE(bytes.Reader reader, [int length = 4]) {
   int result = utils.bytesToUintLE(readBytes(reader, length), length);
   return result;
@@ -55,27 +60,28 @@ Hash256 readSHA256(bytes.Reader reader) {
   return new Hash256(utils.reverseBytes(readBytes(reader, 32)));
 }
 
-int readVarInt(bytes.Reader reader) {
-  int firstByte = readUintLE(reader, 1);
-  if (firstByte == 0xfd) {
-    return readUintLE(reader, 2);
+BigInt readVarInt(bytes.Reader reader) {
+  BigInt firstByte = readBigIntLE(reader, 1);
+  int intFirstByte = firstByte.toInt();
+  if (intFirstByte == 0xfd) {
+    return readBigIntLE(reader, 2);
   }
-  if (firstByte == 0xfe) {
-    return readUintLE(reader, 4);
+  if (intFirstByte == 0xfe) {
+    return readBigIntLE(reader, 4);
   }
-  if (firstByte == 0xff) {
-    return readUintLE(reader, 8);
+  if (intFirstByte == 0xff) {
+    return readBigIntLE(reader, 8);//reader.length-1);
   }
   return firstByte;
 }
 
 Uint8List readByteArray(bytes.Reader reader) {
-  int size = readVarInt(reader);
-  return readBytes(reader, size);
+  BigInt size = readVarInt(reader);
+  return readBytes(reader, size.toInt());
 }
 
 String readVarStr(bytes.Reader reader) {
-  return UTF8.decode(readByteArray(reader));
+  return utf8.decode(readByteArray(reader));
 }
 
 BitcoinSerializable readObject(
@@ -92,6 +98,9 @@ void writeBytes(bytes.Buffer buffer, List<int> bytes) {
   buffer.add(bytes);
 }
 
+void writeBigIntLE(bytes.Buffer buffer, BigInt value, [int length = 4]) {
+  writeBytes(buffer, utils.bigIntToBytesLE(value, length));
+}
 void writeUintLE(bytes.Buffer buffer, int value, [int length = 4]) {
   writeBytes(buffer, utils.uintToBytesLE(value, length));
 }
@@ -101,28 +110,29 @@ void writeSHA256(bytes.Buffer buffer, Hash256 hash) {
   writeBytes(buffer, utils.reverseBytes(hash.asBytes()));
 }
 
-void writeVarInt(bytes.Buffer buffer, int value) {
-  if (value < 0xfd) {
-    writeBytes(buffer, [value]);
-  } else if (value <= 0xffff) {
+void writeVarInt(bytes.Buffer buffer, BigInt value) {
+  int intValue = value.toInt();
+  if (intValue < 0xfd) {
+    writeBytes(buffer, [value.toInt()]);
+  } else if (intValue <= 0xffff) {
     writeBytes(buffer, [0xfd]);
-    writeUintLE(buffer, value, 2);
-  } else if (value <= 0xffffffff) {
+    writeBigIntLE(buffer, value, 2);
+  } else if (intValue <= 0xffffffff) {
     writeBytes(buffer, [0xfe]);
-    writeUintLE(buffer, value, 4);
+    writeBigIntLE(buffer, value, 4);
   } else {
     writeBytes(buffer, [0xff]);
-    writeUintLE(buffer, value, 8);
+    writeBigIntLE(buffer, value, 8); // TODO 8+?
   }
 }
 
 void writeByteArray(bytes.Buffer buffer, Uint8List bytes) {
-  writeVarInt(buffer, bytes.length);
+  writeVarInt(buffer, new BigInt.from(bytes.length));
   writeBytes(buffer, bytes);
 }
 
 void writeVarStr(bytes.Buffer buffer, String string) {
-  writeByteArray(buffer, UTF8.encode(string));
+  writeByteArray(buffer, utf8.encode(string));
 }
 
 void writeObject(bytes.Buffer buffer, BitcoinSerializable obj, int pver) {

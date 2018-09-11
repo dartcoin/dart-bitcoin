@@ -29,7 +29,7 @@ class AddressMessage extends Message {
 
   @override
   void bitcoinDeserialize(bytes.Reader reader, int pver) {
-    int nbAddrs = readVarInt(reader);
+    int nbAddrs = readVarInt(reader).toInt();
     if (nbAddrs > MAX_ADDRESSES)
       throw new SerializationException("Too many addresses in AddressMessage");
     List<PeerAddress> newAddresses = new List<PeerAddress>(nbAddrs);
@@ -41,7 +41,7 @@ class AddressMessage extends Message {
 
   @override
   void bitcoinSerialize(bytes.Buffer buffer, int pver) {
-    writeVarInt(buffer, addresses.length);
+    writeVarInt(buffer, new BigInt.from(addresses.length));
     addresses.forEach((a) => writeObject(buffer, a, pver));
   }
 }

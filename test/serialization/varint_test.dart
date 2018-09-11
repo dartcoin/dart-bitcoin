@@ -15,31 +15,35 @@ void main() {
     });
 
     test("varint_byte", () {
-      writeVarInt(buffer, 10);
+      BigInt biOrg = new BigInt.from(10);
+      writeVarInt(buffer, biOrg);
       expect(buffer.length, equals(1));
       expect(buffer.asBytes().length, equals(1));
-      expect(readVarInt(buffer), equals(10));
+      expect(readVarInt(buffer), equals(biOrg));
     });
 
     test("varint_short", () {
-      writeVarInt(buffer, 64000);
+      BigInt biOrg = new BigInt.from(64000);
+      writeVarInt(buffer, biOrg);
       expect(buffer.length, equals(3));
       expect(buffer.asBytes().length, equals(3));
-      expect(readVarInt(buffer), equals(64000));
+      expect(readVarInt(buffer), equals(biOrg));
     });
 
     test("varint_int", () {
-      writeVarInt(buffer, 0xAABBCCDD);
+      BigInt biOrg = BigInt.parse("0xAABBCCDD");
+      writeVarInt(buffer, biOrg);
       expect(buffer.length, equals(5));
       expect(buffer.asBytes().length, equals(5));
-      expect(readVarInt(buffer), equals(0xAABBCCDD));
+      expect(readVarInt(buffer), equals(biOrg));
     });
 
     test("varint_long", () {
-      writeVarInt(buffer, 0xCAFEBABEDEADBEEF);
+      BigInt biOrg = BigInt.parse("0xCAFEBABEDEADBEEF");
+      writeVarInt(buffer, biOrg);
       expect(buffer.length, equals(9));
       expect(buffer.asBytes().length, equals(9));
-      expect(readVarInt(buffer), equals(0xCAFEBABEDEADBEEF));
+      expect(readVarInt(buffer), equals(biOrg));
     });
   });
 }

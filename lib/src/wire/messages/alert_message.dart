@@ -48,14 +48,14 @@ class AlertMessage extends Message {
     expiration = new DateTime.fromMillisecondsSinceEpoch(readUintLE(reader, 8) * 1000);
     id = readUintLE(reader);
     cancel = readUintLE(reader);
-    int cancelSetSize = readVarInt(reader);
+    int cancelSetSize = readVarInt(reader).toInt();
     cancelSet = new HashSet<int>();
     for (int i = 0; i < cancelSetSize; i++) {
       cancelSet.add(readUintLE(reader));
     }
     minVer = readUintLE(reader);
     maxVer = readUintLE(reader);
-    int subVerSetSize = readVarInt(reader);
+    int subVerSetSize = readVarInt(reader).toInt();
     matchingSubVer = new HashSet<String>();
     for (int i = 0; i < subVerSetSize; i++) matchingSubVer.add(readVarStr(reader));
     priority = readUintLE(reader);

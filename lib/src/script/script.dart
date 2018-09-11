@@ -38,7 +38,7 @@ class Script {
           continue;
         }
 //        else
-//          Script.writeBytes(out, utils.reverseBytes(utils.encodeMPI(BigInteger.valueOf(val), false)));
+//          Script.writeBytes(out, utils.reverseBytes(utils.encodeMPI(BigInt.valueOf(val), false)));
       } catch (e) {}
       // try opcode
       if (s.startsWith("OP_")) s = s.substring(3);
@@ -193,7 +193,7 @@ class Script {
     int sigOps = 0;
     int lastOpCode = ScriptOpCodes.OP_INVALIDOPCODE;
     for (ScriptChunk chunk in chunks) {
-      if (chunk.isOpCode) {
+      if (chunk.isOpCode && chunk.data != null) { // TODO how did we get null data
         int opcode = 0xFF & chunk.data[0];
         switch (opcode) {
           case ScriptOpCodes.OP_CHECKSIG:
@@ -262,7 +262,7 @@ class Script {
     // TODO [bitcoinj]: Check if we can take out enforceP2SH if there's a checkpoint at the enforcement block.
     if (enforceP2SH && PayToScriptHashOutputScript.matchesType(scriptPubKey)) {
       for (ScriptChunk chunk in chunks)
-        if (chunk.isOpCode && (chunk.data[0] & 0xff) > ScriptOpCodes.OP_16)
+        if (chunk.isOpCode && chunk.data != null && (chunk.data[0] & 0xff) > ScriptOpCodes.OP_16) // TODO why is data null
           throw new ScriptException(
               "Attempted to spend a P2SH scriptPubKey with a script that contained script ops");
 

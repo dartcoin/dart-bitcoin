@@ -5,7 +5,6 @@ import "dart:convert";
 import "dart:io";
 import "dart:typed_data";
 
-import "package:bignum/bignum.dart";
 import "package:cryptoutils/cryptoutils.dart";
 
 import "package:test/test.dart";
@@ -104,7 +103,7 @@ void main() {
     group("bitcoinj-vectors", () {
       test("valid-scripts", () {
         File f = new File.fromUri(new Uri.file("$RESOURCES/script_valid.json"));
-        List<List> vectors = JSON.decode(f.readAsStringSync());
+        List<List> vectors = json.decode(f.readAsStringSync());
 
         for (List instance in vectors) {
           if (instance.length < 2) continue;
@@ -113,13 +112,13 @@ void main() {
           scriptSig.correctlySpends(new Transaction(), 0, scriptPubKey, true);
           expect(() => scriptSig.correctlySpends(new Transaction(), 0, scriptPubKey, true),
               returnsNormally,
-              reason: JSON.encode(instance));
+              reason: json.encode(instance));
         }
       });
 
       test("invalid-scripts", () {
         File f = new File.fromUri(new Uri.file("$RESOURCES/script_invalid.json"));
-        List<List> vectors = JSON.decode(f.readAsStringSync());
+        List<List> vectors = json.decode(f.readAsStringSync());
 
         for (List instance in vectors) {
           if (instance.length < 2) continue;
@@ -128,13 +127,13 @@ void main() {
 
           expect(() => scriptSig.correctlySpends(new Transaction(), 0, scriptPubKey, true),
               throwsA(new isInstanceOf<ScriptException>()),
-              reason: JSON.encode(instance));
+              reason: json.encode(instance));
         }
       });
 
       test("valid-tx", () {
         File f = new File.fromUri(new Uri.file("$RESOURCES/tx_valid.json"));
-        List<List> vectors = JSON.decode(f.readAsStringSync());
+        List<List> vectors = json.decode(f.readAsStringSync());
 
         instances:
         for (List instance in vectors) {
@@ -162,7 +161,7 @@ void main() {
           Transaction transaction = new Transaction.fromBitcoinSerialization(bytes, 0);
           bool enforceP2SH = instance[2];
 
-          expect(() => transaction.verify(), returnsNormally, reason: JSON.encode(instance));
+          expect(() => transaction.verify(), returnsNormally, reason: json.encode(instance));
 
           for (int i = 0; i < transaction.inputs.length; i++) {
             TransactionInput input = transaction.inputs[i];
@@ -191,7 +190,7 @@ void main() {
 
       test("invalid-tx", () {
         File f = new File.fromUri(new Uri.file("$RESOURCES/tx_invalid.json"));
-        List<List> vectors = JSON.decode(f.readAsStringSync());
+        List<List> vectors = json.decode(f.readAsStringSync());
 
         instances:
         for (List instance in vectors) {
@@ -239,7 +238,7 @@ void main() {
             }
           }
 
-          expect(valid, isFalse, reason: JSON.encode(instance));
+          expect(valid, isFalse, reason: json.encode(instance));
         }
       });
     });
@@ -260,7 +259,7 @@ Script parseScriptString(String string) {
         out.add(Script.encodeToOpN(val));
       else
         out.addAll(
-            Script.encodeData(utils.reverseBytes(utils.encodeMPI(new BigInteger(val), false))));
+            Script.encodeData(utils.reverseBytes(utils.encodeMPI(new BigInt.from(val), false))));
     } else if (new RegExp("^0x[0-9a-fA-F]*\$").hasMatch(w)) {
       // Raw hex data, inserted NOT pushed onto stack:
       out.addAll(CryptoUtils.hexToBytes(w.substring(2)));

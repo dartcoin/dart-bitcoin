@@ -9,7 +9,7 @@ import "package:pointycastle/api.dart";
 class ChecksumBuffer extends BufferImpl {
   final Digest digest;
 
-  ChecksumBuffer(Digest this.digest) : super(false);
+  ChecksumBuffer(Digest this.digest) : super();
 
   Uint8List checksum() {
     Uint8List sum = new Uint8List(digest.digestSize);

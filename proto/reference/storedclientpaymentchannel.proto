@@ -1,0 +1,58 @@
+/** Copyright 2013 Google Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/*
+ * Authors: Mike Hearn, Matt Corallo
+ */
+
+/* Notes:
+ * - Endianness: All byte arrays that represent numbers (such as hashes and private keys) are Big Endian
+ * - To regenerate after editing, run mvn clean package -DupdateProtobuf
+ */
+
+syntax = "proto3";
+
+package com.paycoin.data;
+
+//option dart_package = "org.bitcoinj.protocols.channels";
+//option dart_outer_classname = "ClientState";
+
+// A set of StoredPaymentChannel's
+message StoredClientPaymentChannels {
+    repeated StoredClientPaymentChannel channels = 1;
+}
+
+// A client-side payment channel in serialized form, which can be reloaded later if the client restarts and wants to
+// reopen an existing channel
+message StoredClientPaymentChannel {
+    bytes id = 1;
+    bytes contractTransaction = 2;
+    bytes refundTransaction = 3;
+    bytes myPublicKey = 8;
+    // Deprecated, key is already stored in the wallet, and found using myPublicKey;
+    bytes myKey = 4;
+    uint64 valueToMe = 5;
+    // Fees required to refund the transaction.
+    uint64 refundFees = 6;
+    // When set, the hash of the transaction that was presented by the server for closure of the channel.
+    // It spends the contractTransaction and is expected to be broadcast to the network by the server.
+    // It's supposed to be in the wallet already.
+    bytes closeTransactionHash = 7;
+    uint32 majorVersion = 9;
+    // The expiry time of the CLTV lock. Only used in protocol v2.
+    uint64 expiryTime = 10;
+    // The server's public key. Only used in protocol v2.
+    bytes serverKey = 11;
+}

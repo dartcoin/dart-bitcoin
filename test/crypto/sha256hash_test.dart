@@ -11,11 +11,11 @@ import "dart:convert";
 Map vectors = {
   "single": [
     [
-      UTF8.encode(
+      utf8.encode(
           "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"),
       "475dbd9278ce464097f8dd241b088ac96615bfdea9e496bc05828aca94aabfca"
     ],
-    [UTF8.encode("x"), "2d711642b726b04401627ca9fbac32f5c8530fb1903cc4db02258717921a4881"]
+    [utf8.encode("x"), "2d711642b726b04401627ca9fbac32f5c8530fb1903cc4db02258717921a4881"]
   ],
   "double": [
     [

@@ -6,7 +6,7 @@ import "package:cryptoutils/cryptoutils.dart";
 
 import "package:test/test.dart";
 
-import "package:bitcoin/crypto/mnemonic_code.dart";
+import "package:bitcoin/src/crypto/mnemonic_code.dart";
 
 MnemonicCode _mc;
 

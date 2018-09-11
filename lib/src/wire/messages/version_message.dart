@@ -4,10 +4,10 @@ class VersionMessage extends Message {
   @override
   String get command => Message.CMD_VERSION;
 
-  static final BigInteger SERVICE_NODE_NETWORK = BigInteger.ONE;
+  static final BigInt SERVICE_NODE_NETWORK = BigInt.one;
 
   int clientVersion;
-  BigInteger services;
+  BigInt services;
   int time;
   PeerAddress myAddress;
   PeerAddress theirAddress;
@@ -32,13 +32,13 @@ class VersionMessage extends Message {
       {int this.lastHeight: 0,
       bool this.relayBeforeFilter: false,
       int this.clientVersion: NetworkParameters.PROTOCOL_VERSION,
-      BigInteger this.services,
+      BigInt this.services,
       int this.time: 0,
       PeerAddress this.myAddress,
       PeerAddress this.theirAddress,
       int this.nonce,
       String this.subVer}) {
-    services = services ?? BigInteger.ZERO;
+    services = services ?? BigInt.zero;
     nonce = nonce ?? new Random().nextInt(0xffffffff);
     subVer = subVer ?? LIBRARY_SUBVER;
     // make sure a PeerAddress instance with protocolVersion = 0 is used
@@ -133,7 +133,7 @@ class VersionMessage extends Message {
   @override
   void bitcoinDeserialize(bytes.Reader reader, int pver) {
     clientVersion = readUintLE(reader);
-    services = utils.bytesToUBigIntLE(readBytes(reader, 8)); //_readUintLE(8);
+    services = utils.bytesToBigInt(readBytes(reader, 8)); //_readUintLE(8);
     time = readUintLE(reader, 8);
     // for PeerAddresses in the version message, the protocolVersion must be hard coded to 0
     myAddress = readObject(reader, new PeerAddress.empty(), 0);
@@ -159,7 +159,7 @@ class VersionMessage extends Message {
   @override
   void bitcoinSerialize(bytes.Buffer buffer, int pver) {
     writeUintLE(buffer, clientVersion);
-    writeBytes(buffer, utils.uBigIntToBytesLE(services, 8));
+    writeBytes(buffer, utils.bigIntToBytesLE(services, 8));
     writeUintLE(buffer, time, 8);
     writeObject(buffer, myAddress, 0);
     // we are version >= 106

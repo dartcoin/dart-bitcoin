@@ -3,15 +3,58 @@ version: 0.0.0
 author: Steven Roose <stevenroose@gmail.com>
 description: A Bitcoin library for Dart. Pub-test release.
 homepage: http://www.dartcoin.org/
+environment:
+  sdk: ">=2.0.0-dev.61.0 <3.0.0"
 dependencies:
-  asn1lib: ">=0.3.1"
+  asn1lib: ^0.5.2
   base58check: ^1.0.0
-  bignum: ">=0.0.4"
-  bytes: ">=0.2.0 <0.3.0"
+  bytes: ^0.2.0 # <0.3.0
   collection: any
-  cryptoutils: ">=0.1.8"
+  cryptoutils: ^0.3.0
+  events: ^0.1.2+1
+  grpc: ^0.6.1
   pointycastle: any
+  protobuf: ^0.9.1
+  sqlite: ^0.4.2
+  observable: ^0.22.1+3
+  upnp: ^1.0.0
 dev_dependencies:
-  browser: any
   test: any
   uuid: any
+#  build_runner: ^0.10.0
+#  build_test: ^0.10.2
+#  build_web_compilers: ^0.4.0
+dependency_overrides:
+  cryptoutils:
+    git:
+      url: git://github.com/paycoin-com/dart-cryptoutils
+      ref: dart2
+  upnp:
+    git:
+      url: git://github.com/paycoin-com/upnp.dart
+      ref: dart2
+  sqlite:
+    git:
+      url: git://github.com/paycoin-com/dart-sqlite
+      ref: dart2
+  bytes:
+    git:
+      url: git://github.com/paycoin-com/dart-bytes
+      ref: dart2
+  events:
+    git:
+      url: git://github.com/paycoin-com/dart-events
+      ref: dart2
+  stevenroose:
+    git:
+      url: git://github.com/paycoin-com/dart-snippets
+      ref: dart2
+  zengen:
+    git:
+      url: git://github.com/paycoin-com/dart-zengen/
+      ref: dart2
+      path: main_lib
+  reflectable:
+    git:
+      url: git://github.com/dart-lang/reflectable
+      ref: eliminate_barback_jul18

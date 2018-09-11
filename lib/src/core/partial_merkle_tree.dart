@@ -44,14 +44,14 @@ class PartialMerkleTree extends BitcoinSerializable {
 
   void bitcoinSerialize(bytes.Buffer buffer, int pver) {
     writeUintLE(buffer, transactionCount);
-    writeVarInt(buffer, hashes.length);
+    writeVarInt(buffer, new BigInt.from(hashes.length));
     for (Hash256 hash in hashes) writeSHA256(buffer, hash);
     writeByteArray(buffer, matchedChildBits);
   }
 
   void bitcoinDeserialize(bytes.Reader reader, int pver) {
     transactionCount = readUintLE(reader);
-    int nbHashes = readVarInt(reader);
+    int nbHashes = readVarInt(reader).toInt();
     hashes = new List<Hash256>(nbHashes);
     for (int i = 0; i < nbHashes; i++) {
       hashes[i] = readSHA256(reader);

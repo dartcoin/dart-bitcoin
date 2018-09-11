@@ -1,15 +1,15 @@
 part of bitcoin.wire;
 
-class TransactionMessage extends Message {
+class TransactionBroadcast extends Message {
   @override
   String get command => Message.CMD_TX;
 
   Transaction transaction;
 
-  TransactionMessage(Transaction this.transaction) {}
+  TransactionBroadcast(Transaction this.transaction) {}
 
   /// Create an empty instance.
-  TransactionMessage.empty();
+  TransactionBroadcast.empty();
 
   @override
   void bitcoinDeserialize(bytes.Reader reader, int pver) {
