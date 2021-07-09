@@ -1,7 +1,7 @@
 dart-bitcoin
 ============
 
-Bitcoin library witten in Google Dart (dartlang.org).
+Bitcoin library written in Google Dart (dartlang.org).
 
 This library is still in very early development so it is far from usable.
 Expect a lot refactoring and renaming to happen before it reaches a stable state.
